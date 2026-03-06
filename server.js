@@ -70,6 +70,27 @@ app.get('/api/summoner/:name', async (req, res) => {
         const realIconId = summonerRes.data.profileIconId;
         const rankData = leagueRes.data.find(entry => entry.queueType === 'RANKED_SOLO_5x5') || null;
 
+        // ==========================================
+        // [신규 기능 1] DB에 오늘의 티어/LP 기록 저장 및 과거 기록 조회 (그래프용)
+        // ==========================================
+        let historyRecords = [];
+        if (db) {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+            if (rankData) {
+                await db.run(
+                    `INSERT INTO lp_history (puuid, date, tier, rank, lp) VALUES (?, ?, ?, ?, ?)
+                     ON CONFLICT(puuid, date) DO UPDATE SET tier=excluded.tier, rank=excluded.rank, lp=excluded.lp`,
+                    [targetPuuid, today, rankData.tier, rankData.rank, rankData.leaguePoints]
+                );
+            }
+            // 유저의 과거 LP 기록 모두 불러오기
+            historyRecords = await db.all(
+                `SELECT date, tier, rank, lp FROM lp_history WHERE puuid = ? ORDER BY date ASC`,
+                [targetPuuid]
+            );
+        }
+        // ==========================================
+
         // 2-5. Match-V5 (최근 10게임 Match ID 조회)
         const matchUrl = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${targetPuuid}/ids?start=0&count=10&api_key=${API_KEY}`;
         const { data: matchIds } = await axios.get(matchUrl);
@@ -119,6 +140,35 @@ app.get('/api/summoner/:name', async (req, res) => {
                 else if (p.tripleKills > 0) multiKill = "트리플킬";
                 else if (p.doubleKills > 0) multiKill = "더블킬";
 
+                // ========================================================
+                // [신규 기능 2] 10명 플레이어의 전체 상세 데이터를 프론트엔드로 전달
+                // ========================================================
+                const detailedParticipants = detail.info.participants.map(part => {
+                    let pChampName = part.championName;
+                    if (pChampName === "FiddleSticks") pChampName = "Fiddlesticks"; // 이미지 엑박 방지 처리
+
+                    return {
+                        puuid: part.puuid,
+                        isSearchedUser: part.puuid === targetPuuid,
+                        teamId: part.teamId,
+                        win: part.win,
+                        championName: pChampName,
+                        summonerName: part.riotIdGameName ? `${part.riotIdGameName}#${part.riotIdTagLine}` : (part.summonerName || "알 수 없음"),
+                        kills: part.kills, deaths: part.deaths, assists: part.assists,
+                        damage: part.totalDamageDealtToChampions,
+                        gold: part.goldEarned,
+                        cs: part.totalMinionsKilled + part.neutralMinionsKilled,
+                        wardsPlaced: part.wardsPlaced || 0,
+                        wardsKilled: part.wardsKilled || 0,
+                        visionWards: part.visionWardsBoughtInGame || 0,
+                        item0: part.item0, item1: part.item1, item2: part.item2, item3: part.item3, item4: part.item4, item5: part.item5, item6: part.item6,
+                        spell1: part.summoner1Id, spell2: part.summoner2Id,
+                        mainRune: part.perks.styles[0]?.style, subRune: part.perks.styles[1]?.style,
+                        champLevel: part.champLevel
+                    };
+                });
+                // ========================================================
+
                 return {
                     queueType, win: p.win, 
                     championName: p.championName, champLevel: p.champLevel,
@@ -130,7 +180,8 @@ app.get('/api/summoner/:name', async (req, res) => {
                     multiKill, firstBlood: p.firstBloodKill,
                     durationMin, durationSec, dateStr,
                     timestamp: detail.info.gameEndTimestamp, 
-                    blueTeam, redTeam
+                    blueTeam, redTeam,
+                    participants: detailedParticipants // [추가됨] 10인 데이터 탑재
                 };
             } catch (err) {
                 return null;
@@ -150,7 +201,8 @@ app.get('/api/summoner/:name', async (req, res) => {
                 rank: rankData ? rankData.rank : '',
                 leaguePoints: rankData ? rankData.leaguePoints : 0
             },
-            history: cleanHistory
+            history: cleanHistory,
+            lpHistory: historyRecords // [추가됨] 프론트엔드로 전달할 그래프 데이터
         };
 
         // 2-8. 결과 캐싱 및 응답
@@ -193,6 +245,18 @@ async function initDB() {
             puuid TEXT PRIMARY KEY,
             displayName TEXT,
             updatedAt INTEGER
+        )
+    `);
+
+    // [신규 기능 1] 날짜별 LP 기록용 테이블 생성
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS lp_history (
+            puuid TEXT,
+            date TEXT,
+            tier TEXT,
+            rank TEXT,
+            lp INTEGER,
+            PRIMARY KEY (puuid, date)
         )
     `);
     
@@ -316,6 +380,19 @@ app.get('/api/ranking', async (req, res) => {
     res.json(finalRankingData);
 });
 
+// ==========================================
+// [신규] 통계 데이터 로컬 제공 API (/api/champion-stats)
+// ==========================================
+app.get('/api/champion-stats', (req, res) => {
+    try {
+        // 방금 만든 stats_data.json 파일을 불러와서 제공합니다.
+        const statsData = require('./stats_data.json');
+        res.json(statsData);
+    } catch (error) {
+        console.error('[Error] 로컬 통계 데이터 파일을 찾을 수 없거나 읽기 실패:', error.message);
+        res.status(500).json({ error: "통계 데이터를 불러오지 못했습니다. stats_data.json 파일을 확인해주세요." });
+    }
+});
 
 // ==========================================
 // 5. 프론트엔드 라우팅 (SPA 지원용)
