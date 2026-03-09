@@ -246,7 +246,7 @@ app.get('/api/summoner/:name', async (req, res) => {
                 return {
                     puuid: part.puuid, isSearchedUser: part.puuid === targetPuuid, teamId: part.teamId, win: part.win, champLevel: part.champLevel, 
                     championName: part.championName === "FiddleSticks" ? "Fiddlesticks" : part.championName, visionScore: part.visionScore,
-                    summonerName: part.riotIdGameName ? `${part.riotIdGameName}#${part.riotIdTagLine}` : (part.summonerName || "알 수 없음"),
+                    summonerName: part.riotIdGameName ? `${part.riotIdGameName}#${part.riotIdTagline}` : (part.summonerName || "알 수 없음"),
                     kills: part.kills, deaths: part.deaths, assists: part.assists, damage: part.totalDamageDealtToChampions, damageTaken: part.totalDamageTaken, 
                     kp: pTeamKills === 0 ? 0 : Math.round(((part.kills + part.assists) / pTeamKills) * 100), gold: part.goldEarned,
                     cs: part.totalMinionsKilled + part.neutralMinionsKilled, wardsPlaced: part.wardsPlaced || 0, wardsKilled: part.wardsKilled || 0, visionWards: part.visionWardsBoughtInGame || 0,
@@ -310,7 +310,8 @@ app.get('/api/summoner/:name', async (req, res) => {
             version: currentVersion,
             profile: {
                 name: `${gameName}#${tagLine}`, level: realLevel, icon: `https://ddragon.leagueoflegends.com/cdn/${currentVersion}/img/profileicon/${realIconId}.png`,
-                tier: rankData?.tier || 'UNRANKED', rank: rankData?.rank || '', leaguePoints: rankData?.leaguePoints || 0
+                tier: rankData?.tier || 'UNRANKED', rank: rankData?.rank || '', leaguePoints: rankData?.leaguePoints || 0,
+                wins: rankData?.wins || 0, losses: rankData?.losses || 0 // ★ 이 줄이 추가되었습니다!
             },
             history: history
         };
