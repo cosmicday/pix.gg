@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>pix.gg - 전적검색</title>
     <style>
         /* =========================================
@@ -155,9 +155,21 @@
         }
 
         @keyframes errorShake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-6px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(6px);
+            }
         }
 
         .search-box.error-shake {
@@ -272,6 +284,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -283,7 +296,7 @@
            ========================================= */
         #result-container {
             display: none;
-            max-width: 1150px;
+            max-width: 1100px;
             margin: 40px auto;
             padding-bottom: 50px;
             animation: fadeIn 0.6s ease;
@@ -343,12 +356,12 @@
         .pix-tier-icon img.unranked-icon {
             width: 100%;
             height: 100%;
-            transform: translateY(0); 
+            transform: translateY(0);
         }
-        
+
         .pix-tier-info h3 {
             font-size: 12px;
-            color: #9aa4af;
+            color: #ffffff;
             margin-bottom: 2px;
         }
 
@@ -360,7 +373,7 @@
 
         .pix-tier-info .lp {
             font-size: 12px;
-            color: #8fa3b0;
+            color: #ffffff;
         }
 
         .profile-header {
@@ -545,8 +558,8 @@
         }
 
         .pix-info {
-            width: 85px;
-            padding: 0 8px 0 12px;
+            width: 75px;
+            padding: 0 4px 0 12px;
             display: flex;
             flex-direction: column;
             gap: 2px;
@@ -599,18 +612,20 @@
 
         .pix-level {
             position: absolute;
-            bottom: -2px;
-            right: -2px;
-            background: #202d37;
+            bottom: 0;
+            /* ★ 초상화 맨 아래에 딱 붙임 */
+            right: 0;
+            /* ★ 초상화 맨 오른쪽에 딱 붙임 */
+            background: rgba(0, 0, 0, 0.75);
+            /* 반투명 검은색 사각형 배경 */
             color: #fff;
             font-size: 11px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 0;
+            /* ★ 원형 테두리를 없애고 각진 사각형으로 변경 */
+            line-height: 1;
+            z-index: 1;
         }
 
         .pix-spells {
@@ -626,7 +641,7 @@
         }
 
         .pix-kda {
-            width: 110px;
+            width: 95px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -650,12 +665,11 @@
         }
 
         .pix-stats {
-            width: 110px;
+            width: 80px;
             display: flex;
             flex-direction: column;
             gap: 2px;
-            border-left: 1px solid rgba(255, 255, 255, 0.05);
-            padding-left: 12px;
+            padding-left: 4px;
         }
 
         .pix-stats .kp {
@@ -668,6 +682,7 @@
             flex-direction: column;
             gap: 5px;
             width: 96px;
+            margin-top: 3px;
         }
 
         .pix-items {
@@ -692,24 +707,35 @@
         .pix-badges {
             display: flex;
             gap: 4px;
+            position: absolute;
+            bottom: -21px;
+            left: 0;
+            z-index: 2;
         }
 
         .pix-badge {
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 11px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 10px;
+            /* 초상화 크기에 맞게 폰트 살짝 축소 */
             font-weight: bold;
             color: #fff;
+            white-space: nowrap;
         }
 
-        .pix-badge.multi-kill { background: #c0392b; }
-        .pix-badge.first-blood { background: #6a1b9a; }
+        .pix-badge.multi-kill {
+            background: #c0392b;
+        }
+
+        .pix-badge.first-blood {
+            background: #6a1b9a;
+        }
 
         .pix-players {
             display: flex;
             gap: 10px;
             flex-grow: 1;
-            padding-left: 15px;
+            padding-left: 10px;
         }
 
         .pix-team {
@@ -787,7 +813,7 @@
         .match-wrapper {
             margin-bottom: 5px;
             border-radius: 4px;
-            background: #1a1a2e;
+            background: transparent;
         }
 
         .pix-game {
@@ -833,24 +859,20 @@
             fill: #fff;
         }
 
-        .match-wrapper.open .pix-game {
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-
         .match-detail {
             display: none;
-            background: #1a1a2e;
+            background: transparent;
             font-size: 12px;
             border-bottom-left-radius: 4px;
             border-bottom-right-radius: 4px;
             overflow: visible;
+            margin-top: 4px;
+            /* ★ 요약 전적의 둥근 모서리가 예쁘게 보이도록 살짝 띄워줌 */
         }
 
-        .detail-table thead:first-of-type th:first-child { border-top-left-radius: 8px !important; }
-        .detail-table thead:first-of-type th:last-child { border-top-right-radius: 8px !important; }
-        .detail-table tbody:last-of-type tr:last-child td:first-child { border-bottom-left-radius: 8px !important; }
-        .detail-table tbody:last-of-type tr:last-child td:last-child { border-bottom-right-radius: 8px !important; }
+        /* 부모 컨테이너가 4px로 예쁘게 잘라주므로, 표 자체의 둥글기는 0으로 폅니다 */
+        .detail-table tbody:last-of-type tr:last-child td:first-child { border-bottom-left-radius: 0 !important; }
+        .detail-table tbody:last-of-type tr:last-child td:last-child { border-bottom-right-radius: 0 !important; }
 
         .match-wrapper.open .match-detail {
             display: block;
@@ -865,7 +887,7 @@
         }
 
         .detail-table tbody tr {
-            height: 48px !important; 
+            height: 48px !important;
         }
 
         .detail-table th {
@@ -876,36 +898,51 @@
         }
 
         .detail-table td {
-            padding: 0 3px !important; 
+            padding: 0 3px !important;
             vertical-align: middle !important;
-            border: none !important; 
+            border: none !important;
             background: transparent !important;
             text-align: center !important;
         }
 
-        .team-blue tr:not(:last-child) td { border-bottom: 1px solid #192336 !important; }
-        .team-red tr:not(:last-child) td { border-bottom: 1px solid #3f252a !important; }
+        .team-blue tr:not(:last-child) td {
+            border-bottom: 1px solid #192336 !important;
+        }
+
+        .team-red tr:not(:last-child) td {
+            border-bottom: 1px solid #3f252a !important;
+        }
 
         .team-blue-header th {
             background: #2b4073 !important;
-            color: #ffffff !important; 
-            padding: 6px 4px !important; 
-            border-top: 1px solid rgba(0, 0, 0, 0.4) !important; 
-            border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important; 
-            text-align: center !important; 
-        }
-        .team-red-header th {
-            background: #612e3b !important;
-            color: #ffffff !important; 
-            padding: 6px 4px !important; 
-            border-top: 1px solid rgba(0, 0, 0, 0.4) !important; 
+            color: #ffffff !important;
+            padding: 6px 4px !important;
+            border-top: 1px solid rgba(0, 0, 0, 0.4) !important;
             border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important;
-            text-align: center !important; 
+            text-align: center !important;
         }
 
-        .team-blue { background: #28344e; }
-        .team-red { background: #59343b; }
-        .team-blue td, .team-red td { background: transparent !important; }
+        .team-red-header th {
+            background: #612e3b !important;
+            color: #ffffff !important;
+            padding: 6px 4px !important;
+            border-top: 1px solid rgba(0, 0, 0, 0.4) !important;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important;
+            text-align: center !important;
+        }
+
+        .team-blue {
+            background: #28344e;
+        }
+
+        .team-red {
+            background: #59343b;
+        }
+
+        .team-blue td,
+        .team-red td {
+            background: transparent !important;
+        }
 
         .detail-table td.detail-champ-col,
         .detail-table td.detail-spell-rune-col {
@@ -913,15 +950,48 @@
             vertical-align: middle !important;
             height: 48px !important;
         }
+
         .detail-table td.detail-champ-col {
             padding-left: 15px !important;
         }
 
+        /* 1. 초상화와 닉네임을 감싸는 박스 */
         .champ-name-wrapper {
             display: flex;
             align-items: center;
+            /* ★ 핵심: 위아래 수직 중앙 완벽 정렬 */
             gap: 8px;
+            /* 초상화와 닉네임 사이의 적절한 간격 */
         }
+
+        /* 2. 초상화 이미지 강제 고정 */
+        .champ-name-wrapper img {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            /* ★ 화면이 좁아져도 초상화가 찌그러지지 않도록 방어 */
+        }
+
+        /* 3. 닉네임 텍스트 영역 */
+        .detail-summoner {
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            /* ★ 닉네임이 길어도 절대 밑으로 줄바꿈되지 않게 막음 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* ★ 칸을 넘어가면 자동으로 '...' 처리 */
+            max-width: 95px;
+            /* 텍스트가 차지할 최대 너비 제한 (옆칸 침범 방지) */
+        }
+
+        .detail-summoner:hover {
+            text-decoration: underline;
+            color: #fff;
+        }
+
         .spell-rune-wrapper {
             display: flex;
             align-items: center;
@@ -929,26 +999,18 @@
             gap: 4px;
         }
 
-        .detail-spells, .detail-runes {
+        .detail-spells,
+        .detail-runes {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
-        .detail-spells img, .detail-runes img {
-            width: 16px !important; 
+
+        .detail-spells img,
+        .detail-runes img {
+            width: 16px !important;
             height: 16px !important;
             border-radius: 3px;
-        }
-        
-        .detail-summoner {
-            margin-left: 0 !important; 
-            width: 85px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: #fff;
-            cursor: pointer;
-            transition: 0.2s;
         }
 
         .detail-champ-col img {
@@ -999,7 +1061,7 @@
         }
 
         .damage-bar.taken {
-            background: #9aa4af !important; 
+            background: #9aa4af !important;
         }
 
         .detail-items {
@@ -1055,12 +1117,29 @@
             table-layout: fixed;
         }
 
-        .stats-table th:nth-child(1) { width: 35%; }
-        .stats-table th:nth-child(2) { width: 13%; }
-        .stats-table th:nth-child(3) { width: 13%; }
-        .stats-table th:nth-child(4) { width: 13%; }
-        .stats-table th:nth-child(5) { width: 13%; }
-        .stats-table th:nth-child(6) { width: 13%; }
+        .stats-table th:nth-child(1) {
+            width: 35%;
+        }
+
+        .stats-table th:nth-child(2) {
+            width: 13%;
+        }
+
+        .stats-table th:nth-child(3) {
+            width: 13%;
+        }
+
+        .stats-table th:nth-child(4) {
+            width: 13%;
+        }
+
+        .stats-table th:nth-child(5) {
+            width: 13%;
+        }
+
+        .stats-table th:nth-child(6) {
+            width: 13%;
+        }
 
         .stats-table th {
             background: #2b1a52;
@@ -1106,12 +1185,29 @@
             font-weight: 800;
         }
 
-        .tier-s { color: #dc2626; }
-        .tier-a { color: #3b82f6; }
-        .tier-b { color: #10b981; }
-        .tier-c { color: #f59e0b; }
-        .tier-d { color: #a1a1aa; }
-        .tier-e { color: #cd7f32; }
+        .tier-s {
+            color: #dc2626;
+        }
+
+        .tier-a {
+            color: #3b82f6;
+        }
+
+        .tier-b {
+            color: #10b981;
+        }
+
+        .tier-c {
+            color: #f59e0b;
+        }
+
+        .tier-d {
+            color: #a1a1aa;
+        }
+
+        .tier-e {
+            color: #cd7f32;
+        }
 
         .stats-lane img {
             width: 20px;
@@ -1181,7 +1277,7 @@
         .stats-filter-btn.all-btn.active {
             color: #ffffff;
         }
-        
+
         .sortable-th {
             cursor: pointer;
             user-select: none;
@@ -1260,10 +1356,11 @@
             object-fit: cover;
         }
 
-        .champ-grid-item:hover, .champ-grid-item.active {
+        .champ-grid-item:hover,
+        .champ-grid-item.active {
             border-color: #a78bfa;
             transform: scale(1.1);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
             z-index: 10;
         }
 
@@ -1293,12 +1390,12 @@
 
         .master-table td {
             padding: 12px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             vertical-align: middle;
         }
 
         .master-table tr:hover {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .master-summoner {
@@ -1329,11 +1426,25 @@
             color: #fff;
         }
 
-        .tier-badge.c { background: #ca8a04; }
-        .tier-badge.gm { background: #d33148; }
-        .tier-badge.m { background: #8b5cf6; }
-        .tier-badge.d { background: #0284c7; }
-        .tier-badge.e { background: #10b981; }
+        .tier-badge.c {
+            background: #ca8a04;
+        }
+
+        .tier-badge.gm {
+            background: #d33148;
+        }
+
+        .tier-badge.m {
+            background: #8b5cf6;
+        }
+
+        .tier-badge.d {
+            background: #0284c7;
+        }
+
+        .tier-badge.e {
+            background: #10b981;
+        }
 
         /* 토스트 알림창 스타일 */
         #error-toast {
@@ -1374,7 +1485,7 @@
             margin-top: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             z-index: 100;
-            display: none; 
+            display: none;
             overflow: hidden;
         }
 
@@ -1463,83 +1574,401 @@
         .fav-star {
             color: #444;
             cursor: pointer;
-            font-size: 27px; 
+            font-size: 27px;
             margin-left: 10px;
             transition: all 0.2s;
             user-select: none;
-            -webkit-text-stroke: 1.5px #444; 
+            -webkit-text-stroke: 1.5px #444;
         }
 
         .fav-star.active {
             color: #facc15;
-            -webkit-text-stroke: 1.5px #facc15; 
+            -webkit-text-stroke: 1.5px #facc15;
             text-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
         }
 
         /* 상세 전적 탭 UI */
         .detail-tabs-header { 
-            display: flex; background: #2b1a52; border-bottom: 1px solid rgba(255,255,255,0.05); 
-            border-top-left-radius: 4px; border-top-right-radius: 4px;
+            display: flex; 
+            background: transparent; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            border-top-left-radius: 4px; 
+            border-top-right-radius: 4px;
         }
         .detail-tab-btn { 
-            flex: 1; background: transparent; border: none; color: #9aa4af; padding: 12px 0; 
-            font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; outline: none; 
+            flex: 1; 
+            background: #6a5587; /* ★ 기본 바탕: 채도를 낮춘 부드럽고 차분한 보라색 */
+            border: none; 
+            color: rgba(255, 255, 255, 0.9); /* ★ 글씨: 눈부시지 않게 살짝 부드러운 흰색 */
+            padding: 9px 0; 
+            font-size: 13px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: background 0.2s, color 0.2s; 
+            outline: none; 
         }
-        .detail-tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .detail-tab-btn.active { color: #a78bfa; border-bottom: 2px solid #a78bfa; background: rgba(0,0,0,0.2); }
-        .detail-tab-content { display: none; background: #1a1a2e; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
-        .detail-tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        .detail-tab-btn:hover { 
+            background: #483463; /* ★ 마우스 올렸을 때: 자연스럽게 톤 다운된 어두운 보라색 */
+            color: #ffffff; 
+        }
+        .detail-tab-btn.active { 
+            background: #2b1a44; /* ★ 클릭(활성화) 상태: 묵직하고 깊이 있는 어두운 보라색 */
+            color: #ffffff; 
+            border-bottom: 2px solid #a78bfa; /* 흰색 대신 은은한 연보라색 밑줄로 포인트 */
+        }
+
+        .detail-tab-content { 
+            display: none; 
+            background: #1a1a2e; 
+            border-bottom-left-radius: 4px; 
+            border-bottom-right-radius: 4px; 
+            overflow: hidden; /* ★ 안쪽에 있는 레드팀 표가 모서리 밖으로 삐져나오지 못하게 칼같이 잘라줌 */
+        }
+
+        .detail-tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
 
         /* 빌드 탭 스타일 */
-        .build-container { display: flex; flex-direction: column; gap: 20px; padding: 20px; box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: hidden !important; }
-        .build-box { width: 100%; background: #1a1a2e; border-radius: 8px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); box-sizing: border-box; }
-        .build-title { color: #fff; font-size: 14px; font-weight: bold; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        
+        .build-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden !important;
+        }
+
+        .build-box {
+            width: 100%;
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-sizing: border-box;
+        }
+
+        .build-title {
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         /* 1. 룬 트리 스타일 */
-        .rune-trees-wrap { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; } 
-        .rune-tree { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-        .rune-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
-        .rune-item-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 48px; }
-        .rune-icon { width: 36px; height: 36px; border-radius: 50%; padding: 3px; border: 2px solid transparent; transition: 0.2s; }
-        .rune-icon.keystone { width: 50px; height: 50px; padding: 3px; }
-        .rune-icon.inactive { filter: grayscale(1) opacity(0.2); }
-        .rune-icon.stat { width: 24px; height: 24px; padding: 2px; border: 1px solid transparent; border-radius: 50%; }
-        .rune-name { font-size: 11px; color: #fff; text-align: center; line-height: 1.1; display: none; font-weight: bold; white-space: nowrap; letter-spacing: -0.5px; margin-top: -2px; }
-        .rune-name.active { display: block; }
-        
+        .rune-trees-wrap {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .rune-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rune-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .rune-item-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 48px;
+        }
+
+        .rune-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            padding: 3px;
+            border: 2px solid transparent;
+            transition: 0.2s;
+        }
+
+        .rune-icon.keystone {
+            width: 50px;
+            height: 50px;
+            padding: 3px;
+        }
+
+        .rune-icon.inactive {
+            filter: grayscale(1) opacity(0.2);
+        }
+
+        .rune-icon.stat {
+            width: 24px;
+            height: 24px;
+            padding: 2px;
+            border: 1px solid transparent;
+            border-radius: 50%;
+        }
+
+        .rune-name {
+            font-size: 11px;
+            color: #fff;
+            text-align: center;
+            line-height: 1.1;
+            display: none;
+            font-weight: bold;
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+            margin-top: -2px;
+        }
+
+        .rune-name.active {
+            display: block;
+        }
+
         /* 2. 스킬 표 스타일 */
-        .skill-table-wrapper { width: 100%; overflow-x: auto; }
-        .skill-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; table-layout: fixed; }
-        .skill-table th, .skill-table td { border: 1px solid rgba(255,255,255,0.05); padding: 6px 0; }
-        .skill-table th { background: rgba(0,0,0,0.3); color: #9aa4af; font-weight: normal; }
-        .skill-icon-cell { width: 45px; background: rgba(0,0,0,0.3); }
-        .skill-icon-cell img { width: 30px; height: 30px; border-radius: 4px; vertical-align: middle; }
-        .skill-active-1 { background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-weight: bold; } /* Q */
-        .skill-active-2 { background: rgba(16, 185, 129, 0.2); color: #34d399; font-weight: bold; } /* W */
-        .skill-active-3 { background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-weight: bold; } /* E */
-        .skill-active-4 { background: rgba(239, 68, 68, 0.2); color: #f87171; font-weight: bold; }  /* R */
-        
+        .skill-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .skill-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 12px;
+            table-layout: fixed;
+        }
+
+        .skill-table th,
+        .skill-table td {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 6px 0;
+        }
+
+        .skill-table th {
+            background: rgba(0, 0, 0, 0.3);
+            color: #9aa4af;
+            font-weight: normal;
+        }
+
+        .skill-icon-cell {
+            width: 45px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .skill-icon-cell img {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+
+        .skill-active-1 {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        /* Q */
+        .skill-active-2 {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            font-weight: bold;
+        }
+
+        /* W */
+        .skill-active-3 {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        /* E */
+        .skill-active-4 {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            font-weight: bold;
+        }
+
+        /* R */
+
         /* 3. 아이템 타임라인 스타일 */
-        .build-items { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; align-content: flex-start; }
-        .item-group-col { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
-        .item-row { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
-        .item-row img { width: 32px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; }
-        .build-item-time { font-size: 11px; color: #9aa4af; }
-        .build-item-arrow { color: #555; font-size: 12px; display: flex; align-items: center; margin: 0 4px; height: 32px; flex-shrink: 0; }
+        .build-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-start;
+            align-content: flex-start;
+        }
+
+        .item-group-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .item-row {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .item-row img {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+
+        .build-item-time {
+            font-size: 11px;
+            color: #9aa4af;
+        }
+
+        .build-item-arrow {
+            color: #555;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            margin: 0 4px;
+            height: 32px;
+            flex-shrink: 0;
+        }
 
         /* =========================================
            15. 최근 게임 요약 통계 박스
            ========================================= */
         .summary-stats-box {
-            display: flex; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 8px; margin-bottom: 10px; padding: 15px; align-items: center; justify-content: space-between;
+            display: flex;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 15px;
+            align-items: center;
+            justify-content: space-between;
         }
-        .stat-wl { flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.1); }
-        .stat-kda { flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.1); }
-        .stat-champs { flex: 1.5; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
-        .stat-champ-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #9aa4af; }
-        .stat-champ-row img { width: 32px; height: 32px; border-radius: 4px; }
 
+        .stat-wl {
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-kda {
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-champs {
+            flex: 1.5;
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-champ-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #9aa4af;
+        }
+
+        .stat-champ-row img {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+        }
+
+        /* ==========================================
+           [상세전적 모서리 둥글기 UI 보정]
+           ========================================== */
+
+        /* 1. 맨 위 종합/팀분석/빌드 탭의 윗모서리를 둥글게 - !important 추가 */
+        .detail-tabs-header {
+            border-top-left-radius: 8px !important;
+            border-top-right-radius: 8px !important;
+            overflow: hidden;
+            /* 안쪽 탭 버튼 색상이 둥근 모서리를 삐져나가지 않게 방어 */
+        }
+
+        /* 2. 블루팀 헤더 칸의 윗모서리를 직각(0)으로 펴서 탭과 밀착 - !important 사용 및 th에 적용 */
+        .team-blue-header th:first-child,
+        .team-blue-header th:last-child {
+            border-radius: 0 !important;
+        }
+        
+        /* =========================================
+           [모바일 반응형 최적화]
+           ========================================= */
+        @media (max-width: 768px) {
+            /* 헤더 메뉴 */
+            .header { padding: 0 15px; justify-content: space-between; }
+            .nav-menu { gap: 12px; }
+            .nav-item { font-size: 13px; }
+
+            /* 검색 및 신화상점 */
+            .main-logo-img { height: 220px; }
+            .search-box { flex-direction: column; border-radius: 15px; }
+            .search-input { border-radius: 15px 15px 0 0; text-align: center; }
+            .search-btn { padding: 15px; border-radius: 0 0 15px 15px; width: 100%; }
+            .mythic-items-grid { flex-wrap: wrap; }
+            .mythic-item-card { min-width: 45%; }
+
+            /* 전적검색 결과 메인 레이아웃 */
+            .pix-content-wrap { flex-direction: column; padding: 0 10px; }
+            .pix-sidebar { width: 100%; }
+            
+            /* 프로필 영역 */
+            .profile-header { flex-direction: column; text-align: center; gap: 15px; padding: 20px; }
+            .profile-header > div:last-child { width: 100%; }
+            .profile-info { margin-left: 0; align-items: center; }
+
+            /* 30게임 통계 박스 강제 세로 정렬 */
+            #summary-stats-area > div { flex-direction: column !important; padding: 15px !important; gap: 15px; height: auto !important; }
+            #summary-stats-area > div > div { width: 100% !important; justify-content: center !important; text-align: center; margin: 0 !important; }
+            #summary-stats-area > div > div[style*="width: 1px"] { display: none !important; } /* 세로 구분선 숨김 */
+            
+            /* 전적 리스트 매치 박스 */
+            .pix-game { flex-wrap: wrap; height: auto; padding: 15px; padding-right: 35px; gap: 10px; justify-content: center; }
+            .pix-info { width: 100%; flex-direction: row; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 5px; }
+            .pix-info .bar { display: none; }
+            .pix-players { display: none; } /* 공간 확보를 위해 모바일에서는 10인 참가자 목록 숨김 */
+            .pix-items-box { width: 100%; align-items: center; margin-top: 10px; }
+            .pix-items { display: flex; flex-wrap: wrap; justify-content: center; }
+
+            /* 상세 전적 테이블 가로 스크롤 허용 */
+            .detail-tab-content { overflow-x: auto; }
+            .detail-table { min-width: 650px; }
+
+            /* 통계 / 장인랭킹 페이지 */
+            .stats-table-wrapper, .master-table { overflow-x: auto; display: block; }
+            .stats-table { min-width: 600px; }
+            .masters-wrap { flex-direction: column; padding: 0 10px; }
+            .masters-left { width: 100%; }
+            .champ-grid { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); }
+            
+            /* 랭킹 타이틀 정렬 */
+            .ranking-title { font-size: 20px; text-align: center; display: flex; flex-direction: column; }
+            .ranking-title img { position: static !important; width: 40px !important; height: 40px !important; transform: none !important; margin: 0 auto 10px auto !important; }
+        }
+        
     </style>
 
     <link rel="icon" href="/favicon.png">
@@ -1559,7 +1988,7 @@
             <a class="nav-item" id="nav-masters" onclick="showMasters(); setActiveNav('nav-masters')">장인랭킹</a>
         </nav>
     </header>
-    
+
     <div id="error-toast" class="toast-hidden">현재 접속자가 많아 검색이 지연되고 있습니다. 잠시 후 다시 시도해주세요.</div>
 
     <main>
@@ -1568,18 +1997,21 @@
 
             <div class="search-box-wrapper" style="position: relative;">
                 <div class="search-box">
-                    <input type="text" class="search-input" id="summoner-input" placeholder="소환사명 검색 (예: Hide on bush#KR1)" autocomplete="off">
+                    <input type="text" class="search-input" id="summoner-input"
+                        placeholder="소환사명 검색 (예: Hide on bush#KR1)" autocomplete="off">
                     <button class="search-btn" id="search-btn">.GG</button>
                 </div>
                 <div id="search-error-msg" class="search-error-msg"></div>
-                
+
                 <div id="search-dropdown" class="search-dropdown">
                     <div class="search-dropdown-header">
-                        <span id="tab-favorites" class="dropdown-tab active" onclick="switchTab('favorites')">★ 즐겨찾기</span>
+                        <span id="tab-favorites" class="dropdown-tab active" onclick="switchTab('favorites')">★
+                            즐겨찾기</span>
                         <span class="tab-divider">|</span>
                         <span id="tab-recent" class="dropdown-tab" onclick="switchTab('recent')">🔍 최근기록</span>
                         <span class="tab-divider">|</span>
-                        <span style="font-size: 11px; color: #777; font-weight: normal; cursor: default;">즐겨찾기 및 최근기록은 10개까지 저장됩니다.</span>
+                        <span style="font-size: 11px; color: #777; font-weight: normal; cursor: default;">즐겨찾기 및 최근기록은
+                            10개까지 저장됩니다.</span>
                     </div>
                     <div id="dropdown-list" class="favorite-list"></div>
                 </div>
@@ -1620,64 +2052,87 @@
         <div id="stats-container"></div>
         <div id="masters-container"></div>
 
-        <div id="privacy-container" style="display: none; max-width: 800px; margin: 40px auto; padding: 40px 30px; line-height: 1.8; color: #ddd; background: #1a1a2e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; animation: fadeIn 0.6s ease; min-height: 60vh;">
+        <div id="privacy-container"
+            style="display: none; max-width: 800px; margin: 40px auto; padding: 40px 30px; line-height: 1.8; color: #ddd; background: #1a1a2e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; animation: fadeIn 0.6s ease; min-height: 60vh;">
             <h2 style="color: #fff; margin-bottom: 20px; text-align: center; font-size: 28px;">개인정보 처리방침</h2>
             <p style="margin-bottom: 15px;"><b>pix.gg</b>(이하 '본 사이트')는 이용자의 개인정보를 중요시하며, 안전하게 보호하기 위해 최선을 다하고 있습니다.</p>
-            
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">1. 수집하는 개인정보 항목</h3>
-            <p style="margin-bottom: 15px;">본 사이트는 리그 오브 레전드 전적 검색 서비스를 제공하기 위해 라이엇 게임즈(Riot Games) API 파트너 프로그램을 사용합니다. 이 과정에서 사용자가 검색창에 입력한 <b>'소환사명 및 태그'</b> 정보만을 일시적으로 처리하며, 당사의 서버나 데이터베이스에 사용자의 개인 식별 정보를 영구적으로 저장하거나 무단으로 수집하지 않습니다.</p>
-            
+            <p style="margin-bottom: 15px;">본 사이트는 리그 오브 레전드 전적 검색 서비스를 제공하기 위해 라이엇 게임즈(Riot Games) API 파트너 프로그램을 사용합니다.
+                이 과정에서 사용자가 검색창에 입력한 <b>'소환사명 및 태그'</b> 정보만을 일시적으로 처리하며, 당사의 서버나 데이터베이스에 사용자의 개인 식별 정보를 영구적으로 저장하거나 무단으로
+                수집하지 않습니다.</p>
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">2. 개인정보의 처리 목적</h3>
-            <p style="margin-bottom: 15px;">입력된 닉네임 정보는 오직 라이엇 게임즈 서버로 전적 데이터를 요청하고, 그 결과를 가공하여 사용자 화면에 보여주기 위한 1회성 검색 목적으로만 사용됩니다.</p>
-            
+            <p style="margin-bottom: 15px;">입력된 닉네임 정보는 오직 라이엇 게임즈 서버로 전적 데이터를 요청하고, 그 결과를 가공하여 사용자 화면에 보여주기 위한 1회성 검색
+                목적으로만 사용됩니다.</p>
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">3. 제3자 제공 및 위탁</h3>
             <p style="margin-bottom: 15px;">본 사이트는 사용자의 어떠한 개인정보도 영리 목적을 위해 제3자에게 제공하거나 외부에 위탁하지 않습니다.</p>
 
-            <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">4. 쿠키(Cookie) 및 로컬 저장소 운용</h3>
-            <p style="margin-bottom: 15px;">본 사이트는 사용자의 편의(다크 모드 유지, 최근 검색어 등)를 위해 최소한의 브라우저 로컬 저장소(Local Storage)를 사용할 수 있으나, 이는 개인을 식별할 수 있는 정보가 아니며 언제든지 브라우저 설정을 통해 삭제할 수 있습니다.</p>
-            
+            <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">4. 쿠키(Cookie) 및 로컬 저장소
+                운용</h3>
+            <p style="margin-bottom: 15px;">본 사이트는 사용자의 편의(다크 모드 유지, 최근 검색어 등)를 위해 최소한의 브라우저 로컬 저장소(Local Storage)를 사용할
+                수 있으나, 이는 개인을 식별할 수 있는 정보가 아니며 언제든지 브라우저 설정을 통해 삭제할 수 있습니다.</p>
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">5. 문의 및 피드백</h3>
-            <p style="margin-bottom: 15px;">서비스 이용 중 발생하는 건의사항, 버그 리포트 또는 개인정보 처리방침과 관련된 문의는 아래의 이메일 채널을 통해 연락해 주시기 바랍니다.<br>
-            ▶ 이메일: <a href="mailto:00.y4no@gmail.com" style="color: #60a5fa; text-decoration: none; font-weight: bold;">00.y4no@gmail.com</a></p>
+            <p style="margin-bottom: 15px;">서비스 이용 중 발생하는 건의사항, 버그 리포트 또는 개인정보 처리방침과 관련된 문의는 아래의 이메일 채널을 통해 연락해 주시기
+                바랍니다.<br>
+                ▶ 이메일: <a href="mailto:00.y4no@gmail.com"
+                    style="color: #60a5fa; text-decoration: none; font-weight: bold;">00.y4no@gmail.com</a></p>
         </div>
-        <div id="terms-container" style="display: none; max-width: 800px; margin: 40px auto; padding: 40px 30px; line-height: 1.8; color: #ddd; background: #1a1a2e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; animation: fadeIn 0.6s ease; min-height: 60vh;">
+        <div id="terms-container"
+            style="display: none; max-width: 800px; margin: 40px auto; padding: 40px 30px; line-height: 1.8; color: #ddd; background: #1a1a2e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; animation: fadeIn 0.6s ease; min-height: 60vh;">
             <h2 style="color: #fff; margin-bottom: 20px; text-align: center; font-size: 28px;">이용약관</h2>
-            
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제1조 (목적)</h3>
-            <p style="margin-bottom: 15px;">본 약관은 <b>pix.gg</b>(이하 '본 사이트')가 제공하는 리그 오브 레전드 전적 검색 및 관련 통계 서비스의 이용 조건 및 제반 사항을 규정함을 목적으로 합니다.</p>
-            
+            <p style="margin-bottom: 15px;">본 약관은 <b>pix.gg</b>(이하 '본 사이트')가 제공하는 리그 오브 레전드 전적 검색 및 관련 통계 서비스의 이용 조건 및
+                제반 사항을 규정함을 목적으로 합니다.</p>
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제2조 (라이엇 게임즈와의 관계)</h3>
-            <p style="margin-bottom: 15px;">본 사이트는 라이엇 게임즈(Riot Games)의 공식 서비스가 아니며, 라이엇 게임즈 또는 리그 오브 레전드의 제작 및 관리에 공식적으로 관여하는 당사자의 견해나 의견을 반영하지 않습니다. 리그 오브 레전드 및 라이엇 게임즈는 Riot Games, Inc.의 상표 또는 등록 상표입니다.</p>
-            
+            <p style="margin-bottom: 15px;">본 사이트는 라이엇 게임즈(Riot Games)의 공식 서비스가 아니며, 라이엇 게임즈 또는 리그 오브 레전드의 제작 및 관리에
+                공식적으로 관여하는 당사자의 견해나 의견을 반영하지 않습니다. 리그 오브 레전드 및 라이엇 게임즈는 Riot Games, Inc.의 상표 또는 등록 상표입니다.</p>
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제3조 (서비스의 제공 및 변경)</h3>
-            <p style="margin-bottom: 15px;">본 사이트는 라이엇 API를 기반으로 데이터를 제공하므로, API 서버 상태나 운영 상황에 따라 서비스가 사전 예고 없이 지연, 변경, 또는 중단될 수 있습니다. 본 사이트는 이로 인해 발생하는 이용자의 불편에 대해 법적 책임을 지지 않습니다.</p>
-            
+            <p style="margin-bottom: 15px;">본 사이트는 라이엇 API를 기반으로 데이터를 제공하므로, API 서버 상태나 운영 상황에 따라 서비스가 사전 예고 없이 지연, 변경,
+                또는 중단될 수 있습니다. 본 사이트는 이로 인해 발생하는 이용자의 불편에 대해 법적 책임을 지지 않습니다.</p>
+
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제4조 (이용자의 의무)</h3>
-            <p style="margin-bottom: 15px;">이용자는 본 사이트를 이용함에 있어 비정상적인 접근(매크로, 봇 등)을 통해 서버에 과도한 부하를 주거나, 제공되는 데이터를 무단 가공 및 재배포하는 행위를 하여서는 안 됩니다.</p>
+            <p style="margin-bottom: 15px;">이용자는 본 사이트를 이용함에 있어 비정상적인 접근(매크로, 봇 등)을 통해 서버에 과도한 부하를 주거나, 제공되는 데이터를 무단 가공
+                및 재배포하는 행위를 하여서는 안 됩니다.</p>
 
             <h3 style="color: #a78bfa; margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제5조 (면책 조항)</h3>
-            <p style="margin-bottom: 15px;">본 사이트에서 제공하는 데이터는 라이엇 API를 바탕으로 자동 처리되므로 데이터의 완벽한 정확성을 보증하지 않으며, 이를 바탕으로 한 이용자의 게임 내 의사결정에 대한 책임은 본인에게 있습니다.</p>
+            <p style="margin-bottom: 15px;">본 사이트에서 제공하는 데이터는 라이엇 API를 바탕으로 자동 처리되므로 데이터의 완벽한 정확성을 보증하지 않으며, 이를 바탕으로 한
+                이용자의 게임 내 의사결정에 대한 책임은 본인에게 있습니다.</p>
         </div>
 
-        <footer style="text-align: center; padding: 40px 20px; margin-top: 50px; border-top: 1px solid rgba(255, 255, 255, 0.1); color: #777; font-size: 12px; line-height: 1.6;">
-            <div style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px;">
-                <a onclick="showTerms()" class="summoner-link" style="color: #a78bfa; font-weight: bold; text-decoration: none;">이용약관</a>
-                <span style="color: #444;">|</span>
-                <a onclick="showPrivacyPolicy()" class="summoner-link" style="color: #a78bfa; font-weight: bold; text-decoration: none;">개인정보 처리방침</a>
-                <span style="color: #444;">|</span>
-                <a onclick="copyEmail()" class="summoner-link" style="color: #a78bfa; font-weight: bold; text-decoration: none;">버그제보 및 피드백</a>
-            </div>
+        <footer
+            style="text-align: center; padding: 40px 20px; margin-top: 50px; border-top: 1px solid rgba(255, 255, 255, 0.1); color: #777; font-size: 12px; line-height: 1.6;">
             
-            <div>
-                pix.gg isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
+            <div style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px;">
+                <a onclick="showTerms()" class="summoner-link"
+                    style="color: #a78bfa; font-weight: bold; text-decoration: none; cursor: pointer;">이용약관</a>
+                <span style="color: #444;">|</span>
+                <a onclick="showPrivacyPolicy()" class="summoner-link"
+                    style="color: #a78bfa; font-weight: bold; text-decoration: none; cursor: pointer;">개인정보 처리방침</a>
+                <span style="color: #444;">|</span>
+                <a onclick="copyEmail()" class="summoner-link"
+                    style="color: #a78bfa; font-weight: bold; text-decoration: none; cursor: pointer;">버그제보 및 피드백</a>
             </div>
+
+            <div style="color: rgba(255, 255, 255, 0.3); font-size: 11px; margin-top: 15px; word-break: keep-all;">
+                pix.gg isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone
+                officially involved in producing or managing Riot Games properties. Riot Games, and all associated
+                properties are trademarks or registered trademarks of Riot Games, Inc.
+            </div>
+
             <div style="margin-top: 10px; font-size: 11px;">
-                Contact: <a href="mailto:00.y4no@gmail.com" style="color: #777; text-decoration: none;">00.y4no@gmail.com</a>
+                Contact: <a href="mailto:00.y4no@gmail.com"
+                    style="color: #777; text-decoration: none;">00.y4no@gmail.com</a>
             </div>
         </footer>
 
     </main>
-    
+
     <script src="/statsData.js"></script>
     <script src="/mastersData.js"></script>
 
@@ -1685,21 +2140,21 @@
         // ==========================================
         // [0] 전역 변수 및 챔피언, 툴팁 정보 캐싱
         // ==========================================
-        let ddragonVersion = "14.4.1";
+        let ddragonVersion = "16.5.1"; // 2026 시즌 최신 핫픽스 방어용 기본값
         let allMatches = [];
         let activeFilters = [];
         let championIdMap = {};
-        
-        let rateLimitUnlockTime = 0; 
-        let toastTimer = null;       
+
+        let rateLimitUnlockTime = 0;
+        let toastTimer = null;
 
         let fullRuneData = {};
         let runePathMap = {};
-        
+
         // ★ 툴팁 데이터를 담을 전역 저장소
         let globalItemMap = {};
         let globalSpellMap = {};
-        let runeDataMap = {}; 
+        let runeDataMap = {};
 
         const statRuneMap = {
             5001: "perk-images/StatMods/StatModsHealthScalingIcon.png", 5002: "perk-images/StatMods/StatModsArmorIcon.png", 5003: "perk-images/StatMods/StatModsMagicResIcon.png",
@@ -1707,7 +2162,6 @@
             5011: "perk-images/StatMods/StatModsHealthPlusIcon.png", 5013: "perk-images/StatMods/StatModsTenacityIcon.png", 5010: "perk-images/StatMods/StatModsMovementSpeedIcon.png"
         };
 
-        // 파편 룬 이름 및 설명 수동 맵핑
         const statRuneDataMap = {
             5001: { name: "체력", desc: "레벨에 비례해 체력이 증가합니다." },
             5002: { name: "방어력", desc: "방어력이 6 증가합니다." },
@@ -1719,36 +2173,46 @@
             5011: { name: "체력", desc: "체력이 65 증가합니다." },
             5013: { name: "강인함", desc: "강인함 및 둔화 저항이 10% 증가합니다." }
         };
-        
-        // 포지션 퀘스트 달성 여부 판별 함수
+
+        // 포지션 퀘스트 달성 여부 판별 함수 (혹시 나중에 UI에 쓸 일이 있을까봐 유지합니다)
         const checkQuestCompletion = (item7, spell1, spell2) => {
             if (!item7) return false;
-            // 기본 미달성 퀘스트 아이템 (탑 노텔포 1200 포함)
             if ([1200, 1201, 1202, 1203, 1204].includes(item7)) return false;
-            // 탑: 텔레포트(스펠 ID: 12)를 든 유저만 1220이 미달성 상태임
             const hasTp = (spell1 === 12 || spell2 === 12);
             if (item7 === 1220 && hasTp) return false;
-            
-            return true; 
+            return true;
         };
 
-        // ★ 라이엇 텍스트 정규식 클리너 (인게임용 HTML 태그 청소)
+        // ★ 라이엇 공식 텍스트 정규식 클리너
         function cleanTooltipText(text) {
             if (!text) return "";
-            let cleaned = text.replace(/<br\s*\/?>/gi, '\n'); // 줄바꿈 보존
-            cleaned = cleaned.replace(/<li[^>]*>/gi, '\n- '); // 리스트를 불릿 포인트로 변환
-            cleaned = cleaned.replace(/<[^>]+>/g, '');        // 나머지 태그 전부 삭제
+            let cleaned = text.replace(/<br\s*\/?>/gi, '\n');
+            cleaned = cleaned.replace(/<li[^>]*>/gi, '\n- ');
+            cleaned = cleaned.replace(/<[^>]+>/g, '');
             return cleaned.trim();
         }
 
-        // 데이터 드래곤 로드 함수들
+        // ==========================================
+        // ★ 최신 데이터 드래곤 로드 로직
+        // ==========================================
+        async function initDdragonVersion() {
+            try {
+                const res = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+                const versions = await res.json();
+                ddragonVersion = versions[0]; // 접속하자마자 무조건 제일 최신 패치 버전으로 동기화!
+                console.log("최신 데이터 드래곤 적용 완료:", ddragonVersion);
+            } catch (e) {
+                console.warn('데이터 드래곤 버전 로드 실패, 기본값 사용');
+            }
+        }
+
         async function fetchRuneMap() {
             if (Object.keys(fullRuneData).length > 0) return;
             try {
                 const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/ko_KR/runesReforged.json`);
                 const data = await res.json();
                 data.forEach(tree => {
-                    fullRuneData[tree.id] = tree;  
+                    fullRuneData[tree.id] = tree;
                     runePathMap[tree.id] = tree.icon;
                     tree.slots.forEach(slot => {
                         slot.runes.forEach(rune => {
@@ -1757,7 +2221,7 @@
                         });
                     });
                 });
-            } catch (e) {}
+            } catch (e) { }
         }
 
         async function fetchItemData() {
@@ -1766,12 +2230,13 @@
                 const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/ko_KR/item.json`);
                 const data = await res.json();
                 for (const key in data.data) {
+                    // ★ 이제 라이엇 공식 API에서 가져온 진짜 설명만 박힙니다! 임시 텍스트는 전부 삭제!
                     globalItemMap[key] = {
                         name: data.data[key].name,
                         desc: cleanTooltipText(data.data[key].description)
                     };
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         async function fetchSpellData() {
@@ -1782,7 +2247,7 @@
                 for (const key in data.data) {
                     globalSpellMap[data.data[key].key] = { name: data.data[key].name, desc: cleanTooltipText(data.data[key].description) };
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         window.korChampMap = {};
@@ -1793,7 +2258,7 @@
                 const data = await res.json();
                 for (let champName in data.data) {
                     const champInfo = data.data[champName];
-                    championIdMap[champInfo.key] = champInfo.id; 
+                    championIdMap[champInfo.key] = champInfo.id;
                     window.korChampMap[champInfo.id] = champInfo.name;
                 }
             } catch (e) { }
@@ -1805,6 +2270,14 @@
         // [1] 초기화 및 공통 유틸리티
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
+            // 페이지 접속 시 가장 먼저 버전 업데이트 및 툴팁 정보 백그라운드 다운로드
+            initDdragonVersion().then(() => {
+                fetchChampionMap();
+                fetchRuneMap();
+                fetchItemData();
+                fetchSpellData();
+            });
+
             loadMythicShop();
             updateShopTimer();
             setInterval(updateShopTimer, 1000);
@@ -1824,31 +2297,13 @@
             document.addEventListener('mouseover', (e) => {
                 const target = e.target.closest('[data-tt-type]');
                 if (!target) return;
-                
+
                 const type = target.getAttribute('data-tt-type');
                 const id = target.getAttribute('data-tt-id');
                 let data = null;
 
-                if (type === 'item') {
-                    const isQuest = target.hasAttribute('data-tt-quest');
-                    const questCompleted = target.getAttribute('data-tt-quest') === 'true';
-                    const parsedId = parseInt(id);
-                    
-                    // 퀘스트 아이템 전용 커스텀 툴팁 로직 (텔포 유무까지 반영됨)
-                    if (isQuest && [1200, 1201, 1202, 1203, 1204, 1206, 1208, 1209, 1220, 1221].includes(parsedId)) {
-                        const posMap = {
-                            1201: "미드", 1206: "미드", 1202: "바텀", 1203: "서폿", 1208: "서폿",
-                            1204: "정글", 1209: "정글", 1200: "탑", 1220: "탑", 1221: "탑"
-                        };
-                        const posName = posMap[parsedId] || "포지션";
-                        data = {
-                            name: questCompleted ? `완료된 ${posName} 퀘스트` : `미달성 ${posName} 퀘스트`,
-                            desc: questCompleted ? `성공적으로 달성된 ${posName} 퀘스트입니다.` : `아직 달성하지 못한 ${posName} 퀘스트입니다.`
-                        };
-                    } else if (globalItemMap[id]) {
-                        data = globalItemMap[id];
-                    }
-                }
+                // 커스텀 조건문 싹 빼고 100% 라이엇 API 원본 데이터만 매칭합니다!
+                if (type === 'item' && globalItemMap[id]) data = globalItemMap[id];
                 else if (type === 'spell' && globalSpellMap[id]) data = globalSpellMap[id];
                 else if (type === 'rune') data = runeDataMap[id] || statRuneDataMap[id];
 
@@ -1927,18 +2382,18 @@
             } else if (currentPath === '/ranking') {
                 const params = new URLSearchParams(window.location.search);
                 const targetPage = params.get('page') ? parseInt(params.get('page')) : 1;
-                
+
                 if (fullRankingData.length > 0) {
                     hideAllContainers();
                     document.getElementById('result-container').style.display = "block";
-                    
+
                     const sidebarArea = document.getElementById('sidebar-area');
                     const filterArea = document.getElementById('filter-area');
                     const summaryArea = document.getElementById('summary-stats-area');
                     if (sidebarArea) sidebarArea.style.display = "none";
                     if (filterArea) filterArea.style.display = "none";
                     if (summaryArea) summaryArea.style.display = "none";
-                    
+
                     document.getElementById('user-profile').innerHTML = `
                         <div class="stats-header">
                             <h1 class="ranking-title">
@@ -1961,11 +2416,11 @@
                 const pathParts = currentPath.split('/');
                 const champId = pathParts[2] ? decodeURIComponent(pathParts[2]) : null;
                 const existingGrid = document.getElementById('masters-champ-grid');
-                
+
                 if (existingGrid && existingGrid.innerHTML.trim() !== '') {
                     const items = existingGrid.querySelectorAll('.champ-grid-item');
                     let targetItem = Array.from(items).find(i => i.dataset.id.toLowerCase() === (champId ? champId.toLowerCase() : items[0].dataset.id.toLowerCase()));
-                    
+
                     if (targetItem) {
                         hideAllContainers();
                         document.getElementById('masters-container').style.display = "block";
@@ -1988,7 +2443,7 @@
             const toast = document.getElementById('error-toast');
             if (message) toast.innerText = message;
             toast.classList.add('toast-show');
-            if(toastTimer) clearTimeout(toastTimer);
+            if (toastTimer) clearTimeout(toastTimer);
             toastTimer = setTimeout(() => toast.classList.remove('toast-show'), 3000);
         }
 
@@ -1996,7 +2451,7 @@
             const searchBox = document.querySelector('.search-box');
             if (searchBox) {
                 searchBox.classList.remove('error-shake');
-                void searchBox.offsetWidth; 
+                void searchBox.offsetWidth;
                 searchBox.classList.add('error-shake');
             }
         }
@@ -2045,7 +2500,7 @@
         async function executeSearch() {
             const inputName = document.getElementById('summoner-input').value.trim();
             const errorMsgDiv = document.getElementById('search-error-msg');
-            
+
             clearSearchError();
 
             if (!inputName || !inputName.includes('#')) {
@@ -2056,24 +2511,24 @@
                 triggerShake();
                 return;
             }
-            
+
             hideAllContainers();
             document.getElementById('result-container').style.display = "block";
-            document.getElementById('user-profile').innerHTML = ""; 
+            document.getElementById('user-profile').innerHTML = "";
             const sidebarArea = document.getElementById('sidebar-area');
-            if (sidebarArea) sidebarArea.style.display = "none";    
+            if (sidebarArea) sidebarArea.style.display = "none";
             const filterArea = document.getElementById('filter-area');
-            if (filterArea) filterArea.style.display = "none";      
+            if (filterArea) filterArea.style.display = "none";
             const summaryArea = document.getElementById('summary-stats-area');
-            if (summaryArea) summaryArea.style.display = "none";    
-            document.getElementById('game-list').innerHTML = "<div style='text-align:center; padding:100px 0; min-height:100vh; color:#9aa4af;'>전적 데이터를 불러오는 중입니다...</div>"; 
+            if (summaryArea) summaryArea.style.display = "none";
+            document.getElementById('game-list').innerHTML = "<div style='text-align:center; padding:100px 0; min-height:100vh; color:#9aa4af;'>전적 데이터를 불러오는 중입니다...</div>";
 
             try {
                 const response = await fetch(`/api/summoner/${encodeURIComponent(inputName)}`);
 
                 if (response.status === 429) {
                     showErrorToast("서버 요청이 많아 지연되고 있습니다.\n잠시 후 다시 시도해주세요.");
-                    return; 
+                    return;
                 }
 
                 if (response.status === 404) {
@@ -2082,9 +2537,9 @@
                 }
 
                 if (!response.ok) throw new Error("서버 통신 중 오류가 발생했습니다.");
-                
+
                 const data = await response.json();
-                
+
                 if (data.error) throw new Error(data.error);
 
                 if (data.isCachedFallback) {
@@ -2095,7 +2550,7 @@
 
                 ddragonVersion = data.version || ddragonVersion;
                 allMatches = data.history || [];
-                
+
                 window.champDetailCache = window.champDetailCache || {};
                 const uniqueChamps = [...new Set(allMatches.map(m => m.championName))];
                 await Promise.all(uniqueChamps.map(async champName => {
@@ -2104,7 +2559,7 @@
                             const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/ko_KR/champion/${champName}.json`);
                             const detailData = await res.json();
                             window.champDetailCache[champName] = detailData.data[champName].spells.map(s => ({ img: s.image.full, max: s.maxrank }));
-                        } catch(e) {}
+                        } catch (e) { }
                     }
                 }));
 
@@ -2147,9 +2602,31 @@
                 const rawRank = data.profile.rank || "";
                 const safeTier = rawTier.split(' ')[0].toLowerCase();
 
+                // ★ 점수와 승패 데이터 변수 할당
+                const lp = data.profile.leaguePoints || 0;
+                const wins = data.profile.wins || 0;
+                const losses = data.profile.losses || 0;
+                const totalGames = wins + losses;
+
                 let displayRank = rawRank;
-                if (["MASTER", "GRANDMASTER", "CHALLENGER"].includes(rawTier.toUpperCase())) displayRank = ""; 
-                const finalTierText = `${rawTier} ${displayRank}`.trim();
+                if (["MASTER", "GRANDMASTER", "CHALLENGER"].includes(rawTier.toUpperCase())) displayRank = "";
+
+                // ★ 1. 티어 텍스트 옆에 LP 합치기 (Unranked가 아닐 때만)
+                let finalTierText = `${rawTier} ${displayRank}`.trim();
+                if (safeTier !== 'unranked') {
+                    finalTierText += ` <span style="font-size: 14px; font-weight: normal; color: #8fa3b0;">${lp} LP</span>`;
+                }
+
+                // ★ 2. 승패 및 승률 계산 (소수점 2자리 고정)
+                let winRateHtml = '';
+                if (totalGames > 0) {
+                    const winRate = ((wins / totalGames) * 100).toFixed(2); // 소수점 2자리 무조건 출력
+                    // 승률 50% 이상은 파란색, 미만은 빨간색으로 예쁘게 표시
+                    const wrColor = winRate >= 50.00 ? '#5383e8' : '#e84057';
+                    winRateHtml = `<div style="font-size: 12px; color: #ffffff; margin-top: 4px;">
+                        ${wins}W ${losses}L <span style="color: ${wrColor}; margin-left: 5px;">${winRate}%</span>
+                    </div>`;
+                }
 
                 let sidebarHtml = `
                 <div class="pix-box pix-tier-box">
@@ -2161,7 +2638,7 @@
                     <div class="pix-tier-info">
                         <h3>솔로랭크</h3>
                         <div class="tier-rank">${finalTierText}</div>
-                        ${data.profile.leaguePoints ? `<div class="lp">${data.profile.leaguePoints} LP</div>` : ''}
+                        ${winRateHtml}
                     </div>
                 </div>
                 `;
@@ -2199,7 +2676,7 @@
 
                 sidebar.innerHTML = sidebarHtml;
                 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                
+
                 renderMatches(allMatches);
 
                 const allBtn = document.querySelector('.filter-btn');
@@ -2208,7 +2685,7 @@
                 const refreshBtn = document.getElementById('refresh-btn');
                 const refreshText = document.getElementById('refresh-timer-text');
                 let expireAt = data.expireAt;
-                if (data.isCachedFallback) expireAt = Date.now() + 120 * 1000; 
+                if (data.isCachedFallback) expireAt = Date.now() + 120 * 1000;
 
                 refreshBtn.addEventListener('click', executeSearch);
 
@@ -2240,7 +2717,7 @@
                 }
 
             } catch (e) {
-                console.error("전적 화면 렌더링 에러:", e); 
+                console.error("전적 화면 렌더링 에러:", e);
                 showErrorToast("서버 요청이 많아 지연되고 있습니다.\n잠시 후 다시 시도해주세요.");
             }
         }
@@ -2268,11 +2745,11 @@
                 const queueColor = isRemake ? '#7b7a8e' : (game.win ? '#5383e8' : '#e84057');
 
                 let exactDateText = '상세 시간 정보 없음';
-                let displayDate = game.dateStr; 
+                let displayDate = game.dateStr;
 
                 if (game.timestamp) {
                     const now = Date.now();
-                    const timeDiff = now - game.timestamp; 
+                    const timeDiff = now - game.timestamp;
                     const diffMinutes = Math.floor(timeDiff / (1000 * 60));
                     const diffHours = Math.floor(timeDiff / (1000 * 60 * 60));
                     const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
@@ -2285,10 +2762,10 @@
                     const durationMs = (game.durationMin * 60 + game.durationSec) * 1000;
                     const startTime = new Date(game.timestamp - durationMs);
                     const endTime = new Date(game.timestamp);
-                    
+
                     const formatCustomDate = (date) => {
                         const y = date.getFullYear(), m = String(date.getMonth() + 1).padStart(2, '0'), d = String(date.getDate()).padStart(2, '0');
-                        let h = date.getHours(); const ampm = h >= 12 ? '오후' : '오전'; h = h % 12 || 12; 
+                        let h = date.getHours(); const ampm = h >= 12 ? '오후' : '오전'; h = h % 12 || 12;
                         const hh = String(h).padStart(2, '0'), mm = String(date.getMinutes()).padStart(2, '0'), ss = String(date.getSeconds()).padStart(2, '0');
                         return `${y}.${m}.${d} ${ampm} ${hh}:${mm}:${ss}`;
                     };
@@ -2303,31 +2780,30 @@
                 const subRuneImg = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${runeMap[game.subRune] || '7204_Resolve'}.png`;
 
                 let itemsHtml = `<div class="pix-items">`;
-                
+
                 [0, 1, 2, 6].forEach(i => {
                     const id = game[`item${i}`];
                     const tClass = (i === 6) ? " trinket" : "";
                     itemsHtml += id ? `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${id}.png" class="${tClass.trim()}" data-tt-type="item" data-tt-id="${id}">` : `<div class="empty${tClass}"></div>`;
                 });
-                
+
                 [3, 4, 5].forEach(i => {
                     const id = game[`item${i}`];
                     itemsHtml += id ? `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${id}.png" data-tt-type="item" data-tt-id="${id}">` : `<div class="empty"></div>`;
                 });
-                
+
                 const item7 = game[`item7`];
                 if (item7) {
-                    const isCompleted = checkQuestCompletion(item7, game.spell1, game.spell2);
-                    itemsHtml += `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${item7}.png" style="width: 22px; height: 22px; border-radius: 3px;" data-tt-type="item" data-tt-id="${item7}" data-tt-quest="${isCompleted}">`;
+                    itemsHtml += `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${item7}.png" style="width: 22px; height: 22px; border-radius: 3px;" data-tt-type="item" data-tt-id="${item7}">`;
                 } else {
                     itemsHtml += `<div class="empty"></div>`;
                 }
-                
+
                 itemsHtml += `</div>`;
 
                 let badgeHtml = `<div class="pix-badges">`;
-                if (game.multiKill) badgeHtml += `<div class="pix-badge multi-kill">${game.multiKill}</div>`;
                 if (game.firstBlood) badgeHtml += `<div class="pix-badge first-blood">선취점</div>`;
+                if (game.multiKill) badgeHtml += `<div class="pix-badge multi-kill">${game.multiKill}</div>`;
                 badgeHtml += `</div>`;
 
                 const renderTeamList = (participantsArray, targetTeamId) => {
@@ -2387,7 +2863,7 @@
                         <div class="pix-champ-icon">
                             <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${game.championName}.png">
                             <div class="pix-level">${game.champLevel}</div>
-                        </div>
+                            ${badgeHtml} </div>
                         <div class="pix-spells">
                             <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${s1}.png" data-tt-type="spell" data-tt-id="${game.spell1}">
                             <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${s2}.png" data-tt-type="spell" data-tt-id="${game.spell2}">
@@ -2405,9 +2881,7 @@
                         ${statsHtml}
                     </div>
                     <div class="pix-items-box">
-                        ${itemsHtml}
-                        ${badgeHtml}
-                    </div>
+                        ${itemsHtml} </div>
                     <div class="pix-players">
                         <div class="pix-team">${renderTeamList(game.participants, 100)}</div>
                         <div class="pix-team">${renderTeamList(game.participants, 200)}</div>
@@ -2426,7 +2900,7 @@
 
                 const maxDamage = Math.max(...game.participants.map(p => p.damage));
                 const maxDamageTaken = Math.max(...game.participants.map(p => p.damageTaken));
-                
+
                 const blueWon = game.participants.find(p => p.teamId === 100)?.win;
                 const redWon = game.participants.find(p => p.teamId === 200)?.win;
                 const blueHeaderClass = blueWon ? 'team-blue-header' : 'team-red-header';
@@ -2452,15 +2926,14 @@
                         const id = p[`item${i}`];
                         pItems += id ? `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${id}.png" style="width:20px; height:20px; border-radius:3px;" data-tt-type="item" data-tt-id="${id}">` : `<div class="empty" style="width:20px; height:20px; background:rgba(0,0,0,0.3); border-radius:3px;"></div>`;
                     });
-                    
+
                     const pItem7 = p.item7;
                     if (pItem7) {
-                        const isCompleted = checkQuestCompletion(pItem7, p.spell1, p.spell2);
-                        pItems += `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${pItem7}.png" style="width: 20px; height: 20px; border-radius: 3px;" data-tt-type="item" data-tt-id="${pItem7}" data-tt-quest="${isCompleted}">`;
+                        pItems += `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${pItem7}.png" style="width: 20px; height: 20px; border-radius: 3px;" data-tt-type="item" data-tt-id="${pItem7}">`;
                     } else {
                         pItems += `<div class="empty" style="width:20px; height:20px; background:rgba(0,0,0,0.3); border-radius:3px;"></div>`;
                     }
-                    
+
                     pItems += `</div></div>`;
 
                     const dmgPercent = maxDamage > 0 ? (p.damage / maxDamage) * 100 : 0;
@@ -2487,8 +2960,8 @@
                                         <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${pS2}.png" data-tt-type="spell" data-tt-id="${p.spell2}">
                                     </div>
                                     <div class="detail-runes">
-                                        <img src="${pMainRune}" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png'" data-tt-type="rune" data-tt-id="${p.mainRune}">
-                                        <img src="${pSubRune}" class="sub" data-tt-type="rune" data-tt-id="${p.subRune}">
+                                        <img src="${pMainRune}" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png'">
+                                        <img src="${pSubRune}" class="sub">
                                     </div>
                                 </div>
                             </td>
@@ -2523,21 +2996,21 @@
                 };
 
                 const detailHtml = document.createElement('div');
-                detailHtml.className = 'match-detail'; 
+                detailHtml.className = 'match-detail';
 
                 window.matchGoldData = window.matchGoldData || {};
                 window.matchGoldData[game.matchId] = game.goldFrames;
 
                 let runesHtml = '';
                 let skillTableHtml = '';
-                let buildItemsHtml = ''; 
+                let buildItemsHtml = '';
 
                 if (game.myRunes && game.myTimeline && game.myTimeline.skills.length > 0) {
-                    
+
                     let primaryTree = fullRuneData[game.myRunes.primaryStyle];
                     let subTree = fullRuneData[game.myRunes.subStyle];
                     runesHtml = `<div class="rune-trees-wrap">`;
-                    
+
                     if (primaryTree) {
                         runesHtml += `<div class="rune-tree" style="justify-content: flex-start;">
                             <div style="display:flex; align-items:center; gap:6px; color:#fff; font-weight:bold; margin-bottom:2px; height: 24px;">
@@ -2567,9 +3040,9 @@
                         subTree.slots.forEach((slot, index) => {
                             if (index === 0) {
                                 runesHtml += `<div class="rune-row" style="min-height: 68px; width: 100%;"></div>`;
-                                return; 
+                                return;
                             }
-                            
+
                             runesHtml += `<div class="rune-row">`;
                             slot.runes.forEach(rune => {
                                 const isActive = game.myRunes.subSelections.includes(rune.id);
@@ -2583,12 +3056,12 @@
                         runesHtml += `</div>`;
                     }
 
-                    const statGrid = [ [5008, 5005, 5007], [5008, 5010, 5001], [5011, 5013, 5001] ];
+                    const statGrid = [[5008, 5005, 5007], [5008, 5010, 5001], [5011, 5013, 5001]];
                     runesHtml += `<div class="rune-tree" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 30px; justify-content: flex-start;">`;
-                    
-                    runesHtml += `<div style="height: 26px; width: 100%;"></div>`; 
-                    runesHtml += `<div class="rune-row" style="min-height: 68px; width: 100%;"></div>`; 
-                    
+
+                    runesHtml += `<div style="height: 26px; width: 100%;"></div>`;
+                    runesHtml += `<div class="rune-row" style="min-height: 68px; width: 100%;"></div>`;
+
                     statGrid.forEach((row, rIdx) => {
                         runesHtml += `<div class="rune-row" style="gap: 10px;">`;
                         row.forEach(id => {
@@ -2604,10 +3077,10 @@
 
                     const maxLevel = Math.max(15, game.myTimeline.skills.length);
                     const spellInfos = window.champDetailCache[game.championName] || [];
-                    let counts = {1:0, 2:0, 3:0, 4:0};
+                    let counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
 
                     skillTableHtml = `<div class="skill-table-wrapper"><table class="skill-table"><thead><tr><th class="skill-icon-cell"></th>`;
-                    for(let i=1; i<=maxLevel; i++) skillTableHtml += `<th>${i}</th>`;
+                    for (let i = 1; i <= maxLevel; i++) skillTableHtml += `<th>${i}</th>`;
                     skillTableHtml += `</tr></thead><tbody>`;
 
                     [1, 2, 3, 4].forEach(slot => {
@@ -2615,14 +3088,14 @@
                         const spell = spellInfos[slot - 1];
                         const sImg = spell ? (typeof spell === 'string' ? spell : spell.img) : null;
                         const sMax = spell && spell.max ? spell.max : (slot === 4 ? 3 : 5);
-                        
-                        const letter = ['Q','W','E','R'][slot-1];
+
+                        const letter = ['Q', 'W', 'E', 'R'][slot - 1];
                         let rowHtml = `<tr>
                             <td class="skill-icon-cell">
                                 ${sImg ? `<img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${sImg}" title="${letter}">` : `<b style="color:#fff;">${letter}</b>`}
                             </td>`;
-                            
-                        for(let i=0; i<maxLevel; i++) {
+
+                        for (let i = 0; i < maxLevel; i++) {
                             if (game.myTimeline.skills[i] === slot) {
                                 counts[slot]++;
                                 const isMastered = counts[slot] === sMax;
@@ -2639,7 +3112,7 @@
 
                     let groupedItems = [];
                     let currentGroup = [];
-                    
+
                     game.myTimeline.items.forEach((item) => {
                         if (currentGroup.length === 0) currentGroup.push(item);
                         else {
@@ -2658,7 +3131,7 @@
                         const firstTs = grp[0].ts;
                         const mins = String(Math.floor(firstTs / 60000)).padStart(2, '0');
                         const secs = String(Math.floor((firstTs % 60000) / 1000)).padStart(2, '0');
-                        
+
                         let grpHtml = `<div class="item-group-col">
                             <div class="item-row">`;
                         grp.forEach(item => {
@@ -2682,7 +3155,7 @@
                     <div id="tab-summary-${game.matchId}" class="detail-tab-content active" style="padding: 0;">
                         <table class="detail-table">
                             <colgroup>
-                                <col> <col style="width: 55px;"> <col style="width: 35px;"> <col style="width: 90px;"> <col style="width: 55px;"> <col style="width: 105px;"> <col style="width: 65px;"> <col style="width: 70px;"> <col style="width: 70px;"> <col style="width: 55px;"> </colgroup>
+                                <col style="width: 150px;"> <col style="width: 55px;"> <col style="width: 30px;"> <col style="width: 90px;"> <col style="width: 45px;"> <col style="width: 105px;"> <col style="width: 65px;"> <col style="width: 70px;"> <col style="width: 70px;"> <col style="width: 55px;"> </colgroup>
                             <thead>
                                 <tr class="${blueHeaderClass}">
                                     <th style="text-align:left; padding-left:15px;">${blueWon ? '승리' : '패배'} (블루팀)</th>
@@ -2702,13 +3175,13 @@
 
                     <div id="tab-analysis-${game.matchId}" class="detail-tab-content" style="padding: 20px;">
                         <h4 style="color:#fff; text-align:center; margin-bottom:15px;">시간대별 팀 골드</h4>
-                        ${game.goldFrames ? 
-                            `<div style="position:relative; width:100%; height:250px;"><canvas id="gold-chart-${game.matchId}"></canvas></div>` : 
-                            `<div style="text-align:center; color:#9aa4af; padding:40px;">과거 전적이라 상세 그래프 데이터가 없습니다.</div>`}
+                        ${game.goldFrames ?
+                        `<div style="position:relative; width:100%; height:250px;"><canvas id="gold-chart-${game.matchId}"></canvas></div>` :
+                        `<div style="text-align:center; color:#9aa4af; padding:40px;">과거 전적이라 상세 그래프 데이터가 없습니다.</div>`}
                     </div>
 
                     <div id="tab-build-${game.matchId}" class="detail-tab-content">
-                        ${runesHtml === '' 
+                        ${runesHtml === ''
                         ? `<div style="text-align:center; padding:50px; color:#9aa4af;">과거 전적이라 빌드 데이터가 없습니다.</div>`
                         : `
                         <div class="build-container">
@@ -2747,12 +3220,19 @@
                 return;
             }
             
-            let wins = 0, losses = 0, totalKills = 0, totalDeaths = 0, totalAssists = 0;
+            let wins = 0, losses = 0, totalKills = 0, totalDeaths = 0, totalAssists = 0, totalKp = 0;
             let champData = {};
+            let posCounts = { top: 0, jungle: 0, mid: 0, adc: 0, support: 0 };
+            
+            // 포지션 예측용 힌트 데이터 (서포터 아이템, 원딜/탑 챔피언 목록)
+            const supportItems = [3869, 3870, 3871, 3873, 3874, 3875, 3876, 3877, 4003, 4004];
+            const adcList = ["Ashe", "Caitlyn", "Draven", "Ezreal", "Jhin", "Jinx", "Kaisa", "Kalista", "KogMaw", "Lucian", "MissFortune", "Nilah", "Samira", "Sivir", "Smolder", "Tristana", "Twitch", "Varus", "Vayne", "Xayah", "Zeri", "Yunara"];
+            const topList = ["Aatrox", "Camille", "ChoGath", "Darius", "DrMundo", "Fiora", "Garen", "Gnar", "Gragas", "Gwen", "Illaoi", "Irelia", "Jax", "Jayce", "KSante", "Kayle", "Kennen", "Kled", "Malphite", "Mordekaiser", "Nasus", "Olaf", "Ornn", "Pantheon", "Poppy", "Quinn", "Renekton", "Riven", "Rumble", "Sett", "Shen", "Singed", "Sion", "TahmKench", "Teemo", "Trundle", "Tryndamere", "Urgot", "Volibear", "Wukong", "Yorick", "Ambessa", "Mel", "Zaahen"];
             
             matchesToCalc.forEach(game => {
                 if(game.win) wins++; else losses++;
                 totalKills += game.kills; totalDeaths += game.deaths; totalAssists += game.assists;
+                totalKp += game.kp || 0;
                 
                 const cName = game.championName;
                 if(!champData[cName]) champData[cName] = { games: 0, wins: 0, kills: 0, deaths: 0, assists: 0 };
@@ -2761,53 +3241,129 @@
                 champData[cName].kills += game.kills;
                 champData[cName].deaths += game.deaths;
                 champData[cName].assists += game.assists;
+
+                // 포지션 추적 알고리즘 (스펠/아이템/챔피언 기반)
+                const hasSmite = (game.spell1 === 11 || game.spell2 === 11);
+                const hasSuppItem = [game.item0, game.item1, game.item2, game.item3, game.item4, game.item5, game.item6].some(id => supportItems.includes(id));
+                
+                if (hasSmite) posCounts.jungle++;
+                else if (hasSuppItem) posCounts.support++;
+                else if (adcList.includes(cName)) posCounts.adc++;
+                else if (topList.includes(cName)) posCounts.top++;
+                else posCounts.mid++;
             });
             
             const totalGames = matchesToCalc.length;
             const winRate = Math.round((wins / totalGames) * 100);
             const avgK = (totalKills / totalGames).toFixed(1), avgD = (totalDeaths / totalGames).toFixed(1), avgA = (totalAssists / totalGames).toFixed(1);
             const kdaRatio = totalDeaths === 0 ? 'Perfect' : ((totalKills + totalAssists) / totalDeaths).toFixed(2);
+            const avgKp = Math.round(totalKp / totalGames);
             
             const sortedChamps = Object.entries(champData).sort((a, b) => b[1].games - a[1].games || b[1].wins - a[1].wins).slice(0, 3);
                 
             let champsHtml = sortedChamps.map(([cName, data]) => {
                 const cWinRate = Math.round((data.wins / data.games) * 100);
                 const cKda = data.deaths === 0 ? 'Perfect' : ((data.kills + data.assists) / data.deaths).toFixed(2);
-                let kdaColor = "#9aa4af";
+                let kdaColor = "#ffffff"; // ★ 평점 글씨 기본 흰색
                 if(cKda >= 5 || cKda === 'Perfect') kdaColor = "#e84057"; else if(cKda >= 4) kdaColor = "#5383e8"; else if(cKda >= 3) kdaColor = "#10b981";
-                const korName = window.korChampMap[cName] || cName;
+                const wrColor = cWinRate >= 60 ? "#e84057" : (cWinRate >= 50 ? "#e84057" : "#ffffff"); 
                 
                 return `
-                    <div class="stat-champ-row">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${cName}.png" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/0.png'">
-                        <div style="flex: 1;">
-                            <div style="color: #fff; font-weight: bold; font-size: 13px;">${korName}</div>
-                            <div style="font-size: 11px; margin-top: 2px;">
-                                <span style="color: ${cWinRate >= 60 ? '#e84057' : '#9aa4af'}">${cWinRate}%</span>
-                                <span style="margin: 0 4px; color: #444;">|</span>
-                                <span style="color: ${kdaColor}; font-weight: bold;">${cKda} 평점</span>
-                            </div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${cName}.png" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/0.png'">
+                        <div style="flex: 1; display: flex; align-items: center; gap: 6px; font-size: 12px;">
+                            <span style="color: ${wrColor}; font-weight: bold; width: 34px;">${cWinRate}%</span>
+                            <span style="color: #ffffff; width: 62px;">(${data.wins}승 / ${data.games - data.wins}패)</span>
+                            <span style="color: ${kdaColor}; font-weight: bold;">${cKda}:1 평점</span>
                         </div>
-                        <div style="color: #777; font-size: 11px;">${data.games} 게임</div>
                     </div>
                 `;
             }).join('');
+
+            if(sortedChamps.length < 3) {
+                for(let i=0; i<3-sortedChamps.length; i++) {
+                    champsHtml += `<div style="height: 28px; margin-bottom: 6px;"></div>`;
+                }
+            }
             
+            const winDeg = Math.round((wins / totalGames) * 360);
+            const maxPos = Math.max(posCounts.top, posCounts.jungle, posCounts.mid, posCounts.adc, posCounts.support) || 1;
+            
+            const iconTop = `<img src="https://s-lol-web.op.gg/images/icon/icon-position-top.svg" style="width:16px;">`;
+            const iconJungle = `<img src="https://s-lol-web.op.gg/images/icon/icon-position-jungle.svg" style="width:16px;">`;
+            const iconMid = `<img src="https://s-lol-web.op.gg/images/icon/icon-position-mid.svg" style="width:16px;">`;
+            const iconAdc = `<img src="https://s-lol-web.op.gg/images/icon/icon-position-adc.svg" style="width:16px;">`;
+            const iconSup = `<img src="https://s-lol-web.op.gg/images/icon/icon-position-support.svg" style="width:16px;">`;
+
+            const posOrder = [
+                { id: 'top', name: '탑', icon: iconTop, val: posCounts.top },
+                { id: 'jungle', name: '정글', icon: iconJungle, val: posCounts.jungle },
+                { id: 'mid', name: '미드', icon: iconMid, val: posCounts.mid },
+                { id: 'adc', name: '원딜', icon: iconAdc, val: posCounts.adc },
+                { id: 'support', name: '서포터', icon: iconSup, val: posCounts.support }
+            ];
+
+            const renderBar = (p) => {
+                const isActive = p.val === Math.max(posCounts.top, posCounts.jungle, posCounts.mid, posCounts.adc, posCounts.support) && p.val > 0;
+                
+                // ★ 0게임이면 막대기 아예 안 보이게(0px), 그 외엔 비율에 정확히 맞춰서 높이 계산 (최대 60px)
+                const h = p.val === 0 ? 0 : Math.max(2, (p.val / maxPos) * 60); 
+                
+                const barColor = isActive ? '#a78bfa' : '#31313c';
+                const filterStyle = isActive ? 'filter: invert(65%) sepia(54%) saturate(3015%) hue-rotate(218deg) brightness(101%) contrast(97%);' : 'filter: invert(30%);';
+                
+                return `
+                    <div data-tooltip="${p.name} 플레이 횟수: ${p.val}게임" style="display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; height: 90px; width: 24px;">
+                        <div style="width: 12px; background: ${barColor}; height: ${h}px; border-radius: 2px;"></div>
+                        <div style="display:flex; ${filterStyle}">${p.icon}</div>
+                    </div>
+                `;
+            };
+
+            const wrColor = winRate >= 50 ? '#5383e8' : '#e84057';
+
             statsArea.innerHTML = `
-                <div class="summary-stats-box">
-                    <div class="stat-wl">
-                        <div style="font-size: 12px; color: #9aa4af; margin-bottom: 5px;">${totalGames}전 ${wins}승 ${losses}패</div>
-                        <div style="font-size: 26px; font-weight: bold; color: ${winRate >= 50 ? '#5383e8' : '#e84057'};">
-                            ${winRate}<span style="font-size:16px;">%</span>
+                <div style="background: linear-gradient(135deg, #2b1a52, #161625); border-radius: 8px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4);">
+                    
+                    <div style="display: flex; align-items: center; gap: 30px; width: 270px;">
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="color: #ffffff; font-size: 11px;">${totalGames}전 ${wins}승 ${losses}패</div>
+                            <div style="width: 88px; height: 88px; border-radius: 50%; background: conic-gradient(#5383e8 ${winDeg}deg, #e84057 0); display: flex; align-items: center; justify-content: center;">
+                                <div style="width: 64px; height: 64px; background: #201435; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: ${wrColor};">
+                                    ${winRate}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; justify-content: center; gap: 6px; text-align: left;">
+                            <div style="font-size: 11px; color: #ffffff; font-weight: bold;">
+                                ${avgK} / <span style="color: #e84057;">${avgD}</span> / ${avgA}
+                            </div>
+                            <div style="font-size: 20px; font-weight: bold; color: #ffffff; letter-spacing: 0.5px;">
+                                ${kdaRatio} <span style="font-size: 14px; font-weight: normal; color: #ffffff;">: 1</span>
+                            </div>
+                            <div style="font-size: 11px; color: #e84057; font-weight: bold;">
+                                킬관여 ${avgKp}%
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-kda">
-                        <div style="font-size: 12px; color: #9aa4af; margin-bottom: 5px; font-weight: bold;">${avgK} / <span style="color: #e84057;">${avgD}</span> / ${avgA}</div>
-                        <div style="font-size: 26px; font-weight: bold; color: ${kdaRatio >= 3 || kdaRatio === 'Perfect' ? '#10b981' : '#fff'};">
-                            ${kdaRatio} <span style="font-size: 14px; font-weight: normal; color: #9aa4af;">평점</span>
+
+                    <div style="width: 1px; height: 90px; background: rgba(107, 70, 193, 0.4); margin: 0 20px;"></div>
+
+                    <div style="width: 250px; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="color: #ffffff; font-size: 11px; margin-bottom: 12px;">플레이한 챔피언 (최근 ${totalGames}게임)</div>
+                        ${champsHtml}
+                    </div>
+
+                    <div style="width: 1px; height: 90px; background: rgba(107, 70, 193, 0.4); margin: 0 20px;"></div>
+
+                    <div style="display: flex; flex-direction: column; justify-content: center; width: 180px;">
+                        <div style="color: #ffffff; font-size: 11px; margin-bottom: 8px; text-align: center;">선호 포지션 (랭크)</div>
+                        <div style="display: flex; justify-content: center; gap: 10px; align-items: flex-end;">
+                            ${posOrder.map(renderBar).join('')}
                         </div>
                     </div>
-                    <div class="stat-champs">${champsHtml}</div>
+
                 </div>
             `;
             statsArea.style.display = 'block';
@@ -2818,12 +3374,12 @@
             btn.classList.add('active');
 
             const games = document.querySelectorAll('.match-wrapper');
-            let visibleCount = 0; let filteredMatches = []; 
+            let visibleCount = 0; let filteredMatches = [];
 
             games.forEach((gameDiv, index) => {
                 if (type === '전체' || (gameDiv.dataset.queue && gameDiv.dataset.queue.includes(type))) {
                     gameDiv.style.display = 'block'; visibleCount++;
-                    if(allMatches[index]) filteredMatches.push(allMatches[index]); 
+                    if (allMatches[index]) filteredMatches.push(allMatches[index]);
                 } else { gameDiv.style.display = 'none'; }
             });
 
@@ -2846,11 +3402,11 @@
         // ==========================================
         // [★] 즐겨찾기 및 최근기록 로직
         // ==========================================
-        let currentDropdownTab = 'favorites'; 
+        let currentDropdownTab = 'favorites';
 
         function getFavorites() { return JSON.parse(localStorage.getItem('pix_favorites') || '[]'); }
         function saveFavorites(favs) { localStorage.setItem('pix_favorites', JSON.stringify(favs)); }
-        
+
         function getRecents() { return JSON.parse(localStorage.getItem('pix_recent') || '[]'); }
         function saveRecents(recents) { localStorage.setItem('pix_recent', JSON.stringify(recents)); }
 
@@ -2860,7 +3416,7 @@
             if (index > -1) favs.splice(index, 1);
             else { favs.push(name); if (favs.length > 10) favs.shift(); }
             saveFavorites(favs); renderDropdownList();
-            
+
             const starIcon = document.getElementById('profile-fav-star');
             if (starIcon && starIcon.dataset.name === name) starIcon.classList.toggle('active', index === -1);
         }
@@ -2869,15 +3425,15 @@
             let favs = getFavorites();
             favs = favs.filter(f => f !== name);
             saveFavorites(favs); renderDropdownList();
-            
+
             const starIcon = document.getElementById('profile-fav-star');
             if (starIcon && starIcon.dataset.name === name) starIcon.classList.remove('active');
         }
 
         function addRecentSearch(name) {
             let recents = getRecents();
-            recents = recents.filter(r => r !== name); 
-            recents.unshift(name); 
+            recents = recents.filter(r => r !== name);
+            recents.unshift(name);
             if (recents.length > 10) recents.pop();
             saveRecents(recents);
             if (currentDropdownTab === 'recent') renderDropdownList();
@@ -2894,12 +3450,12 @@
             document.getElementById('tab-favorites').classList.toggle('active', tabName === 'favorites');
             document.getElementById('tab-recent').classList.toggle('active', tabName === 'recent');
             renderDropdownList();
-            document.getElementById('summoner-input').focus(); 
+            document.getElementById('summoner-input').focus();
         }
 
         function renderDropdownList() {
             const listDiv = document.getElementById('dropdown-list');
-            
+
             if (currentDropdownTab === 'favorites') {
                 const favs = getFavorites();
                 if (favs.length === 0) {
@@ -2930,7 +3486,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('summoner-input');
             const dropdown = document.getElementById('search-dropdown');
-            
+
             searchInput.addEventListener('focus', () => { renderDropdownList(); dropdown.style.display = 'block'; });
             document.addEventListener('click', (e) => {
                 const wrapper = document.querySelector('.search-box-wrapper');
@@ -2953,9 +3509,6 @@
             try {
                 let korToEngMap = {};
                 try {
-                    const versionRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-                    const versions = await versionRes.json();
-                    ddragonVersion = versions[0];
                     const ddragonRes = await fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/ko_KR/champion.json`);
                     const ddragonData = await ddragonRes.json();
                     for (let key in ddragonData.data) korToEngMap[ddragonData.data[key].name] = ddragonData.data[key].id;
@@ -2990,7 +3543,7 @@
                 "support": "https://s-lol-web.op.gg/images/icon/icon-position-support.svg"
             };
 
-            const tierWeights = { "S+": 19, "S": 18, "S-": 17, "A+": 16, "A": 15, "A-": 14, "B+": 13,  "B": 12,  "B-": 11, "C+": 10,  "C": 9,  "C-": 8, "D+": 7,  "D": 6,  "D-": 5, "E+": 4,  "E": 3,  "E-": 2, "F": 1 };
+            const tierWeights = { "S+": 19, "S": 18, "S-": 17, "A+": 16, "A": 15, "A-": 14, "B+": 13, "B": 12, "B-": 11, "C+": 10, "C": 9, "C-": 8, "D+": 7, "D": 6, "D-": 5, "E+": 4, "E": 3, "E-": 2, "F": 1 };
 
             let currentLane = 'all'; let currentSortCol = 'tier'; let currentSortDir = 'desc';
 
@@ -3079,17 +3632,17 @@
                     const col = e.currentTarget.dataset.sort;
                     if (currentSortCol === col) currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
                     else { currentSortCol = col; currentSortDir = col === 'name' ? 'asc' : 'desc'; }
-                    
+
                     sortableThs.forEach(h => {
                         h.classList.remove('active', 'asc');
                         h.querySelector('.sort-icon').textContent = h.dataset.sort === 'name' ? '▲' : '▼';
                     });
-                    
+
                     const activeTh = e.currentTarget;
                     activeTh.classList.add('active');
-                    if (currentSortDir === 'asc') { activeTh.classList.add('asc'); activeTh.querySelector('.sort-icon').textContent = '▲'; } 
+                    if (currentSortDir === 'asc') { activeTh.classList.add('asc'); activeTh.querySelector('.sort-icon').textContent = '▲'; }
                     else { activeTh.querySelector('.sort-icon').textContent = '▼'; }
-                    
+
                     renderStatsTable();
                 });
             });
@@ -3121,7 +3674,7 @@
             document.getElementById('result-container').style.display = "block";
             const profileDiv = document.getElementById('user-profile');
             const listDiv = document.getElementById('game-list');
-            
+
             const filterArea = document.getElementById('filter-area');
             const sidebarArea = document.getElementById('sidebar-area');
             const summaryArea = document.getElementById('summary-stats-area');
@@ -3142,10 +3695,10 @@
 
             try {
                 const res = await fetch('/api/ranking');
-                
+
                 if (res.status === 429) {
                     const retryAfter = res.headers.get('Retry-After');
-                    rateLimitUnlockTime = Date.now() + (retryAfter ? parseInt(retryAfter) * 1000 : 5000); 
+                    rateLimitUnlockTime = Date.now() + (retryAfter ? parseInt(retryAfter) * 1000 : 5000);
                     showErrorToast("조회 한도를 초과했습니다. 잠시 후 다시 시도해주세요.");
                     listDiv.innerHTML = "<div style='text-align:center; padding:50px; color:#f87171;'>조회 한도를 초과했습니다. 잠시 후 다시 시도해주세요.</div>";
                     return;
@@ -3168,7 +3721,7 @@
         function renderRankingPage(page) {
             currentRankingPage = page;
             const listDiv = document.getElementById('game-list');
-            
+
             const newUrl = `/ranking?page=${page}`;
             if (window.location.pathname + window.location.search !== newUrl) {
                 window.history.pushState({ page: 'ranking', rankingPage: page }, '', newUrl);
@@ -3197,11 +3750,11 @@
                 const actualIndex = startIndex + index + 1;
                 const total = player.wins + player.losses;
                 const winRate = total > 0 ? ((player.wins / total) * 100).toFixed(1) : 0;
-                
-                let lpColor = "#8b5cf6"; 
-                if (actualIndex <= 300) lpColor = "#ca8a04"; 
-                else if (actualIndex <= 1000) lpColor = "#d33148"; 
-                
+
+                let lpColor = "#8b5cf6";
+                if (actualIndex <= 300) lpColor = "#ca8a04";
+                else if (actualIndex <= 1000) lpColor = "#d33148";
+
                 tableHtml += `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 12px; color: #777; text-align: center;">${actualIndex}</td>
@@ -3221,7 +3774,7 @@
 
             let paginationHtml = `<div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; padding-bottom: 20px;">`;
             const groupSize = 5;
-            const currentGroup = Math.ceil(page / groupSize); 
+            const currentGroup = Math.ceil(page / groupSize);
             const startPageOfGroup = (currentGroup - 1) * groupSize + 1;
             let endPageOfGroup = startPageOfGroup + groupSize - 1;
             if (endPageOfGroup > totalPages) endPageOfGroup = totalPages;
@@ -3232,8 +3785,8 @@
             }
 
             for (let p = startPageOfGroup; p <= endPageOfGroup; p++) {
-                const activeStyle = p === page 
-                    ? "background: #6b46c1; color: white; border-color: #a78bfa;" 
+                const activeStyle = p === page
+                    ? "background: #6b46c1; color: white; border-color: #a78bfa;"
                     : "background: #1a1a2e; color: #9aa4af; border-color: rgba(255,255,255,0.2);";
                 paginationHtml += `<button onclick="renderRankingPage(${p})" style="padding: 8px 14px; border: 1px solid; border-radius: 4px; cursor: pointer; ${activeStyle}">${p}</button>`;
             }
@@ -3246,7 +3799,7 @@
             paginationHtml += `</div>`;
 
             listDiv.innerHTML = tableHtml + paginationHtml;
-            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // ==========================================
@@ -3262,23 +3815,20 @@
             if (!window.location.pathname.startsWith('/masters')) {
                 window.history.pushState({ page: 'masters' }, '', requestedChampId ? `/masters/${requestedChampId}` : '/masters');
             }
-            
+
             hideAllContainers();
             const mastersContainer = document.getElementById('masters-container');
             mastersContainer.style.display = "block";
             mastersContainer.innerHTML = "<div style='text-align:center; padding:100px 0; min-height:100vh; color:#9aa4af;'>데이터를 준비 중입니다...</div>";
 
             try {
-                const versionRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-                const versions = await versionRes.json();
-                ddragonVersion = versions[0];
                 const ddragonRes = await fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/ko_KR/champion.json`);
                 const ddragonData = await ddragonRes.json();
-                
+
                 let champList = [];
                 for (let key in ddragonData.data) champList.push({ id: ddragonData.data[key].id, name: ddragonData.data[key].name });
-                const newChamps = [ { id: "Mel", name: "멜" }, { id: "Ambessa", name: "암베사" }, { id: "Aurora", name: "오로라" }, { id: "Yunara", name: "유나라" }, { id: "Zaahen", name: "자헨" } ];
-                newChamps.forEach(newC => { if(!champList.find(c => c.id === newC.id)) champList.push(newC); });
+                const newChamps = [{ id: "Mel", name: "멜" }, { id: "Ambessa", name: "암베사" }, { id: "Aurora", name: "오로라" }, { id: "Yunara", name: "유나라" }, { id: "Zaahen", name: "자헨" }];
+                newChamps.forEach(newC => { if (!champList.find(c => c.id === newC.id)) champList.push(newC); });
                 champList.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
                 mastersContainer.innerHTML = `
@@ -3300,21 +3850,21 @@
                 `).join('');
 
                 const gridItems = document.querySelectorAll('.champ-grid-item');
-                
+
                 gridItems.forEach(item => {
                     item.addEventListener('click', (e) => {
                         gridItems.forEach(i => i.classList.remove('active'));
                         const target = e.currentTarget;
                         target.classList.add('active');
-                        
+
                         const cid = target.dataset.id;
                         const cname = target.dataset.name;
-                        
+
                         const newUrl = `/masters/${cid}`;
                         if (window.location.pathname !== newUrl) {
                             window.history.pushState({ page: 'masters', champ: cid }, '', newUrl);
                         }
-                        
+
                         renderMasterRanking(cname, cid);
                     });
                 });
@@ -3324,20 +3874,20 @@
                     if (requestedChampId) {
                         targetItem = Array.from(gridItems).find(i => i.dataset.id.toLowerCase() === requestedChampId.toLowerCase());
                     }
-                    
+
                     if (!targetItem) {
                         targetItem = Array.from(gridItems).find(i => i.dataset.id === 'Lulu');
                         if (!targetItem) targetItem = gridItems[0];
                     }
 
                     targetItem.classList.add('active');
-                    
+
                     const cid = targetItem.dataset.id;
                     const newUrl = `/masters/${cid}`;
                     if (window.location.pathname !== newUrl) {
                         window.history.replaceState({ page: 'masters', champ: cid }, '', newUrl);
                     }
-                    
+
                     renderMasterRanking(targetItem.dataset.name, cid);
                 }
 
@@ -3348,7 +3898,7 @@
 
         function renderMasterRanking(champName, champId) {
             currentChampId = champId;
-            currentChampName = champName; 
+            currentChampName = champName;
             currentMasterData = mastersData[champId] || [];
             currentMasterSortCol = 'games';
             currentMasterSortAsc = false;
@@ -3374,13 +3924,13 @@
                 if (t === 'C' || t.includes('CHALLENGER')) return 100;
                 if (t === 'GM' || t.includes('GRANDMASTER')) return 90;
                 if (t === 'M' || t.includes('MASTER')) return 80;
-                
+
                 let baseScore = 0;
                 if (t.startsWith('D')) baseScore = 70; else if (t.startsWith('E')) baseScore = 60; else if (t.startsWith('P')) baseScore = 50; else if (t.startsWith('G')) baseScore = 40; else if (t.startsWith('S')) baseScore = 30; else if (t.startsWith('B')) baseScore = 20; else if (t.startsWith('I')) baseScore = 10;
-                
+
                 let div = 0;
                 if (t.includes('4') || t.endsWith('IV')) div = 1; else if (t.includes('3') || t.endsWith('III')) div = 2; else if (t.includes('2') || t.endsWith('II')) div = 3; else if (t.includes('1') || t.endsWith('I')) div = 4;
-                return baseScore + div; 
+                return baseScore + div;
             };
 
             currentMasterData.sort((a, b) => {
@@ -3401,7 +3951,7 @@
                 if (t === 'C' || t.includes('CHALLENGER')) return "Challenger"; if (t === 'GM' || t.includes('GRANDMASTER')) return "Grandmaster"; if (t === 'M' || t.includes('MASTER')) return "Master";
                 let rank = "";
                 if (t.startsWith('D')) rank = "Diamond"; else if (t.startsWith('E')) rank = "Emerald"; else if (t.startsWith('P')) rank = "Platinum"; else if (t.startsWith('G')) rank = "Gold"; else if (t.startsWith('S')) rank = "Silver"; else if (t.startsWith('B')) rank = "Bronze"; else if (t.startsWith('I')) rank = "Iron";
-                if (!rank) return tierStr; 
+                if (!rank) return tierStr;
                 let div = "";
                 if (t.includes('4') || t.endsWith('IV')) div = "IV"; else if (t.includes('3') || t.endsWith('III')) div = "III"; else if (t.includes('2') || t.endsWith('II')) div = "II"; else if (t.includes('1') || t.endsWith('I')) div = "I";
                 return div ? `${rank} ${div}` : rank;
@@ -3423,10 +3973,10 @@
             `;
 
             currentMasterData.forEach((player, index) => {
-                let tierBadgeClass = "m"; 
+                let tierBadgeClass = "m";
                 let tUpper = player.tier.toUpperCase();
                 if (tUpper === "C" || tUpper.includes("CHALLENGER")) tierBadgeClass = "c"; else if (tUpper === "GM" || tUpper.includes("GRANDMASTER")) tierBadgeClass = "gm"; else if (tUpper.includes("D")) tierBadgeClass = "d"; else if (tUpper.includes("E")) tierBadgeClass = "e";
-                
+
                 const fullTierName = getFullTierName(player.tier);
                 const lpDisplay = player.lp > 0 ? `<span style="font-weight: bold; color: #fff; font-size: 16px;">${player.lp} <span style="font-weight: normal; color: #9aa4af; font-size: 12px;">LP</span></span>` : '';
 
@@ -3439,7 +3989,7 @@
                                 <div><div class="summoner-link" onclick="document.getElementById('summoner-input').value='${player.name}'; document.getElementById('search-btn').click();" title="${player.name} 검색">${player.name}</div></div>
                             </div>
                         </td>
-                        <td><div class="master-tier"><span class="tier-badge ${tierBadgeClass}" style="white-space: nowrap;">${fullTierName}</span> ${lpDisplay}</div></td>
+                        <td><div class="master-tier"><span class="tierBadge ${tierBadgeClass}" style="white-space: nowrap;">${fullTierName}</span> ${lpDisplay}</div></td>
                         <td style="text-align: center; color: #e2e8f0;">${player.games}</td>
                         <td style="text-align: center; color: #10b981; font-weight: bold;">${Number(player.winRate).toFixed(2)}%</td>
                         <td style="text-align: center; color: #e2e8f0; font-weight: bold;">${Number(player.kda).toFixed(2)}</td>
@@ -3466,7 +4016,7 @@
             document.getElementById('terms-container').style.display = "block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        
+
         // ==========================================
         // [7] 사이드 유틸 (신화상점 등)
         // ==========================================
@@ -3494,7 +4044,7 @@
             const nextReset = new Date();
             nextReset.setHours(9, 0, 0, 0);
             if (now > nextReset) nextReset.setDate(nextReset.getDate() + 1);
-            
+
             const diff = nextReset - now;
             const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, '0');
             const minutes = String(Math.floor((diff / 1000 / 60) % 60)).padStart(2, '0');
@@ -3502,7 +4052,7 @@
 
             document.getElementById('shop-timer').innerText = `${hours}:${minutes}:${seconds} 뒤 초기화`;
         }
-        
+
         function copyEmail() {
             navigator.clipboard.writeText("00.y4no@gmail.com").then(() => {
                 showErrorToast("이메일 주소(00.y4no@gmail.com)가 클립보드에 복사되었습니다.");
@@ -3511,9 +4061,9 @@
             });
         }
 
-        window.switchDetailTab = function(event, matchId, tabName) {
+        window.switchDetailTab = function (event, matchId, tabName) {
             const wrapper = event.target.closest('.match-detail');
-            
+
             wrapper.querySelectorAll('.detail-tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
@@ -3540,7 +4090,7 @@
                                 interaction: { mode: 'index', intersect: false },
                                 plugins: {
                                     legend: { labels: { color: '#9aa4af' } },
-                                    tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw.toLocaleString() + ' G'; } } }
+                                    tooltip: { callbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + ctx.raw.toLocaleString() + ' G'; } } }
                                 },
                                 scales: {
                                     x: { ticks: { color: '#9aa4af' }, grid: { color: 'rgba(255,255,255,0.05)' } },
