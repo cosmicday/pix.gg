@@ -103,8 +103,16 @@ async function getJson(url) {
     const isAramGuardian = (i) =>
         (itemBin['Items/' + i]?.mItemGroups || []).includes('Items/ItemGroups/GuardianItems');
 
+    // ★★ `maps['453']` 도 같이 본다 (2026-09-08, 사용자 지적: 「카파 주스」는 협곡 아이템이 아니다).
+    //   카파 주스(2141)는 `maps['11']`·`['12']` 가 true 라 위 규칙 셋을 전부 빠져나온다.
+    //   실측: 위 셋을 통과한 것 중 **`453` 이 false 인 건 정확히 5개**이고 그중 넷은 이미 빼는
+    //   칼바람 수호자 4종이다 — 즉 이 조건이 더 걸러내는 건 카파 주스 하나뿐이다.
+    //   ★ 그래서 `isAramGuardian`(bin 근거)을 지우지 않고 **둘 다 남긴다** — 근거가 서로 다르고,
+    //     라이엇이 453 딱지를 손대도 수호자 4종은 계속 걸린다.
+    //   ★ 다음 패치에서 이 조건이 갑자기 여러 개를 지우면(로그의 아이템 수가 뚝 떨어지면)
+    //     453 의 뜻이 바뀐 것이니 여기부터 볼 것.
     const liveIds = Object.keys(all).filter(i =>
-        all[i].maps?.['11'] && all[i].gold?.purchasable !== false
+        all[i].maps?.['11'] && all[i].maps?.['453'] && all[i].gold?.purchasable !== false
         && !isOtherModeClone(i) && !isAramGuardian(i));
 
     // ★★ 등급은 게임 bin 의 `epicness` 다 (위 머리주석 참고). 값을 합치거나 다시 매기지 않고

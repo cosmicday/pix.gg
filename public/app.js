@@ -3273,9 +3273,11 @@ function loadCodexData() {
 //   섞여 있어 공식 이름이 없다 — 그 칸만 우리가 이름을 붙여야 한다.
 //   ★ `상위` 로 뒀다 (stringtable 의 `shop_group_superior`). 처음엔 `기타` 였는데
 //     **아래 분류 줄 마지막 칸도 `기타` 라 위아래로 같은 이름이 나란히 붙었다.**
+// ★ 2026-09-08: **시작 → 기본** 순으로 뒤집었다 (사용자 요청). `order` 는 목록 정렬용이고
+//   아래 CODEX_DEPTH_CATS 의 버튼 순서와 **짝이다** — 한쪽만 바꾸면 버튼 차례와 목록 차례가 어긋난다.
 const CODEX_EPICNESS = {
-    0: { name: '기본', order: 0 },      // 장화·롱소드·B.F. 대검 … (bin 에 필드가 아예 없다)
-    1: { name: '시작', order: 1 },      // 도란템·물약·와드·장신구
+    0: { name: '기본', order: 1 },      // 장화·롱소드·B.F. 대검 … (bin 에 필드가 아예 없다)
+    1: { name: '시작', order: 0 },      // 도란템·물약·와드·장신구
     4: { name: '서사급', order: 2 },
     5: { name: '전설급', order: 3 },
     7: { name: '상위', order: 4 }       // 영약 3 + 신발 업그레이드 7
@@ -3293,8 +3295,8 @@ const epInfo = ep => CODEX_EPICNESS[ep] || { name: '상위', order: 4 };
 //     라이엇이 새 등급 값을 쓰기 시작해도 그 아이템이 목록에서 통째로 사라지지 않는다.
 const CODEX_DEPTH_CATS = [
     { key: 'all', name: '전체', test: () => true },
+    { key: '1', name: '시작', test: it => it.ep === 1 },   // ★ 시작이 기본보다 앞 (2026-09-08, 위 CODEX_EPICNESS 와 짝)
     { key: '0', name: '기본', test: it => it.ep === 0 },
-    { key: '1', name: '시작', test: it => it.ep === 1 },
     { key: '4', name: '서사급', test: it => it.ep === 4 },
     { key: '5', name: '전설급', test: it => it.ep === 5 },
     { key: 'etc', name: '상위', test: it => ![0, 1, 4, 5].includes(it.ep) }
