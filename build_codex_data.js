@@ -271,12 +271,22 @@ async function getJson(url) {
             }
 
             case 'ByCharLevelBreakpointsCalculationPart': {
-                let v = part.mLevel1Value || 0, step = part.mInitialBonusPerLevel || 0;
+                // ★★ 필드 셋을 다 봐야 한다 (fill_values.js 의 챔피언 스킬 쪽에서 확인된 규칙 그대로):
+                //     mInitialBonusPerLevel       첫 구간의 레벨당 증가분
+                //     mBonusPerLevelAtAndAfter    이 레벨부터 증가분이 바뀜
+                //     mAdditionalBonusAtThisLevel 이 레벨에서 한 번 뛰는 양  ← 아이템 10자리가 쓴다
+                //   ★ 필드가 **생략된 Breakpoint 는 "여기서 성장 정지"** 다 (생략 = 0).
+                //     `undefined` 를 그대로 더하면 NaN 이 되어 아이템이 통째로 버려진다 (10자리가 그랬다).
+                let v = part.mLevel1Value || 0;
+                let per = part.mInitialBonusPerLevel || 0;
                 const bps = part.mBreakpoints || [];
                 for (let L = 2; L <= lv; L++) {
                     const bp = bps.find(x => x.mLevel === L);
-                    if (bp) step = bp.mBonusPerLevelAtAndAfter;
-                    v += step;
+                    if (bp) {
+                        per = bp.mBonusPerLevelAtAndAfter !== undefined ? bp.mBonusPerLevelAtAndAfter : 0;
+                        v += bp.mAdditionalBonusAtThisLevel || 0;
+                    }
+                    v += per;
                 }
                 return { n: v };
             }
@@ -457,9 +467,13 @@ async function getJson(url) {
             return null;
         }
 
+        // ★ 스탯 비례 값은 "…의 25%" 로 끝나는데 원문이 빈칸 **뒤에도** `%` 를 적어 둔 자리가 있다
+        //   (속삭이는 머리띠의 `@BonusHSPCalc@%` → "추가 마나의 0.5%%"). 겹친 것만 하나로 줄인다.
+        const tidied = filled.replace(/%\s*%/g, '%');
+
         // DD 의 스탯 상자는 그대로 쓴다 (거긴 값이 멀쩡하다). 효과 부분만 게임 문장으로 갈아 끼운다.
         const stats = (String(ddDesc || '').match(/<stats>[\s\S]*?<\/stats>/) || [''])[0];
-        const out = `<mainText>${stats}${stats ? '<br><br>' : ''}${filled.trim()}</mainText>`;
+        const out = `<mainText>${stats}${stats ? '<br><br>' : ''}${tidied.trim()}</mainText>`;
         itemTipMade.push(`${name} :: ${filled.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 90)}`);
         return out;
     }
