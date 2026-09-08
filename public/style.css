@@ -135,15 +135,17 @@ main {
 
 /* (게임 스위처 아이콘 .pix-game-* 규칙은 2026-08-22 제거 — 공통 파일(dogu-ui.css .dogu-game-icon)이 그린다) */
 
-/* ★ 검색 버튼 돋보기 (2026-09-08). 버튼 자체는 공통 파일(.dogu-search-btn, 17px)이 그리는데
-   「⌕」 글리프가 글자 크기에 비해 유난히 작게 그려져서 버튼이 비어 보였다.
-   ★ .dogu-* 선택자를 이 파일에 쓰면 안 되는 규칙(맨 위 :root 주석)이라, app.js 가 넘기는
-     버튼 내용을 이 클래스로 감싸서 pixlol 안에서만 키운다. 다른 dogu 사이트는 .GG 글자라 무관 */
+/* ★ 검색 버튼 돋보기 (2026-09-08). 버튼 자체는 공통 파일(.dogu-search-btn)이 그리고,
+   안에 들어가는 그림만 app.js 가 넘긴다 (.dogu-* 를 이 파일에 쓰면 안 되는 규칙 때문에 우리 클래스로).
+   ★★ 처음엔 「⌕」 글자를 30px 로 키워 썼는데 **세로 가운데가 안 맞았다** (실측 5.8px 아래).
+     글리프가 OS 기본 기호 폰트에서 오고 베이스라인 위에만 잉크가 있어서 줄상자 가운데와 어긋난다.
+     SVG 로 바꾸고 viewBox 를 잉크에 맞춰서 이제 상자 = 그림이다 — 버튼이 세로 가운데를 잡아 주고,
+     가로는 margin auto (버튼의 text-align:center 는 블록 자식엔 안 통한다) */
 .pix-search-icon {
     display: block;
-    font-size: 30px;
-    line-height: 1;
-    font-weight: 400;
+    width: 16px;
+    height: 16px;
+    margin: 0 auto;
 }
 
 /* =========================================
@@ -186,13 +188,15 @@ main {
     padding: 10px;
 }
 
+/* ★ 좌우 3px 은 줄(.home-tier-row)의 padding 과 같은 값이다 — 안 맞추면 열 머리의 「승률·픽률」이
+   아래 숫자보다 3px 오른쪽으로 튀어나온다 (2026-09-08 실측). 테두리는 padding 밖이라 열 폭 그대로 그어진다 */
 .home-tier-colhead {
     display: flex;
     align-items: center;
     gap: 5px;
     font-size: 12px;
     color: var(--text-muted);
-    padding-bottom: 8px;
+    padding: 0 3px 8px;
     margin-bottom: 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -204,6 +208,21 @@ main {
     margin-left: auto;
     font-size: 12px;
     color: var(--text-dim);
+}
+
+/* ★★ 라벨과 숫자를 같은 두 칸 격자로 묶는다 (2026-09-08).
+   예전엔 라벨이 「승률 · 픽률」 한 덩어리, 숫자가 「53.7%·6.3%」 한 덩어리라
+   **오른쪽 끝만 맞고 그 안은 제각각**이었다 (승률 라벨이 승률 숫자 위가 아니었다).
+   게다가 숫자 폭이 픽률 자릿수에 따라 61 / 67.6px 로 달라져 **줄마다 왼쪽 끝이 들쭉날쭉**했다.
+   ★ 33px 은 12px 기준 「53.7%」·「27.9%」 실측 32.49px 에서 온 값이다 (픽률 두 자리까지 안 넘친다).
+   ★ tabular-nums 를 켜야 줄이 바뀌어도 자릿수가 세로로 맞는다 */
+.home-tier-colnote,
+.home-tier-num {
+    display: grid;
+    grid-template-columns: 33px 33px;
+    column-gap: 3px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 .home-tier-row {

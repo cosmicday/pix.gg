@@ -681,10 +681,15 @@ function mountDoguUI() {
         mascot: '/favicon_lol_180.png',         // 히어로 로고 왼쪽 마스코트 (공통 옵션)
         search: {
             placeholder,
-            // ★ pixlol 만 돋보기 (다른 사이트는 .GG 글자). span 으로 감싸는 건 크기 때문이다 —
-            //   공통 버튼은 17px 인데 「⌕」 글리프가 유난히 작게 그려져서, style.css 의 .pix-search-icon 이 키운다.
-            //   .dogu-* 를 style.css 에 쓰면 안 되는 규칙이라 우리 클래스를 하나 끼웠다.
-            button: '<span class="pix-search-icon">' + DoguUI.TEXT.searchIcon + '</span>',
+            // ★★ pixlol 만 돋보기 (다른 사이트는 .GG 글자). 2026-09-08 부터 글자(DoguUI.TEXT.searchIcon = 「⌕」)가
+            //   아니라 SVG 다 — 글자로는 **세로 가운데정렬이 불가능했다.** 실측: 잉크가 버튼 중심보다 5.8px 아래.
+            //   글리프가 Pretendard 에 없어서 OS 기본 기호 폰트(윈도우는 Segoe UI Symbol)가 그리는데,
+            //   그 글리프는 베이스라인 위에만 잉크가 있어(-16~0) 줄상자 가운데와 어긋난다. OS 마다 폰트가 달라서
+            //   translateY 로 밀면 윈도우에서만 맞는다. SVG 는 viewBox 를 잉크에 딱 맞춰 어디서나 같다.
+            //   ★ viewBox 「1 1 14 14」는 원(테두리 포함)과 손잡이 둥근 끝을 합친 실제 잉크 범위다 — 가로세로 14 로 같다.
+            button: '<svg class="pix-search-icon" viewBox="1 1 14 14" aria-hidden="true">' +
+                    '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+                    '<circle cx="9.7" cy="6.3" r="4.3"/><path d="M6.66 9.34 2 14"/></g></svg>',
             onSubmit,
             favorites: { all: getFavorites, remove: removeFavorite },
             recents:   { all: getRecents,   remove: removeRecentSearch },
@@ -6855,7 +6860,7 @@ async function loadHomeTiers() {
                 <div class="home-tier-colhead">
                     <img src="${STAT_LANE_ICON[p.key]}" alt="">
                     <span>${p.name}</span>
-                    <span class="home-tier-colnote">승률 · 픽률</span>
+                    <span class="home-tier-colnote"><span>승률</span><span>픽률</span></span>
                 </div>
                 ${arr.map(c => {
             const eng = championIdMap[c.champ] || '0';
@@ -6868,7 +6873,7 @@ async function loadHomeTiers() {
                          src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${eng}.png" alt="" loading="lazy">
                     <span class="home-tier-name">${kor}</span>
                     <span class="stats-tier ${tierClass(c.tier)} home-tier-badge" title="점수 ${c.score.toFixed(2)}">${c.tier === 'OP' ? 'OP' : c.tier + '티어'}</span>
-                    <span class="home-tier-num">${win.toFixed(1)}%·${pick.toFixed(1)}%</span>
+                    <span class="home-tier-num"><span>${win.toFixed(1)}%</span><span>${pick.toFixed(1)}%</span></span>
                 </div>`;
         }).join('')}
             </div>`).join('');
