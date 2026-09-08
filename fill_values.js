@@ -3824,4 +3824,10 @@ async function main() {
     }
 }
 
-main().catch(e => { console.error('실패:', e); process.exit(1); });
+// ★★ 스탯 번호표를 밖에서도 쓴다 (2026-09-08) — `build_codex_data.js` 의 **아이템 효과 수치**가
+//   같은 번호 체계를 읽는다. 표를 두 벌로 두면 한쪽만 고쳐져 이름이 어긋나므로 여기가 정본이다.
+//   ★ `main()` 은 **직접 실행할 때만** 돈다. 이 줄이 없으면 require 하는 순간 챔피언 파이프라인이
+//     통째로 돌아 버린다 (표만 빌리려는 쪽에서는 사고다).
+module.exports = { STAT_NAMES, FRACTION_STATS, applyStatFormula };
+
+if (require.main === module) main().catch(e => { console.error('실패:', e); process.exit(1); });

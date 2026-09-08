@@ -3946,7 +3946,11 @@ async function showCodex(target) {
                 ${it.p ? `<div class="codex-plain">${it.p}</div>` : ''}
             </div>
         </div>
-        <div class="codex-desc">${itemDescHtml(it.d)}</div>
+        <!-- ★★ dt 는 **수치가 든 인게임 문장**이다 (2026-09-08). DD 의 d 는 계산식으로 정해지는
+             값을 0 으로 찍거나 통째로 빼서 "0의 추가 마법 피해" 가 나왔다.
+             빌드가 다 못 채운 아이템은 dt 가 없고 그때만 d 로 물러난다 (주문의 dt 와 같은 규약).
+             ★ 이 주석은 템플릿 문자열 안이다 — 백틱을 쓰면 문자열이 거기서 끊긴다 (또 걸렸다) -->
+        <div class="codex-desc">${itemDescHtml(it.dt || it.d)}</div>
         ${it.f.length ? recipeTreeRow(e.id) : ''}
         ${recipeRow('재료', it.f)}
         ${recipeRow('상위 아이템', it.t)}

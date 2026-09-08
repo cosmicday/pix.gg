@@ -150,6 +150,320 @@ async function getJson(url) {
     //   champion.json 은 `Fiddlesticks` 다. 정확히 찾으면 못 찾으므로 **소문자로 맞춰 찾는다.**
     // ★ 못 찾으면 영문을 그대로 남기고 경고를 찍는다 — 조용히 빈칸이 되면 칼리스타 창 두 개를
     //   구분할 길이 사라진다. **빈칸보다 영문이 낫다.**
+    // ══════════════════════════════════════════════════════════════
+    //  ★★★ 아이템 효과 **수치** (2026-09-08 신설, 사용자 요청)
+    //
+    //  ★ 문제: DD 의 `description` 은 계산식으로 정해지는 값을 **0 으로 찍거나 통째로 뺀다.**
+    //      DD   "다음 기본 공격 시 추가 물리 피해를 입힙니다"          (삼위일체 — 수치가 없다)
+    //      DD   "0의 추가 마법 피해를 입히고 0의 체력을 회복"          (황혼과 새벽 — 0 이 그대로 나온다)
+    //      DD   "성형작약 (0초)"                                       (재사용 대기시간도 0)
+    //    고정값(`mDataValues`)은 DD 도 채워 준다 — **계산식(`mItemCalculations`) 자리만** 비어 있다.
+    //
+    //  ★ 진짜 문장과 값은 게임 데이터에 다 있다. **소환사 주문과 같은 길**이다:
+    //      문장  stringtable 의 `Item_<id>_Tooltip`  (`@SpellbladeDamage@` 빈칸이 살아 있다)
+    //      값    bin `Items/<id>` 의 `mDataValues` · `mEffectAmount` · `mItemCalculations`
+    //    둘 다 이미 받고 있다 (등급·역할군용 bin · 주문 문장용 stringtable). 새로 받는 파일은 없다.
+    //
+    //  ★★ 규칙: **하나라도 못 채우면 그 아이템은 통째로 포기하고 DD 문장을 쓴다** (`dt` 를 안 담는다).
+    //    반쯤 채운 문장에 `@이름@` 이 그대로 나가느니 예전 문장이 낫다 — 주문 쪽과 같은 원칙이다.
+    //
+    //  ★ 스탯 번호표는 `fill_values.js` 가 정본이다 (챔피언 스킬과 같은 번호 체계).
+    //    표를 두 벌 두면 한쪽만 고쳐져 이름이 어긋난다.
+    const { STAT_NAMES, applyStatFormula } = require('./fill_values');
+
+    const itemTipMiss = [];     // 못 채운 자리 (아이템 이름 → 이유)
+    const itemTipMade = [];     // 채운 것
+
+    // ★ 소수 둘째 자리까지. 셋째 자리까지 두면 float 오차가 그대로 나간다 —
+    //   그림자 검이 「원거리 2.001」 이었다 (3 × 0.667 의 부동소수점 찌꺼기).
+    const inum = (v) => {
+        if (!isFinite(v)) return null;
+        return String(Math.round(v * 100) / 100);
+    };
+
+    // 스탯 항 하나 = `{ name, coef }` (계수는 비율이다 — 0.25 → "25%").
+    //   ★ 곱셈에서 계수를 다시 만져야 해서 **글이 아니라 구조로** 들고 다닌다
+    //     ("공격력의 25%" × 2 = "공격력의 50%" 를 문자열로는 못 한다).
+    //   ★ 모르는 스탯 번호면 null → 그 아이템은 통째로 포기한다. 추측으로 이름을 지어내면
+    //     "?" 보다 나쁘다는 게 fill_values 의 결론이다.
+    const statTerm = (stat, formula, coef) => {
+        const base = STAT_NAMES[stat === undefined ? 0 : stat];
+        if (base === undefined) return null;
+        return { name: applyStatFormula(base, formula), coef };
+    };
+
+    const termText = (t) => {
+        const pct = inum(t.coef * 100);
+        return pct === null ? null : `${t.name}의 ${pct}%`;
+    };
+
+    // 계산식 조각 하나 → `{ n }`(숫자) 또는 `{ term }`(스탯 항) 또는 null(못 품).
+    //   `lv` 는 챔피언 레벨이다 — 레벨에 따라 변하는 값은 1과 18로 두 번 재서 "A~B" 로 적는다.
+    function itemPart(part, C, lv, depth = 0) {
+        if (!part || typeof part !== 'object' || depth > 8) return null;
+        const t = part.__type || '';
+
+        switch (t) {
+            case 'NumberCalculationPart':
+                return { n: part.mNumber || 0 };
+
+            case 'NamedDataValueCalculationPart': {
+                const v = C.dv[String(part.mDataValue || '').toLowerCase()];
+                return v === undefined ? null : { n: v };
+            }
+
+            case 'EffectValueCalculationPart': {
+                const v = (C.eff || [])[(part.mEffectIndex || 1) - 1];
+                return v === undefined ? null : { n: v };
+            }
+
+            case 'StatByCoefficientCalculationPart': {
+                const s = statTerm(part.mStat, part.mStatFormula, part.mCoefficient || 0);
+                return s ? { term: s } : null;
+            }
+
+            case 'StatByNamedDataValueCalculationPart': {
+                const v = C.dv[String(part.mDataValue || '').toLowerCase()];
+                if (v === undefined) return null;
+                const s = statTerm(part.mStat, part.mStatFormula, v);
+                return s ? { term: s } : null;
+            }
+
+            case 'StatBySubPartCalculationPart': {
+                const sub = itemPart(part.mSubpart, C, lv, depth + 1);
+                if (!sub || sub.n === undefined) return null;
+                const s = statTerm(part.mStat, part.mStatFormula, sub.n);
+                return s ? { term: s } : null;
+            }
+
+            case 'SumOfSubPartsCalculationPart': {
+                const s = sumParts(part.mSubparts, C, lv, depth + 1);
+                if (!s) return null;
+                if (!s.terms.length) return { n: s.n };
+                if (s.terms.length === 1 && !s.n) return { term: s.terms[0] };
+                return null;      // 숫자 + 스탯이 섞인 덩어리는 위(계산식)에서만 다룬다
+            }
+
+            case 'ProductOfSubPartsCalculationPart': {
+                const a = itemPart(part.mPart1, C, lv, depth + 1);
+                const b = itemPart(part.mPart2, C, lv, depth + 1);
+                if (!a || !b) return null;
+                if (a.n !== undefined && b.n !== undefined) return { n: a.n * b.n };
+                // 숫자 × 스탯 → 스탯 계수 쪽에 곱한다
+                const k = a.n !== undefined ? a.n : b.n;
+                const s = a.term || b.term;
+                if (k === undefined || !s) return null;
+                return { term: { name: s.name, coef: s.coef * k } };
+            }
+
+            case 'ClampSubPartsCalculationPart': {
+                const s = sumParts(part.mSubparts, C, lv, depth + 1);
+                if (!s || s.terms.length) return null;
+                let v = s.n;
+                if (part.mFloor !== undefined) v = Math.max(v, part.mFloor);
+                if (part.mCeiling !== undefined) v = Math.min(v, part.mCeiling);
+                return { n: v };
+            }
+
+            case 'ByCharLevelInterpolationCalculationPart': {
+                const a = part.mStartValue || 0, b = part.mEndValue || 0;
+                return { n: a + (b - a) * (lv - 1) / 17 };
+            }
+
+            case 'ByCharLevelBreakpointsCalculationPart': {
+                let v = part.mLevel1Value || 0, step = part.mInitialBonusPerLevel || 0;
+                const bps = part.mBreakpoints || [];
+                for (let L = 2; L <= lv; L++) {
+                    const bp = bps.find(x => x.mLevel === L);
+                    if (bp) step = bp.mBonusPerLevelAtAndAfter;
+                    v += step;
+                }
+                return { n: v };
+            }
+
+            case 'AbilityResourceByCoefficientCalculationPart': {
+                const res = part.mStatFormula === 2 ? '추가 마나'
+                    : part.mStatFormula === 1 ? '기본 마나' : '최대 마나';
+                return { term: { name: res, coef: part.mCoefficient || 0 } };
+            }
+
+            // 모르는 조각 — 버프 중첩 수·가진 아이템 수처럼 우리가 알 수 없는 값이다.
+            // 포기하면 그 아이템은 DD 문장으로 남는다 (틀린 값보다 낫다).
+            default:
+                return null;
+        }
+    }
+
+    // 조각 여럿을 더한다 → `{ n, terms }`
+    function sumParts(list, C, lv, depth = 0) {
+        if (!Array.isArray(list) || !list.length) return null;
+        const vals = list.map(p => itemPart(p, C, lv, depth));
+        if (vals.some(v => !v)) return null;
+        return {
+            n: vals.filter(v => v.n !== undefined).reduce((a, b) => a + b.n, 0),
+            terms: vals.filter(v => v.term).map(v => v.term)
+        };
+    }
+
+    // ★★ 계산식 이름이 **해시로 적혀 있는 자리가 있다** (`{d02ea590}`).
+    //   CDTB 가 이름을 못 찾으면 그렇게 남기는데, 해시는 **FNV-1a 32비트(소문자)** 다 —
+    //   월식의 `ShieldSplit` 로 실제로 맞춰 확인했다. 그래서 이름으로 못 찾으면 해시로 한 번 더 찾는다.
+    const fnv1a = (s) => {
+        let h = 0x811c9dc5 >>> 0;
+        for (const ch of Buffer.from(String(s).toLowerCase(), 'utf8')) {
+            h ^= ch;
+            h = Math.imul(h, 0x01000193) >>> 0;
+        }
+        return h.toString(16).padStart(8, '0');
+    };
+    const findCalc = (C, key) => {
+        const lc = String(key || '').toLowerCase();
+        return C.calcs[lc] !== undefined ? C.calcs[lc] : C.calcs['{' + fnv1a(lc) + '}'];
+    };
+
+    // 계산식 하나를 그 레벨에서 재서 `{ n, terms }` 로. 계산식 종류 네 가지를 여기서 푼다.
+    function calcAt(calc, C, lv, depth = 0) {
+        if (!calc || depth > 4) return null;
+        const type = calc.__type || '';
+
+        // 다른 계산식을 가리키는 자리
+        if (type === '{f3cbe7b2}') return calcAt(findCalc(C, calc.mSpellCalculationKey), C, lv, depth + 1);
+
+        // 배수가 붙은 계산식 (루덴의 메아리 「단일 대상 최대」 = 기본 피해 × 2)
+        if (type === 'GameCalculationModified') {
+            const inner = calcAt(findCalc(C, calc.mModifiedGameCalculation), C, lv, depth + 1);
+            const mul = itemPart(calc.mMultiplier, C, lv, depth + 1);
+            if (!inner || !mul || mul.n === undefined) return null;
+            return {
+                n: inner.n * mul.n,
+                terms: inner.terms.map(t => ({ name: t.name, coef: t.coef * mul.n }))
+            };
+        }
+
+        const s = sumParts(calc.mFormulaParts, C, lv, depth + 1);
+        if (!s) return null;
+        const k = calc.mDisplayAsPercent ? 100 : 1;
+        return { n: s.n * k, terms: s.terms.map(t => ({ name: t.name, coef: t.coef * k })), pct: !!calc.mDisplayAsPercent };
+    }
+
+    // 계산식 → 화면에 나갈 글. 레벨에 따라 변하면 1레벨과 18레벨을 재서 "A~B" 로 적는다.
+    function itemCalc(key, C, depth = 0) {
+        const calc = findCalc(C, key);
+        if (!calc || depth > 4) return null;
+
+        // 근접/원거리로 갈리는 자리 — 둘 다 적는다
+        if ((calc.__type || '') === 'GameCalculationConditional') {
+            const a = itemCalc(calc.mDefaultGameCalculation, C, depth + 1);
+            const b = itemCalc(calc.mConditionalGameCalculation, C, depth + 1);
+            if (a === null || b === null) return null;
+            return a === b ? a : `근접 ${a} / 원거리 ${b}`;
+        }
+
+        const lo = calcAt(calc, C, 1), hi = calcAt(calc, C, 18);
+        if (!lo || !hi) return null;
+        const suffix = lo.pct ? '%' : '';
+
+        // 스탯 항은 레벨과 무관해야 한다 (레벨에 따라 계수가 변하는 자리는 아직 없다)
+        const loT = lo.terms.map(termText), hiT = hi.terms.map(termText);
+        if (loT.some(x => x === null) || loT.join('|') !== hiT.join('|')) return null;
+
+        const a = inum(lo.n), b = inum(hi.n);
+        if (a === null || b === null) return null;
+        let head = a === b ? a + suffix : `${a}~${b}${suffix}`;
+
+        // 원거리 배수가 붙은 계산식 (이름 없는 해시 타입) — 근접/원거리를 갈라 적는다
+        if (calc.mRangedMultiplier) {
+            const m = itemPart(calc.mRangedMultiplier, C, 1);
+            if (!m || m.n === undefined) return null;
+            if (m.n !== 1) {
+                if (loT.length) return null;      // 스탯 항까지 겹치면 문장이 너무 길어진다
+                const ra = inum(lo.n * m.n), rb = inum(hi.n * m.n);
+                if (ra === null || rb === null) return null;
+                return `근접 ${head} / 원거리 ${ra === rb ? ra + suffix : `${ra}~${rb}${suffix}`}`;
+            }
+        }
+
+        if (!loT.length) return head;
+        return (Number(a) === 0 && Number(b) === 0 ? loT : [head, ...loT]).join(' + ');
+    }
+    // stringtable 의 `{{ 키 }}` 를 펼친다. 끼워 넣은 문장 안에 또 `{{ }}` 가 있다.
+    //   ★ 근접/원거리 갈림(`Item_Melee_Ranged_Split_Dynamic`)은 챔피언마다 다른 자리라
+    //     정적으로는 못 고른다 — 두 계산식을 **둘 다** 적는 우리 문장으로 바꿔 끼운다.
+    const expandRefs = (s, depth = 0) => {
+        if (depth > 4) return s;
+        return String(s).replace(/\{\{\s*([^}]+?)\s*\}\}/g, (m, key) => {
+            if (/^Item_Melee_Ranged_Split/i.test(key)) return '근접 @MeleeItemCalcValue@ / 원거리 @RangedItemCalcValue@';
+            const v = strings[key.toLowerCase()];
+            return v === undefined ? m : expandRefs(v, depth + 1);
+        });
+    };
+
+    // 아이템 하나의 효과 문장. 못 채우면 null (그러면 DD 문장을 그대로 쓴다).
+    function itemTooltip(id, name, ddDesc) {
+        const b = itemBin['Items/' + id];
+        const keys = b && b.mItemDataClient && b.mItemDataClient.mTooltipData
+            && b.mItemDataClient.mTooltipData.mLocKeys;
+        if (!keys) return null;
+        // ★★ **지속 효과와 사용 효과가 다른 키에 있다** (2026-09-08 자체 대조로 잡았다).
+        //   `keyTooltip` 만 쓰면 란두인의 「억제」·발걸음 분쇄기의 「파괴의 충격파」처럼
+        //   **사용 효과가 통째로 사라진다** — DD 문장에는 있던 내용이라 바로 티가 난다.
+        //   ★ `keyTooltip` 없이 `keyActive` 만 있는 것도 있다 (물약·와드). 있는 것만 이어 붙인다.
+        const parts = [keys.keyTooltip, keys.keyActive]
+            .filter(Boolean)
+            .map(k => ({ k, s: strings[String(k).toLowerCase()] }));
+        if (!parts.length) return null;              // 효과가 없는 순수 스탯템 (롱소드 등)
+        const lost = parts.filter(p => !p.s);
+        if (lost.length) { itemTipMiss.push(`${name}: 문장 없음 (${lost.map(p => p.k).join(', ')})`); return null; }
+        const raw = parts.map(p => p.s).join('<br><br>');
+
+        const C = { dv: {}, eff: b.mEffectAmount || [], calcs: {} };
+        (b.mDataValues || []).forEach(v => { if (v.mName) C.dv[v.mName.toLowerCase()] = v.mValue; });
+        Object.entries(b.mItemCalculations || {}).forEach(([k, v]) => { C.calcs[k.toLowerCase()] = v; });
+
+        let body = expandRefs(raw)
+            .replace(/%i:[A-Za-z0-9_]+%/g, '')       // 인게임 아이콘 자리 — 우리 화면엔 그림이 없다
+            .replace(/\s+([,.)])/g, '$1');
+
+        const missing = [];
+        const filled = body.replace(/@([A-Za-z0-9_.]+)(\*(-?[0-9.]+))?@/g, (m, vname, _x, mul) => {
+            const lc = vname.toLowerCase();
+            const factor = mul === undefined ? 1 : Number(mul);
+
+            // ① 고정값
+            let v = C.dv[lc];
+            // ② `@Effect1Amount@` 꼴 — bin 의 mEffectAmount 배열
+            if (v === undefined) {
+                const em = lc.match(/^effect(\d+)amount$/);
+                if (em) v = C.eff[Number(em[1]) - 1];
+            }
+            // ③ bin 최상위 필드 (`@FlatPhysicalDamageMod@` 등)
+            if (v === undefined && b['m' + vname] !== undefined && typeof b['m' + vname] === 'number') v = b['m' + vname];
+            if (typeof v === 'number') return inum(v * factor);
+
+            // ④ 계산식
+            const c = itemCalc(lc, C);
+            if (c !== null) {
+                if (factor === 1) return c;
+                // 배수가 붙은 계산식 자리는 숫자일 때만 접는다
+                const n = Number(c);
+                if (isFinite(n)) return inum(n * factor);
+            }
+            missing.push(vname);
+            return m;
+        });
+
+        if (missing.length) {
+            itemTipMiss.push(`${name}: @${[...new Set(missing)].join('@ @')}@`);
+            return null;
+        }
+
+        // DD 의 스탯 상자는 그대로 쓴다 (거긴 값이 멀쩡하다). 효과 부분만 게임 문장으로 갈아 끼운다.
+        const stats = (String(ddDesc || '').match(/<stats>[\s\S]*?<\/stats>/) || [''])[0];
+        const out = `<mainText>${stats}${stats ? '<br><br>' : ''}${filled.trim()}</mainText>`;
+        itemTipMade.push(`${name} :: ${filled.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 90)}`);
+        return out;
+    }
+
     const korChamp = {};
     Object.values(ddChamp.data).forEach(c => { korChamp[c.id.toLowerCase()] = c.name; });
     const rcMissed = [];
@@ -166,6 +480,9 @@ async function getJson(url) {
         items[i] = {
             n: x.name,
             d: x.description || '',
+            // ★ 효과 수치가 든 인게임 문장. 못 만들면 담지 않고 화면이 `d` 로 물러난다
+            //   (주문의 `dt` 와 같은 규약이다). 위 itemTooltip 주석 참고.
+            dt: itemTooltip(i, x.name, x.description) || undefined,
             p: x.plaintext || '',
             g: x.gold.total,
             s: x.gold.sell,
@@ -485,6 +802,16 @@ const codexData = ${body};
     console.log(`  챔피언 전용: ${rcList.length}개 — ${rcList.map(([id, x]) => `${x.n}(${id}) ${x.rc}`).join(' / ') || '없음'}`);
     // ★ 한글로 못 바꾼 자리. 화면에 영문이 그대로 나가므로 champion.json 쪽 키를 확인할 것
     if (rcMissed.length) console.log(`  ★ 한글 이름을 못 찾은 requiredChampion: ${[...new Set(rcMissed)].join(', ')} — champion.json 에 그 키가 없다`);
+    // ★★ 효과 수치 문장. 못 채운 아이템은 DD 문장으로 남으므로 화면은 안 깨지지만,
+    //   그 목록이 곧 "아직 못 푼 계산식" 이다 — 패치 때마다 여기 숫자를 보고 늘었는지 볼 것.
+    const noTip = Object.entries(items).filter(([id]) =>
+        !(itemBin['Items/' + id] || {}).mItemDataClient?.mTooltipData?.mLocKeys?.keyTooltip).length;
+    console.log(`  ★ 효과 수치 문장: ${itemTipMade.length}개 채움 / 못 채움 ${itemTipMiss.length}개 / 툴팁 키가 없는 아이템 ${noTip}개(DD 문장 그대로)`);
+    if (itemTipMiss.length) {
+        console.log(`  -- 못 채운 것 (DD 문장 그대로 나간다):`);
+        itemTipMiss.forEach(x => console.log(`     ${x}`));
+    }
+
     const tagCount = {};
     Object.values(items).forEach(x => x.g2.forEach(t => tagCount[t] = (tagCount[t] || 0) + 1));
     console.log(`  태그: ${Object.entries(tagCount).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ':' + v).join(' ')}`);
