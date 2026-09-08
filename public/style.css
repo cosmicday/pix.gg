@@ -2680,24 +2680,8 @@ main {
 
 /* 펼침 표시. 줄에 마우스를 올리거나 열려 있을 때만 보인다 —
    늘 보이면 챔피언 이름 옆이 지저분하다 */
-.stats-expand {
-    color: var(--text-faint);
-    font-size: 12px;
-    margin-left: 2px;
-    opacity: 0;
-    transition: opacity 0.15s, transform 0.15s;
-}
-
-@media (hover: hover) {
-    .stats-table tbody tr:hover .stats-expand {
-        opacity: 1;
-    }
-}
-
-.stats-row.is-open .stats-expand {
-    opacity: 1;
-    transform: rotate(180deg);
-}
+/* (.stats-expand — 이름 오른쪽 hover 화살표 ▾ 는 2026-09-08 에 뗐다. 줄 아래가 펼쳐지던
+    시절의 표식인데 상세 페이지로 바뀌면서 가리키는 동작이 없어졌다) */
 
 .stats-row.is-open {
     background: rgba(167, 139, 250, 0.08);
@@ -3982,11 +3966,6 @@ main {
 
     .stats-champ-name {
         font-size: 12px;
-    }
-
-    /* 펼침 화살표(▾)는 hover 에서만 보이던 것이라 폰에서는 자리만 차지한다 */
-    .stats-expand {
-        display: none;
     }
 
     .stats-lane img {
@@ -8035,6 +8014,33 @@ main {
     overflow: visible;
 }
 
+/* ★★ 자리막이 카드 (2026-09-08 사용자 요청). 예전엔 「…을 불러오는 중입니다」 한 줄이었다가
+   카드 8~12장이 한꺼번에 나타나서 화면이 통째로 튀었다.
+   ★ 진짜 카드와 **같은 태그·클래스**를 쓰므로 크기가 저절로 같다 — 여기선 회색 덩어리만 얹는다.
+   ★ 카드가 뜨는 hover 효과가 자리막이에 걸리면 안 되므로 pointer-events 를 끈다 */
+.mythic-card-skel { pointer-events: none; }
+
+.mythic-card-skel .mythic-item-img-box::after {
+    content: '';
+    width: 100px;                       /* 진짜 아이콘과 같은 크기 */
+    height: 100px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.mythic-card-skel .mythic-item-name::after,
+.mythic-card-skel .mythic-item-price::after {
+    content: '';
+    display: block;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ★ 막대 높이 + 여백을 진짜 줄 높이에 맞춘다 — 이름 18px(line-height) · 가격 21px(아이콘 13 + 14px 700).
+   안 맞추면 카드가 9px 짧아서 자리막이가 걷힐 때 줄마다 그만큼 밀린다 (실측) */
+.mythic-card-skel .mythic-item-name::after { width: 70%; height: 14px; margin: 2px auto; }
+.mythic-card-skel .mythic-item-price::after { width: 42px; height: 15px; margin: 3px auto; }
+
 .mshop-grid .mythic-item-img-box {
     border-radius: 10px 10px 0 0;
     overflow: hidden;
@@ -8168,7 +8174,8 @@ main {
 }
 
 /* 마지막 수집이 오래된 구획. 주간(7일)·격주(14일) 주기를 넘겼을 때 서버가 stale 로 알려준다.
-   ★ 지우고 "없음" 으로 두지 않는다 — 있는 정보는 보여주되 낡았다고 말하는 편이 낫다. */
+   ★★ 2026-09-08 부터 **안 붙인다** (사용자 요청) — app.js renderMythicSection 의 주석 참고.
+     규칙은 남겨 둔다. 서버의 `stale`·`ageDays` 는 그대로 오므로 한 줄만 되살리면 다시 뜬다. */
 .mshop-stale {
     margin-bottom: 14px;
     padding: 10px 14px;

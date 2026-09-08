@@ -3219,6 +3219,19 @@ function statScopeLabel(scope) {
     return scope.startsWith('p:') ? `${patchDisplay(scope.slice(2))} 패치` : `${scope.slice(2)}`;
 }
 
+// ★★ 범위 드롭다운은 **패치만** 올린다 (2026-09-08 사용자 요청).
+//   서버는 일별 범위(`d:2026-09-08`, 최근 7일)를 그대로 집계하고 응답에도 담는다 —
+//   **고르는 자리에서만** 뺀다. 다시 보이게 하려면 이 filter 한 줄이면 된다.
+//   ★ 지금 보고 있는 범위가 일별이면 그 하나는 남긴다. 안 남기면 select 가 값을 잃고
+//     **엉뚱한 패치가 골라진 것처럼** 보인다 (기본값은 pickStatScope 가 항상 패치로 준다).
+//   쓰는 곳 셋: 통계 표(#stats-scope) · 챔피언 상세 툴바(#lx-scope) · 조합 페이지
+function scopeOptionsHtml(scopes, cur) {
+    return (scopes || [])
+        .filter(s => s.startsWith('p:') || s === cur)
+        .map(s => `<option value="${s}"${s === cur ? ' selected' : ''}>${statScopeLabel(s)}</option>`)
+        .join('');
+}
+
 // ============================================================
 //  도감 — 아이템 · 룬 · 소환사 주문 (2026-08-16 신설)
 //
@@ -4664,7 +4677,7 @@ function lxHeader(c) {
     const stat = (val, label, cls, tip) => `<div class="lx-stat"${tip ? ` title="${tip}"` : ''}><div class="lx-stat-v ${cls || ''}">${val}</div><div class="lx-stat-k">${label}</div></div>`;
     const tierCls = c.myTier ? tierClass(c.myTier.tier) : '';
     const R = 30, C = 2 * Math.PI * R;
-    const scopes = (c.data.scopes || []).map(s => `<option value="${s}"${s === c.data.scope ? ' selected' : ''}>${statScopeLabel(s)}</option>`).join('');
+    const scopes = scopeOptionsHtml(c.data.scopes, c.data.scope);
     const desc = `<b>${c.kor}</b> ${c.laneName}은 마스터+ 솔로랭크 ${c.patch} 패치에서 승률 <b>${c.wr.toFixed(1)}%</b>`
         + (c.rank ? `, 같은 라인 ${c.sameLane.length}명 중 <b>${c.rank}위</b>로 <b>${c.myTier.tier === 'OP' ? 'OP' : c.myTier.tier + ' 티어'}</b>입니다 (점수 ${c.myTier.score.toFixed(1)}).` : '입니다.')
         + ` 라인 평균 승률(${c.avgWr.toFixed(2)}%)보다 ${Math.abs(c.delta).toFixed(2)}%p ${c.delta >= 0 ? '높' : '낮'}습니다.`
@@ -5435,8 +5448,7 @@ async function showDuoPage(tabKey) {
 }
 
 function renderDuoPage(box, d) {
-    const scopeOpts = d.scopes.map(s =>
-        `<option value="${s}"${s === d.scope ? ' selected' : ''}>${statScopeLabel(s)}</option>`).join('');
+    const scopeOpts = scopeOptionsHtml(d.scopes, d.scope);
     const tabs = DUO_TABS.map(t =>
         `<button class="duo-tab${t.key === duoTab ? ' active' : ''}" data-tab="${t.key}" type="button">${t.name}</button>`).join('');
 
@@ -5709,8 +5721,7 @@ async function showStats() {
     let sortCol = 'tier', sortDir = 'desc';
 
     // ── 화면 뼈대. 표는 renderStatsTable() 이 매번 새로 그린다.
-    const scopeOpts = data.scopes.map(s =>
-        `<option value="${s}"${s === data.scope ? ' selected' : ''}>${statScopeLabel(s)}</option>`).join('');
+    const scopeOpts = scopeOptionsHtml(data.scopes, data.scope);
 
     box.innerHTML = `
         <div class="stats-header">
@@ -5882,8 +5893,10 @@ async function showStats() {
                 <td class="stats-champ-info"><div class="stats-champ-flex">
                     <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${engId}.png"
                          onerror="this.src='https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/0.png'">
+                    <!-- ★ 이름 오른쪽 hover 화살표(.stats-expand ▾)는 2026-09-08 에 뗐다 (사용자 요청).
+                         줄 아래가 펼쳐지던 시절의 표식인데 2026-08-26 에 상세 **페이지**로 바뀌면서
+                         가리키는 동작이 없어졌다 (줄 전체가 링크다). CSS 도 같이 지웠다 -->
                     <span class="stats-champ-name">${c.name}</span>
-                    <span class="stats-expand">▾</span>
                 </div></td>
                 <td>${c.tier
                     ? `<span class="stats-tier ${tierClass(c.tier)}" title="점수 ${c.score.toFixed(2)}">${c.tier}</span>`
@@ -7208,6 +7221,10 @@ const MYTHIC_TABS = [
     { key: 'daily', name: '일일', full: '일일 로테이션' }
 ];
 
+// ★ 자리막이 카드 수 — **그 구획을 처음 열 때만** 쓴다 (두 번째부터는 지난번에 받은 수를 안다).
+//   격주 12 · 주간 8 은 style.css .mshop-grid 주석에 적힌 기준값이다.
+const MYTHIC_SKEL_N = { featured: 4, biweekly: 12, weekly: 8, daily: 4 };
+
 // 오늘 로테이션 응답을 잠깐 물고 있는다. 탭을 오갈 때마다 다시 부를 이유가 없다.
 //   서버도 60초 캐시(myCache)라 그보다 길게 잡으면 수집 직후 옛 값이 남는다.
 let mythicTodayCache = null;
@@ -7285,13 +7302,44 @@ async function showMythicShop(target) {
     });
 }
 
+// ★★ 제목 옆은 **다음 초기화까지 남은 시간**, 오른쪽 끝은 **판매 기간**이다 (2026-08-17).
+//   예전엔 "8월 17일 기준 · 오늘" 과 "수집 2026. 8. 17. 오후 2:23:11" 이 있었는데,
+//   둘 다 **우리가 언제 읽었나**를 말할 뿐 **언제까지 파는지**를 안 알려줬다.
+//   ★ 추천은 로테이션이 아니라 상품마다 기한이 달라서 둘 다 없다 (카드에 딱지가 붙는다).
+//   ★ 자리막이와 완성 화면이 **같은 머리글**을 써야 로딩이 끝날 때 제목이 안 흔들린다 (2026-09-08)
+function mshopHeadHtml(info, key) {
+    const period = mythicPeriod(key);
+    return `
+        <div class="mshop-section-head">
+            <h2 class="mshop-section-title">${info.full}</h2>
+            ${period ? `<span class="timer-text js-shop-timer" data-until="${period.end}" data-tooltip="${period.tip}"></span>` : ''}
+            ${period ? `<span class="mshop-period" data-tooltip="판매 기간 (한국시간)">${fmtKst(period.start)} - ${fmtKst(period.end)}</span>` : ''}
+        </div>`;
+}
+
 async function renderMythicSection(key) {
     const body = document.getElementById('mshop-body');
     if (!body) return;
     const info = MYTHIC_TABS.find(t => t.key === key);
     const isDaily = key === 'daily';
 
-    body.innerHTML = `<div class="mythic-empty">${info.full}을 불러오는 중입니다...</div>`;
+    // ★★ 「…을 불러오는 중입니다」 한 줄 → **머리글 + 카드 자리막이** 로 바꿨다 (2026-09-08 사용자 요청).
+    //   글 한 줄만 있다가 카드 8~12장이 한꺼번에 나타나면 화면이 통째로 튀어서 "짠" 하고 어색했다.
+    //   머리글(제목·남은 시간·판매 기간)은 **받아 올 게 없는 값**이라 처음부터 진짜를 그린다.
+    //   ★ 카드 수는 지난번에 받은 수를 쓴다 — 캐시가 60초로 만료돼도 객체는 남아 있어 **개수는 안다**.
+    //     처음 여는 구획만 MYTHIC_SKEL_N 의 기준값이다.
+    const lastItems = isDaily ? mythicTodayCache?.data?.items : mythicSectionCache[key]?.data?.items;
+    const skelN = lastItems?.length || MYTHIC_SKEL_N[key] || 4;
+    body.innerHTML = mshopHeadHtml(info, key)
+        + `<div class="mshop-grid">${`
+        <div class="mythic-item-card mythic-card-skel">
+            <div class="mythic-item-img-box"></div>
+            <div class="mythic-item-info">
+                <span class="mythic-item-name"></span>
+                <div class="mythic-item-price"></div>
+            </div>
+        </div>`.repeat(skelN)}</div>`;
+    updateShopTimer();   // 머리글 카운트다운을 바로 채운다 (1초 기다리면 빈 채로 깜빡인다)
 
     let data;
     try {
@@ -7359,19 +7407,13 @@ async function renderMythicSection(key) {
     //   예전엔 "8월 17일 기준 · 오늘" 과 "수집 2026. 8. 17. 오후 2:23:11" 이 있었는데,
     //   둘 다 **우리가 언제 읽었나**를 말할 뿐 **언제까지 파는지**를 안 알려줬다.
     //   ★ 추천은 로테이션이 아니라 상품마다 기한이 달라서 둘 다 없다 (카드에 딱지가 붙는다).
-    const period = mythicPeriod(key);
-    const meta = period
-        ? `<span class="timer-text js-shop-timer" data-until="${period.end}" data-tooltip="${period.tip}"></span>`
-        : '';
-
-    body.innerHTML = `
-        <div class="mshop-section-head">
-            <h2 class="mshop-section-title">${info.full}</h2>
-            ${meta}
-            ${period ? `<span class="mshop-period" data-tooltip="판매 기간 (한국시간)">${fmtKst(period.start)} - ${fmtKst(period.end)}</span>` : ''}
-        </div>
-        ${data.stale ? `<div class="mshop-stale">마지막 수집이 ${data.ageDays}일 전입니다. 그 사이 로테이션이 바뀌었을 수 있습니다.</div>` : ''}
-        ${cards}`;
+    // ★ 머리글은 자리막이가 이미 그린 것과 **같은 함수**다 — 두 벌로 두면 로딩→완료에서 머리글이 흔들린다
+    body.innerHTML = mshopHeadHtml(info, key) + cards;
+    // ★ 「마지막 수집이 N일 전입니다…」 딱지(.mshop-stale)는 2026-09-08 에 뺐다 (사용자 요청).
+    //   서버의 `data.stale`·`data.ageDays` 는 그대로 온다 — 다시 붙이려면 위 cards 앞에
+    //   `${data.stale ? '<div class="mshop-stale">…</div>' : ''}` 한 줄이면 된다.
+    //   ★ 로테이션이 갓 바뀌었을 때의 안내(.mshop-soon)는 **그대로 둔다** — 그건 지난 상품을
+    //     최신인 척 보여주지 않으려고 화면을 통째로 바꾸는 자리라 성격이 다르다.
 
     // 방금 만든 카운트다운·딱지를 바로 채운다 (1초 뒤 타이머를 기다리면 빈 채로 깜빡인다)
     updateShopTimer();
