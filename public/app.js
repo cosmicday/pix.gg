@@ -3851,8 +3851,18 @@ async function showCodex(target) {
             selected = id;
             codexLastPick.item = id;
             renderCats(); renderList();
-            // 목록이 통째로 새로 그려졌으니 고른 자리로 데려간다
-            document.querySelector('.codex-item.active')?.scrollIntoView({ block: 'center' });
+            // ★★ 목록이 통째로 새로 그려졌으니 고른 자리로 데려간다 — **목록 상자 안에서만** 움직인다.
+            //   예전엔 `scrollIntoView({block:'center'})` 였는데, 그건 **스크롤되는 조상을 전부**
+            //   움직여서 페이지까지 같이 튀었다 (2026-09-08 실측: window.scrollY 300 → 133).
+            //   조합식을 눌렀을 때 보던 자리가 흔들리던 게 이것이다.
+            //   ★ rect 차이로 재는 이유: offsetTop 은 offsetParent 기준이라 상자에 position 이
+            //     없으면 엉뚱한 값이 나온다. 두 rect 의 차이는 그런 전제가 필요 없다.
+            const lst = document.getElementById('codex-list');
+            const cur = lst.querySelector('.codex-item.active');
+            if (cur) {
+                lst.scrollTop += cur.getBoundingClientRect().top - lst.getBoundingClientRect().top
+                    - (lst.clientHeight - cur.offsetHeight) / 2;
+            }
         }));
     }
 
@@ -4038,10 +4048,11 @@ async function showCodex(target) {
                 <span class="codex-usage-scope">마스터+ · ${patchDisplay(U.scope.replace('p:', ''))} 패치</span>
             </div>
             ${opt.note ? `<div class="codex-usage-note">${opt.note}</div>` : ''}
+            <!-- ★ 라인별이 먼저, 챔피언 TOP5 가 뒤다 (2026-09-08 사용자 요청) -->
+            ${laneHtml(u)}
             ${champs ? `
                 <div class="codex-usage-sub">채택률 TOP5</div>
                 <div class="codex-usage-champs">${champs}</div>` : ''}
-            ${laneHtml(u)}
         </div>`;
     }
 
