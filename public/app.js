@@ -4020,10 +4020,21 @@ async function showCodex(target) {
 
         return `
         <div class="codex-usage">
+            <!-- ★ 채택률·승률은 **같은 꼴**이다 (2026-09-08 사용자 요청) — 이름은 12px 흐림,
+                 값은 13px 밝음. 예전엔 승률만 .codex-dim 한 덩어리라 **크기를 안 정해서
+                 상속값 16px** 로 혼자 커 보였다. 이름·값을 짝(.codex-usage-pair)으로 묶어야
+                 머리줄 gap 이 「채택률 7.8%」 안쪽까지 벌리지 않는다
+                 ★★ 이 주석은 템플릿 문자열 안이다 — 백틱을 쓰면 문자열이 거기서 끊긴다 -->
             <div class="codex-usage-head">
-                <span class="codex-usage-label">${opt.label || '채택률'}</span>
-                <span class="codex-usage-big">${pct}%</span>
-                <span class="codex-dim">${wr ? `승률 ${wr}%` : '승률 표본 부족'}</span>
+                <span class="codex-usage-pair">
+                    <span class="codex-usage-label">${opt.label || '채택률'}</span>
+                    <span class="codex-usage-big">${pct}%</span>
+                </span>
+                <span class="codex-usage-pair">
+                    <span class="codex-usage-label">승률</span>
+                    ${wr ? `<span class="codex-usage-big">${wr}%</span>`
+                         : `<span class="codex-usage-na">표본 부족</span>`}
+                </span>
                 <span class="codex-usage-scope">마스터+ · ${patchDisplay(U.scope.replace('p:', ''))} 패치</span>
             </div>
             ${opt.note ? `<div class="codex-usage-note">${opt.note}</div>` : ''}

@@ -7393,16 +7393,30 @@ main {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* ★ gap 은 **짝 사이** 간격이다 (2026-09-08). 이름과 값은 .codex-usage-pair 안에서 5px 로 붙는다 */
 .codex-usage-head {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 14px;
+}
+
+/* 「채택률 7.8%」 처럼 이름 + 값 한 짝 */
+.codex-usage-pair {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
 }
 
 .codex-usage-label {
     font-size: 12px;
     color: var(--text-muted);
+}
+
+/* 승률 표본이 모자랄 때. 값 자리에 오지만 값이 아니라서 12px 흐림이다 (.codex-usage-scope 와 같은 결) */
+.codex-usage-na {
+    font-size: 12px;
+    color: var(--text-faint);
 }
 
 /* ★ 강조를 뺐다 (2026-08-26) — 20px 700 보라였는데 본문보다 튀었다.
