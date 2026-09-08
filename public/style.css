@@ -135,11 +135,22 @@ main {
 
 /* (게임 스위처 아이콘 .pix-game-* 규칙은 2026-08-22 제거 — 공통 파일(dogu-ui.css .dogu-game-icon)이 그린다) */
 
+/* ★ 검색 버튼 돋보기 (2026-09-08). 버튼 자체는 공통 파일(.dogu-search-btn, 17px)이 그리는데
+   「⌕」 글리프가 글자 크기에 비해 유난히 작게 그려져서 버튼이 비어 보였다.
+   ★ .dogu-* 선택자를 이 파일에 쓰면 안 되는 규칙(맨 위 :root 주석)이라, app.js 가 넘기는
+     버튼 내용을 이 클래스로 감싸서 pixlol 안에서만 키운다. 다른 dogu 사이트는 .GG 글자라 무관 */
+.pix-search-icon {
+    display: block;
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 400;
+}
+
 /* =========================================
    4. 신화 상점 영역
    ========================================= */
 .mythic-shop-container {
-    margin-top: 110px;   /* 80 → 110 (2026-08-18): 검색창과 위젯 사이를 벌렸다 */
+    margin-top: 70px;    /* 80 → 110 (2026-08-18) → 70 (2026-09-08 사용자 요청: 검색창과 너무 떨어져 있었다) */
     width: 100%;
     max-width: 1240px;   /* 내용 1200 + 패딩 40 (2026-08-28 본문 폭 통일) */
     padding: 0 20px;
@@ -147,10 +158,10 @@ main {
 
 /* ★★ 홈 위젯 — 라인별 추천 챔피언 (2026-09-01 신설, 로드맵 A-6).
    신화상점 **위**에 온다 (사용자 결정) — 홈에 통계 입구가 헤더 메뉴뿐이었다.
-   ★ 검색창과의 간격(110px)을 이 위젯이 물려받고, 뒤따르는 신화상점은 40px 로 좁힌다.
+   ★ 검색창과의 간격(70px)을 이 위젯이 물려받고, 뒤따르는 신화상점은 40px 로 좁힌다.
      안 그러면 위젯 사이가 110px 씩 벌어져 홈이 통째로 길어진다. */
 .home-tier-container {
-    margin-top: 110px;
+    margin-top: 70px;    /* 110 → 70 (2026-09-08 사용자 요청). 신화상점 단독일 때와 같은 값을 유지한다 */
     width: 100%;
     max-width: 1240px;   /* 신화상점·패치노트와 같은 통 폭 */
     padding: 0 20px;
@@ -361,12 +372,16 @@ main {
     border: 1px solid rgba(167, 139, 250, 0.15);
     border-radius: 10px;
     overflow: hidden;
-    transition: transform 0.3s, border-color 0.3s;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 
+/* ★ hover 테두리는 보라(--accent) 다 (2026-09-08). 예전엔 #fff 라 카드만 사이트 색과 따로 놀았다 —
+   기본 테두리가 rgba(167,139,250,0.15) = 같은 보라의 15% 라, hover 는 그 보라를 100% 로 켜는 셈이다.
+   ★ /mythic 탭 카드도 이 규칙을 그대로 쓴다 (.mshop-grid 가 .mythic-item-card 를 물려받는다) */
 .mythic-item-card:hover {
     transform: translateY(-5px);
-    border-color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.25);
 }
 
 .mythic-item-img-box {

@@ -681,7 +681,10 @@ function mountDoguUI() {
         mascot: '/favicon_lol_180.png',         // 히어로 로고 왼쪽 마스코트 (공통 옵션)
         search: {
             placeholder,
-            button: DoguUI.TEXT.searchIcon,         // ★ pixlol 만 돋보기 (다른 사이트는 .GG 글자)
+            // ★ pixlol 만 돋보기 (다른 사이트는 .GG 글자). span 으로 감싸는 건 크기 때문이다 —
+            //   공통 버튼은 17px 인데 「⌕」 글리프가 유난히 작게 그려져서, style.css 의 .pix-search-icon 이 키운다.
+            //   .dogu-* 를 style.css 에 쓰면 안 되는 규칙이라 우리 클래스를 하나 끼웠다.
+            button: '<span class="pix-search-icon">' + DoguUI.TEXT.searchIcon + '</span>',
             onSubmit,
             favorites: { all: getFavorites, remove: removeFavorite },
             recents:   { all: getRecents,   remove: removeRecentSearch },
