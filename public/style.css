@@ -7610,6 +7610,29 @@ main {
     display: none;
 }
 
+/* ★★ 효과 라벨(「서리」·「사용 시 - 충전:」)을 **인라인으로 되돌린다** (2026-09-08 사용자 요청).
+   TOOLTIP_STYLE_CSS 는 이것들을 `display: block` 으로 두는데 그건 챔피언 스킬 툴팁 기준이다.
+   아이템 원문은 라벨 뒤에 자기 `<br>` 을 갖고 있어서(193자리) 블록이면 **줄이 두 번 바뀌어**
+   라벨과 본문 사이가 한 줄 비었고, 문장 한가운데 쓰인 라벨(암흑의 인장의 「영광」)은
+   **문장을 세 토막으로 끊었다.** 인라인이면 원문의 `<br>` 이 그대로 줄을 나눠 인게임과 같아진다.
+   ★ 도감 안으로만 좁힌다 — 이름 태그로 쓰면 챔피언 스킬 탭까지 같이 바뀐다.
+   ★ 라벨 앞 문단 나눔은 원문의 `<br><br>` 이 그대로 맡는다 (app.js 의 itemDescHtml 주석 참고) */
+.codex-desc passive,
+.codex-desc active,
+.codex-desc charge,
+.codex-desc release,
+.codex-desc toggle,
+.codex-desc tap,
+.codex-desc hold {
+    display: inline;
+    margin-top: 0;
+}
+
+/* 스탯 상자와 첫 효과 사이 — 원문 `<br>` 을 걷어냈으니 여백은 여기서 준다 */
+.codex-desc stats {
+    margin-bottom: 14px;
+}
+
 .codex-recipe {
     display: flex;
     align-items: flex-start;
@@ -7630,6 +7653,26 @@ main {
     width: 74px;
     white-space: nowrap;
     padding-top: 6px;
+}
+
+/* ★ 조합식만 라벨이 위로 간다 (2026-09-08). 왼쪽 라벨은 74+12=86px 을 먹는데,
+   여섯 칸짜리 나무(삼위일체·굶주린 히드라·맬모셔스의 아귀·죽음의 무도)가 그만큼 잘렸다.
+   재료·상위 아이템 줄은 아이콘 칩이 줄바꿈되므로 왼쪽 라벨 그대로가 낫다 */
+.codex-recipe-tree {
+    flex-direction: column;
+    gap: 10px;
+}
+
+.codex-recipe-tree .codex-recipe-label {
+    width: auto;
+    padding-top: 0;
+}
+
+/* ★★ 세로로 쌓은 줄이라 `.codex-recipe` 의 `align-items: flex-start` 가 나무 상자를
+   **내용 폭**으로 줄인다 — 그러면 폰에서 상자가 상세 칸을 뚫고 나가 페이지가 가로로 스크롤된다
+   (`overflow-x: auto` 는 상자가 줄어들면 걸리지 않는다). 폭을 줄에 맞춰 늘려 준다 */
+.codex-recipe-tree .codex-tree {
+    align-self: stretch;
 }
 
 .codex-recipe-list {
@@ -7687,9 +7730,12 @@ main {
     position: relative;
 }
 
+/* ★ `safe center` — 가운데 정렬하되 **넘칠 때는 왼쪽부터** 보여준다 (2026-09-08).
+   그냥 `center` 면 넘치는 나무의 **왼쪽이 잘려서 스크롤로도 못 본다** (플렉스의 오래된 함정).
+   못 알아듣는 브라우저는 이 줄을 버리고 위 `.codex-tree ul` 의 center 로 물러난다 */
 .codex-tree>ul {
     padding-top: 0;
-    justify-content: flex-start;
+    justify-content: safe center;
 }
 
 .codex-tree li {
@@ -7704,7 +7750,14 @@ main {
     padding-top: 0;
 }
 
-/* 부모 노드에서 자식 줄로 내려오는 세로선 */
+/* 부모 노드에서 자식 줄로 내려오는 세로선.
+   ★ 색은 --codex-line 한 곳에서 온다 (2026-09-08) — 선이 다섯 규칙에 흩어져 있어서
+     한 번 바꾸려면 다섯 곳을 고쳐야 했다 */
+.codex-tree {
+    --codex-line: rgba(255, 255, 255, 0.22);
+    --codex-elbow: 6px;
+}
+
 .codex-tree ul ul::before {
     content: '';
     position: absolute;
@@ -7712,7 +7765,7 @@ main {
     left: 50%;
     width: 1px;
     height: 14px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--codex-line);
 }
 
 .codex-tree li::before,
@@ -7723,13 +7776,13 @@ main {
     right: 50%;
     width: 50%;
     height: 14px;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid var(--codex-line);
 }
 
 .codex-tree li::after {
     right: auto;
     left: 50%;
-    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 1px solid var(--codex-line);
 }
 
 .codex-tree li:first-child::before {
@@ -7738,6 +7791,32 @@ main {
 
 .codex-tree li:last-child::after {
     border-top: none;
+}
+
+/* ★★ 꺾이는 자리를 둥글린다 (2026-09-08). 직각이라 선이 툭툭 끊겨 보였다.
+   ★ 첫째는 ::after 가 「위 + 왼쪽」 테두리를 다 갖고 있어 그 모서리를 깎으면 된다.
+   ★ 막내는 ::after 의 위 테두리가 없어서 깎을 모서리가 없다 — 그래서 **내려긋는 선을
+     ::before 의 오른쪽 테두리로 옮겨** 「위 + 오른쪽」 모서리를 만들고 그걸 깎는다.
+     (::before 의 오른쪽 끝이 곧 노드의 가운데다: right:50% · width:50%)
+   ★ 자식이 하나뿐이면 첫째이자 막내다 — 위 테두리는 둘 다 없어지고 내려긋는 선만
+     ::before 의 오른쪽 테두리로 남는다 (실측으로 선이 안 사라지는 걸 확인했다) */
+.codex-tree li:first-child::after {
+    border-top-left-radius: var(--codex-elbow);
+}
+
+.codex-tree li:last-child::before {
+    border-right: 1px solid var(--codex-line);
+    border-top-right-radius: var(--codex-elbow);
+}
+
+.codex-tree li:last-child::after {
+    border-left: none;
+}
+
+/* ★ 자식이 하나뿐이면 가로 막대가 아예 없다 — 위 모서리를 깎으면 **내려긋는 선 끝이
+   갈고리처럼 휜다** (실측으로 보였다). 그 경우만 각지게 되돌린다 */
+.codex-tree li:first-child:last-child::before {
+    border-top-right-radius: 0;
 }
 
 .codex-tree>ul>li::before,
@@ -7749,16 +7828,22 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 5px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 7px;
-    padding: 5px;
+    border-radius: 9px;
+    padding: 6px 6px 5px;
+}
+
+/* ★ 뿌리 = 지금 보고 있는 아이템. 재료와 같은 회색이면 어느 게 완성품인지 안 보인다 */
+.codex-tree-node.is-root {
+    background: rgba(167, 139, 250, 0.10);
+    border-color: rgba(167, 139, 250, 0.35);
 }
 
 .codex-tree-node[data-id] {
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
 
 /* ★ :hover 는 항상 hover:hover 로 감싼다 — 폰 탭 잔상 방지 (role-btn 에서 겪은 것) */
@@ -7766,25 +7851,32 @@ main {
     .codex-tree-node[data-id]:hover {
         background: rgba(167, 139, 250, 0.12);
         border-color: rgba(167, 139, 250, 0.4);
+        transform: translateY(-2px);
     }
 }
 
 .codex-tree-node img {
     display: block;
-    width: 34px;
-    height: 34px;
-    border-radius: 5px;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
 }
 
 .codex-tree-node.is-root img {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
 }
 
+/* 값은 인게임 상점처럼 금색이고, 아이콘보다 뒤로 물러나게 알약에 담는다 */
 .codex-tree-gold {
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 600;
     line-height: 1;
-    color: #f0e6d2;
+    color: #f0c674;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 999px;
+    padding: 3px 7px;
+    font-variant-numeric: tabular-nums;
 }
 
 .codex-empty,

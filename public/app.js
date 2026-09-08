@@ -3901,12 +3901,30 @@ async function showCodex(target) {
     }
 
     function recipeTreeRow(rootId) {
+        // ★ 조합식만 라벨을 **위에** 둔다 (2026-09-08) — 왼쪽에 두면 라벨 몫 86px 때문에
+        //   나무가 눌려서 여섯 칸짜리(삼위일체·굶주린 히드라 등 4종)가 오른쪽으로 잘렸다.
         return `
-        <div class="codex-recipe">
+        <div class="codex-recipe codex-recipe-tree">
             <span class="codex-recipe-label">조합식</span>
             <div class="codex-tree"><ul>${recipeTreeNode(rootId, 0)}</ul></div>
         </div>`;
     }
+
+    // ★★ 아이템 본문의 **줄 간격만** 손본다 (2026-09-08 사용자 요청). 글자·태그·색은 원문 그대로다.
+    //   DD 원문은 이렇게 생겼다:
+    //     <stats>…</stats><br><br><passive>서리</passive><br>스킬로 적에게…
+    //   ① `<stats>` 는 이미 **블록**(아래 여백 12px)이라 그 뒤의 `<br>` 둘은 **빈 줄 두 개**가 된다.
+    //      스탯 상자와 첫 효과 사이가 60px 가까이 벌어지던 원인이다. 존야는 `<br>` 이 **넷**이다.
+    //   ② 끝의 `<br>` 도 같은 이유로 상자 아래에 빈 줄을 남긴다 (장화처럼 효과가 없는 아이템).
+    //   ★ 문단 사이(`효과1<br><br>효과2`)의 `<br>` 은 **안 건드린다** — 그건 진짜 문단 나눔이다.
+    //     라벨 앞이라고 무조건 지우면 효과 두 개가 한 덩어리로 붙는다.
+    //   ★ 라벨(`<passive>` 등)을 인라인으로 되돌리는 건 CSS 쪽이다 (style.css 의 `.codex-desc passive`).
+    //     블록으로 두면 **라벨 뒤 `<br>` 과 겹쳐 줄이 두 번 바뀌고**, 문장 한가운데 쓰인 라벨
+    //     (암흑의 인장의 「영광」 5자리)은 문장을 세 토막으로 끊는다.
+    const itemDescHtml = (d) => (d || '').trim()
+        ? d.replace(/<\/stats>(?:\s*<br\s*\/?>)+/gi, '</stats>')
+            .replace(/(?:\s*<br\s*\/?>)+\s*(?=<\/mainText>|$)/gi, '')
+        : '<span class="codex-dim">설명이 없습니다.</span>';
 
     function itemDetailHtml(e) {
         const it = e.raw;
@@ -3928,7 +3946,7 @@ async function showCodex(target) {
                 ${it.p ? `<div class="codex-plain">${it.p}</div>` : ''}
             </div>
         </div>
-        <div class="codex-desc">${it.d || '<span class="codex-dim">설명이 없습니다.</span>'}</div>
+        <div class="codex-desc">${itemDescHtml(it.d)}</div>
         ${it.f.length ? recipeTreeRow(e.id) : ''}
         ${recipeRow('재료', it.f)}
         ${recipeRow('상위 아이템', it.t)}
