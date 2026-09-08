@@ -281,6 +281,23 @@ main {
     flex: none;
 }
 
+/* ★★ 로딩 자리막이 (2026-09-08). 데이터가 오기 전에 **자리만** 잡아 두는 줄이다 —
+   신화상점이 먼저 그려지고 이 위젯이 나중에 끼어들며 화면을 밀던 것을 막는다.
+   ★ 실제 줄과 같은 태그·클래스를 쓰므로 높이가 저절로 같다. 여기선 회색 막대만 얹는다 */
+.home-tier-skel { pointer-events: none; }
+
+.home-tier-skel .home-tier-portrait,
+.home-tier-skel .home-tier-name,
+.home-tier-skel .home-tier-num span {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.home-tier-skel .home-tier-portrait { border-radius: 50%; }
+.home-tier-skel .home-tier-name { width: 56px; height: 11px; }
+.home-tier-skel .home-tier-num { align-items: center; }
+.home-tier-skel .home-tier-num span { height: 11px; }
+
 /* ★★ 폰은 5열이 불가능하다 (한 열이 66px). 라인별 **1위만** 남기고 세로로 쌓는다 —
    3명씩 다 깔면 15줄이라 홈이 600px 넘게 길어진다. 데이터는 그대로 받고 CSS 로만 줄인다. */
 @media (max-width: 768px) {

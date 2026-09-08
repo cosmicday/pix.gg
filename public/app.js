@@ -226,8 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 페이지 접속 시 가장 먼저 버전 업데이트 및 툴팁 정보 백그라운드 다운로드
     ddragonReady = initDdragonVersion();
     ddragonReady.then(() => {
-        // 공통 헤더 2단 오른쪽 보조 정보 — DD 버전 앞 두 자리 (16.16.1 → 16.16)
-        if (window.DoguUI) DoguUI.setAside('패치 <b>' + patchDisplay(ddragonVersion) + '</b>');
+        // ★ 공통 헤더 2단 오른쪽의 「패치 26.17」은 2026-09-08 에 뺐다 (사용자 요청).
+        //   자리(#dogu-gnb-aside)는 공통 마크업에 그대로 있으니 다시 넣으려면
+        //   DoguUI.setAside('패치 <b>' + patchDisplay(ddragonVersion) + '</b>') 한 줄이면 된다
         fetchChampionMap();
         fetchRuneMap();
         fetchItemData();
@@ -6815,7 +6816,10 @@ function mythicCollectingMsg(key) {
 //     두 벌이 되어 어긋난다 (TIER_COEF·TIER_CUTS 가 화면 쪽에만 있는 이유이기도 하다).
 //     `/api/champion-stats` 는 gzip 16.8KB 라 홈에서 한 번 받아도 부담이 없고 서버 캐시도 있다.
 //   ★ 실패하거나 표본이 없으면 **위젯을 통째로 숨긴다** (도감 채택률과 같은 정신).
-//     `#home-tier-container` 가 `display:none` 으로 시작해서, 그릴 게 있을 때만 켠다.
+//   ★★ 2026-09-08 부터 **골격이 index.html 에 박혀 있고 위젯은 보인 채로 시작한다** —
+//     예전처럼 `display:none` 으로 시작하면 app.js 가 defer 라 첫 그림에 위젯이 없어서,
+//     먼저 그려진 신화상점 위로 나중에 끼어들며 화면을 밀었다. 그래서 **숨기는 쪽이 예외**다:
+//     실패·표본 0 일 때만 `display='none'` 으로 접는다 (아래 세 자리 — 전부 짝이다).
 //   ★ 줄을 누르면 통계 상세로 간다 — 통계 표와 같이 **라인을 주소에 같이 넘긴다**
 //     (안 넘기면 판수가 제일 많은 라인으로 물러나서 "탑 잭스" 를 눌러도 다른 라인이 뜬다).
 // ★ 라인마다 몇 명을 보여줄지. 열 폭이 232px 라 이 이상은 세로로만 길어진다
@@ -6829,7 +6833,7 @@ async function loadHomeTiers() {
         const res = await fetch('/api/champion-stats');
         const data = await res.json();
         // 박제된 패치(rows 가 파일에 있는 경우)는 홈에서까지 파일을 받지 않는다 — 그냥 안 그린다
-        if (!data.ready || !data.rows?.length) return;
+        if (!data.ready || !data.rows?.length) { box.style.display = 'none'; return; }
 
         // 통계 탭의 collect() 와 같은 합산 (kb 는 'all' 하나뿐이다)
         const byKey = new Map();
@@ -6852,9 +6856,13 @@ async function loadHomeTiers() {
                 .sort((a, b) => b.score - a.score)
                 .slice(0, HOME_TIER_N)
         })).filter(x => x.arr.length);
-        if (!cols.length) return;
+        if (!cols.length) { box.style.display = 'none'; return; }
 
-        document.getElementById('home-tier-scope').textContent = statScopeLabel(data.scope);
+        // ★ 여기만 「버전: 26.17」이다 (2026-09-08 사용자 요청). statScopeLabel 은 「26.17 패치」라
+        //   통계 탭·패치 영향·도감이 다 같이 쓰므로 건드리지 않는다
+        const sc = String(data.scope || '');
+        document.getElementById('home-tier-scope').textContent =
+            sc.startsWith('p:') ? `버전: ${patchDisplay(sc.slice(2))}` : statScopeLabel(sc);
         document.getElementById('home-tier-list').innerHTML = cols.map(({ p, arr }) => `
             <div class="home-tier-col">
                 <div class="home-tier-colhead">
@@ -6887,7 +6895,9 @@ async function loadHomeTiers() {
             showChampStatPage(row.dataset.champ, row.dataset.lane);
         });
     } catch (e) {
-        // 곁가지라 조용히 넘긴다 — 홈의 나머지는 그대로 나온다
+        // 곁가지라 조용히 넘긴다 — 홈의 나머지는 그대로 나온다.
+        // ★ 골격을 먼저 띄우므로 실패하면 도로 접어야 한다 (안 접으면 빈 칸이 남는다)
+        box.style.display = 'none';
     }
 }
 
