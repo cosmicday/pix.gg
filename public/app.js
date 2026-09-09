@@ -5211,8 +5211,7 @@ function lxRuneBody(c, v) {
                     <span class="lx-gray">${r.games}</span>
                 </div>`;
             }).join('')}
-        </div>
-        <div class="lx-foot">서버가 표본 상위 12개 조합만 저장한다 · 파편은 조합에 안 들어 있다</div>`;
+        </div>`;
     }
     // ★ 룬은 key [id], 파편은 key [id, 줄] (2026-08-27 — 적응형·체력이 두 줄에 있어 id 로만 세면 픽률이 100% 를 넘었다).
     //   줄 번호 있는 줄이 아직 없으면(재집계 전) 옛 id 값으로 물러난다
@@ -5247,7 +5246,6 @@ function lxRuneBody(c, v) {
     const rowHtml = (row, cls, ri) => `<div class="lx-pk-row${cls}">${row.map(id => cell(id, ri == null ? bright.has(id) : shards[ri] === id, ri)).join('')}</div>`;
     const pageLine = '';   // 표 위 '승률 최고 룬 페이지 — …' 줄은 2026-08-27 에 뺐다 (사용자 지시)
     const styles = Object.keys(perkData.slots || {}).map(Number).sort((a, b) => a - b);
-    const note = v === 'all' ? '' : ' · 밝은 칸 = 그 룬 페이지의 6개 + 파편 3개, 나머지는 어둡게';
     return pageLine + `<div class="lx-pk-trees">
         ${styles.map(sid => `<div class="lx-pk-tree">
             <div class="lx-pk-title"><img src="${perkIcon(sid)}" alt="">${perkName(sid)}</div>
@@ -5257,8 +5255,7 @@ function lxRuneBody(c, v) {
             <div class="lx-pk-title">스탯 파편</div>
             ${(perkData.shardRows || []).map((row, ri) => rowHtml(row, ' is-shard', ri)).join('')}
         </div>
-    </div>
-    <div class="lx-foot">위 = 픽률(이 라인 판 중 그 룬을 든 비율) · 아래 = 승률${note}</div>`;
+    </div>`;
 }
 
 // ── 탭 바 동작 — 그룹마다 몸통을 다시 그린다 ─────────────────────────
