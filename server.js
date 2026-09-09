@@ -1715,9 +1715,9 @@ const ITEM_CONSUMABLES = [
 //   | earlyset    | 초반 아이템 세트 (같은 구간, id 정렬)     | Early Item Sets |
 //   | boots       | **최종 6칸 안의 장화** (없으면 빈 배열)     | Boots. ★ 2026-09-09 부터 타임라인이 아니라 최종 아이템에서 센다 —
 //   |             |                                      | 안 산 판(빈 key)도 세야 해서다. 그래서 이 type 만 buildOneBuildScope 의 facet 에 있다 |
-//   | core        | 완성 아이템 첫 3개 (구매 순서)            | Core Build. 완성 = 아래 loadCompletedItems |
-//   | set2/4/5    | 완성 아이템 첫 2·4·5개 (구매 순서)        | Sets (3개는 core) |
-//   | item1~6     | n번째 완성 아이템 (낱개)                 | Item 1~6 |
+//   | core        | **신발 뺀** 완성 아이템 첫 3개 (구매 순서) | Core Build. 완성 = 아래 loadCompletedItems |
+//   | set2/4/5    | 같은 것의 첫 2·4·5개                    | Sets (3개는 core). ★ 2026-09-09 부터 신발을 뺀다 (`comp` → `compnb`) |
+//   | item1~6     | **신발 뺀** n번째 완성 아이템 (낱개)      | Item 1~6 = 화면의 1~6코어 |
 //   | tlall       | []                                   | 타임라인 있는 판의 참가자 수 — 위 전부의 픽률 분모 |
 //
 //   ★ 1판짜리 조합은 저장 단계에서 뺀다 (`$match games >= 2`, 조합 type) — 조합 가짓수가 룬 페이지보다도
@@ -1757,15 +1757,33 @@ async function loadCompletedItems() {
         const t = data[x];
         return t && t.maps?.['11'] && t.gold?.purchasable && !t.requiredAlly;
     });
-    const complete = [], boots = [];
+    // ★★★ 장화는 **태그로 판정하면 안 된다** (2026-09-09). 라이엇 자료에 구멍이 있다 —
+    //   `3172 건메탈 군화`(3단계 장화, 광전사의 군화에서 올라간다)는 Boots 태그가 없고
+    //   `NonbootsMovement` 만 달려 있다. 태그로 세면 그 8,175명(참가자의 1.68%)이
+    //   「신발 없음」으로 세어지고, 동시에 완성 아이템이라 **코어에도 끼어든다.**
+    //   ★ 그리고 태그가 맞더라도 **1000골드 하한이 장화를 걸러 버린다** —
+    //     `3158 아이오니아`(900g · 12.00%) `3171 핏빛 명석함`(900g · 4.41%) 이 그랬다.
+    //   → 그래서 **`1001 장화` 에서 `into` 로 뻗은 계보 전부**를 장화로 본다 (협곡 15종).
+    //     실측으로 옛 규칙 11종을 하나도 안 놓치고 4종(1001·3158·3171·3172)을 더 잡는다.
+    //   ★ 1단계 `1001 장화` 도 넣는다 — "장화만 신고 끝난 판" 은 「없음」이 아니라 「장화」다.
+    const bootsSet = new Set();
+    const walk = id => {
+        const it = data[id];
+        if (bootsSet.has(Number(id)) || !it) return;
+        if (!it.maps?.['11'] || !it.gold?.purchasable || it.requiredAlly) return;
+        bootsSet.add(Number(id));
+        (it.into || []).forEach(walk);
+    };
+    walk('1001');
+
+    const complete = [], boots = [...bootsSet];
     for (const [id, it] of Object.entries(data)) {
         const n = Number(id);
         if (!it.maps?.['11'] || !it.gold?.purchasable || it.requiredAlly) continue;
         if (ITEM_CONSUMABLES.includes(n) || (it.gold.total || 0) < TL_COMPLETE_GOLD) continue;
-        const isBoots = (it.tags || []).includes('Boots');
-        if (realInto(it).length && !isBoots) continue;
+        // 장화는 위 단계가 있어도(2단계 → 3단계) 그 자체로 완성으로 친다
+        if (realInto(it).length && !bootsSet.has(n)) continue;
         complete.push(n);
-        if (isBoots) boots.push(n);
     }
     completedItemCache = { ver: currentVersion, data: { complete, boots } };
     console.log(`[Stat] 완성 아이템 목록 ${complete.length}개 · 장화 ${boots.length}개 (DD ${currentVersion})`);
@@ -1791,7 +1809,11 @@ async function buildTimelineFacet(matchCond, opts = {}) {
     const min2 = { $match: { games: { $gte: 2 } } };
     // ★ N코어 = **신발을 뺀** 완성 아이템의 N번째 (2026-09-09). 신발은 자기 줄이 따로 있다
     const nth = i => [{ $match: { [`compnb.${i}`]: { $exists: true } } }, grp([at('$compnb', i)])];
-    const firstN = n => [{ $match: { [`comp.${n - 1}`]: { $exists: true } } }, grp({ $slice: ['$comp', n] }), min2];
+    // ★ 세트(2·3·4·5개)도 **신발을 뺀다** (2026-09-09 사용자 결정). 예전엔 `comp`(신발 포함)였다.
+    //   신발은 자기 줄이 따로 있어 세트에까지 끼면 같은 말을 두 번 하고, 무엇보다
+    //   9/9 소급 정리로 16.17 의 신발 구매가 지워져서 `comp` 를 쓰면 그 패치 세트가 틀린다.
+    //   `compnb` 는 그 사고와 무관하다 (지워진 건 신발뿐).
+    const firstN = n => [{ $match: { [`compnb.${n - 1}`]: { $exists: true } } }, grp({ $slice: ['$compnb', n] }), min2];
     const ordTo = n => [{ $match: { [`ord.${n - 1}`]: { $exists: true } } }, grp({ $slice: ['$ord', n] }), min2];
     const ids = arr => ({ $map: { input: arr, as: 'b', in: '$$b.id' } });
     const inWindow = (lo, hi) => ({ $filter: { input: '$buys', as: 'b', cond: { $and: [{ $gt: ['$$b.t', lo] }, { $lte: ['$$b.t', hi] }] } } });
@@ -1830,11 +1852,14 @@ async function buildTimelineFacet(matchCond, opts = {}) {
             ], sortBy: { at: 1, n: -1, l: 1 } } }, as: 's', in: '$$s.l' } },
             start: { $sortArray: { input: ids(inWindow(-1, TL_START_SEC)), sortBy: 1 } },
             early: ids(inWindow(TL_START_SEC, TL_EARLY_SEC)),
-            comp: ids({ $filter: { input: '$buys', as: 'b', cond: { $in: ['$$b.id', complete] } } }),
+            // (`comp` = 신발 포함 완성 아이템. 2026-09-09 에 세트까지 compnb 로 옮겨 쓰는 곳이 없어져 뺐다.
+            //  되살릴 일이 있으면 이 줄을 그대로 넣으면 된다:
+            //  comp: ids({ $filter: { input: '$buys', as: 'b', cond: { $in: ['$$b.id', complete] } } }),)
             // ★★ 코어 순서(1~6코어)는 **신발을 빼고** 센다 (2026-09-09 사용자 요청).
             //   신발은 바로 위에 자기 줄(`boots`)이 따로 있는데 코어에도 끼면 "1코어 = 신발" 인
-            //   챔피언이 생겨서 두 줄이 같은 말을 한다. 세트(`core`·`set2/4/5`)는 **그대로 둔다** —
-            //   거긴 "그 판에 뭘 갖췄나" 라 신발도 장비의 하나다.
+            //   챔피언이 생겨서 두 줄이 같은 말을 한다. **세트(`core`·`set2/4/5`)도 같은 이유로
+            //   신발을 뺀다** (2026-09-09 사용자 결정 — 처음엔 「세트는 그 판에 뭘 갖췄나라
+            //   신발도 장비의 하나」로 남겼다가 뒤집었다).
             compnb: ids({ $filter: { input: '$buys', as: 'b', cond: {
                 $and: [{ $in: ['$$b.id', complete] }, { $not: [{ $in: ['$$b.id', boots] }] }]
             } } })
