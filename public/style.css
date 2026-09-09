@@ -304,40 +304,85 @@ main {
     .home-tier-container { margin-top: 55px; }   /* 신화상점 폰 여백과 같은 값 */
     .home-tier-list { grid-template-columns: 1fr; gap: 8px; }
 
+    /* ★★★ 폰 배치는 **칸 하나에 격자 하나**다 (2026-09-09 사용자 요청으로 개편).
+       라인 라벨과 티어 배지가 왼쪽에 위아래로 서고, 초상화 오른쪽에 이름과 수치가 위아래로 선다:
+
+           [아이콘] 탑      [초상] 갱플랭크
+             1티어                승률 53.7%  픽률 6.3%
+
+       ★★ 그러려면 **줄(.home-tier-row)이 격자를 가로막으면 안 된다** — 배지는 줄 안에 있고
+         라인 라벨은 줄 **밖**(colhead)에 있어서, 둘을 같은 칸에 세우려면 한 격자에 있어야 한다.
+         `display: contents` 로 줄의 상자를 없애 자식들을 칸의 격자 항목으로 올린다.
+         ★ 줄 상자가 사라져도 `closest('.home-tier-row')` 는 그대로 동작한다 (DOM 에는 있다) —
+           app.js 의 클릭 위임이 그 함수를 쓰므로 누르면 여전히 통계 상세로 간다.
+       ★★ 라인 칸 폭 56px = 아이콘 14 + 5 + 「서포터」(3글자 36) + 1 이다. **고정이라야** 카드 다섯 장의
+         초상화가 세로로 줄을 맞춘다 (auto 로 두면 「탑」 카드만 왼쪽으로 당겨진다).
+         ★ 52px 로 뒀더니 **서포터만 「서포 / 터」로 접혔다** (실측). 폭을 줄일 땐 제일 긴
+           「서포터」로 확인할 것 — 아래 nowrap 은 그 사고의 2차 방어다. */
     .home-tier-col {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: 56px auto minmax(0, 1fr);
+        grid-template-areas:
+            "lane pic name"
+            "badge pic num";
         align-items: center;
-        column-gap: 10px;
+        column-gap: 6px;
+        row-gap: 2px;
         padding: 8px 12px;
     }
 
     .home-tier-colhead {
+        grid-area: lane;
         border: 0;
         padding: 0;
         margin: 0;
-        width: 62px;
+        width: auto;
+        gap: 5px;
+        white-space: nowrap;
     }
 
-    .home-tier-colnote { display: none; }
+    .home-tier-colnote { display: none; }   /* 이름은 값 옆에 붙는다 (아래 .home-tier-num) */
+
+    .home-tier-row { display: contents; }
     .home-tier-row ~ .home-tier-row { display: none; }   /* 2·3위는 폰에서 숨긴다 (★ nth-of-type 은 colhead 까지 세서 전부 숨었다) */
-
-    /* ★ 폰은 한 줄에 다 못 넣는다 — 라인 라벨을 빼고도 이름 몫이 64px(4글자)이라
-       「트위스티드 페이트」가 잘렸다. **수치를 아랫줄로 내려** 이름에 124px 을 준다. */
-    .home-tier-row {
-        display: grid;
-        grid-template-columns: auto auto minmax(0, 1fr);
-        grid-template-areas: "pic name name" "pic badge num";
-        column-gap: 8px;
-        row-gap: 1px;
-        padding: 4px 2px;
-    }
 
     .home-tier-portrait { grid-area: pic; width: 32px; height: 32px; align-self: center; }
     .home-tier-name { grid-area: name; font-size: 14px; align-self: end; }
-    .home-tier-badge { justify-self: start; }
-    .home-tier-badge { grid-area: badge; align-self: end; }
-    .home-tier-num { grid-area: num; margin-left: 8px; align-self: start; }
+
+    /* 배지는 라인 이름 **아래**다. 폭을 풀고 왼쪽에 붙여 라인 아이콘과 시작점을 맞춘다
+       (데스크톱의 36px 고정은 초상화 시작점을 맞추려던 것이라 여기선 필요 없다) */
+    .home-tier-badge {
+        grid-area: badge;
+        width: auto;
+        justify-self: start;
+        align-self: start;
+    }
+
+    /* ★ 값 옆에 이름을 붙인다 (2026-09-09 사용자 요청). 폰에서는 열 머리의 「승률·픽률」이
+       숨겨져 있어 숫자 둘이 무슨 뜻인지 알 수가 없었다. 60px 고정은 카드 다섯 장의
+       「승률」·「픽률」 시작점을 맞추려는 것이다 (픽률이 한 자리 늘어도 안 밀린다) */
+    .home-tier-num {
+        grid-area: num;
+        grid-template-columns: 60px 60px;
+        column-gap: 6px;
+        text-align: left;
+        margin-left: 0;
+        align-self: start;
+    }
+
+    .home-tier-num span:first-child::before { content: '승률 '; color: var(--text-dim); }
+    .home-tier-num span:last-child::before { content: '픽률 '; color: var(--text-dim); }
+}
+
+/* ★★ 좁은 폰(≤355px)에서는 승률·픽률도 위아래로 (2026-09-09 사용자가 미리 허락한 갈래).
+   두 칸(60+6+60=126)이 들어가려면 화면이 346px 은 돼야 한다 — 계산:
+   좌우 여백 48×2 + 카드 안쪽 24 + 라인 56 + 6 + 초상 32 + 6 = 220 을 뺀 나머지.
+   320px 짜리에서는 값이 **카드 밖으로 삐져나갔다** (화면 넘침은 아니라 눈으로만 보인다). */
+@media (max-width: 355px) {
+    .home-tier-num {
+        grid-template-columns: 1fr;
+        row-gap: 1px;
+    }
 }
 
 .shop-title-container {
