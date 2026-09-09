@@ -1204,7 +1204,12 @@ const TL_SKIP_ITEMS = new Set([
     2422, 2419                       // 잡화(추적자의 팔목 등 되팔리는 자리)
 ]);
 
-function toSlimTimeline(timeline) {
+// ★★ `keepIds` 를 주면 **집계가 쓰는 구매만** 담는다 (2026-09-09 — Atlas 512MB 가 찼다).
+//   남기는 규칙: **600초(TL_EARLY_SEC) 안 구매** 이거나 **완성 아이템**.
+//   집계(buildOneTimelineScope)가 보는 건 시작(≤90초) · 초반(90~600초) · 완성 아이템(코어 순서)뿐이라
+//   **1코어·2코어·시작템·신발 통계에 손실이 없다.** 빠지는 건 600초 뒤에 산 조합 재료다.
+//   실측: 판당 149건 → 80건(53%). 안 주면(null) 예전처럼 전부 담는다.
+function toSlimTimeline(timeline, keepIds) {
     const frames = timeline?.info?.frames;
     if (!Array.isArray(frames)) return null;
 
@@ -1220,7 +1225,10 @@ function toSlimTimeline(timeline) {
             if (ch) (skills[pid] || (skills[pid] = [])).push(ch);
         } else if (e.type === 'ITEM_PURCHASED') {
             if (TL_SKIP_ITEMS.has(e.itemId)) return;
-            buys.push([Math.round((e.timestamp || 0) / 1000), pid - 1, e.itemId]);
+            const sec = Math.round((e.timestamp || 0) / 1000);
+            // ★ 되무름(ITEM_UNDO)이 뒤에서 찾아 지우므로 **거르는 건 여기서** 해야 짝이 맞는다
+            if (keepIds && sec > TL_EARLY_SEC && !keepIds.has(e.itemId)) return;
+            buys.push([sec, pid - 1, e.itemId]);
         } else if (e.type === 'ITEM_UNDO') {
             // 되무른 아이템을 뒤에서부터 하나 지운다 (같은 참가자의 마지막 구매)
             const gone = e.beforeId;
@@ -1445,6 +1453,19 @@ async function fetchMatchStats() {
     if (scanPending() > 0) return;
     isFetchingStats = true;
 
+    // ★★ 타임라인에서 **집계가 쓰는 구매만** 남기려고 완성 아이템 목록을 미리 받아 둔다
+    //   (2026-09-09, Atlas 512MB 가 차서). 실측: 판당 149건 → 80건(53%) · `it` 186MB → 99MB.
+    //   ★ 1코어·2코어·시작템·초반템 통계는 **손실이 없다** — 코어는 완성 아이템이고,
+    //     시작·초반은 600초 안 구매라 둘 다 남는다. 빠지는 건 600초 뒤에 산 **조합 재료**뿐이다.
+    //   ★ 목록을 못 받으면 null 을 넘겨 예전처럼 전부 담는다 (틀리게 줄이느니 큰 게 낫다).
+    let tlKeepIds = null;
+    try {
+        const ci = await loadCompletedItems();
+        tlKeepIds = new Set(ci.complete);
+    } catch (e) {
+        console.warn('[Stat] 완성 아이템 목록을 못 받아 타임라인을 통째로 담는다:', e.message);
+    }
+
     try {
         // ★★ k 는 **그 경기 날짜의 명단**으로 센다 (2026-08-17). 수집이 경기 다음 날
         //   저녁이라 "지금 명단" 으로 세면 그 사이 강등된 사람이 빠져 5명짜리가 4명이 된다.
@@ -1495,7 +1516,9 @@ async function fetchMatchStats() {
                         const tl = await riotApi.get(
                             `https://asia.api.riotgames.com/lol/match/v5/matches/${t.matchId}/timeline`
                         );
-                        const st = toSlimTimeline(tl.data);
+                        // ★★ `it` 는 **집계가 쓰는 구매만** 담는다 (2026-09-09, Atlas 512MB 가 차서).
+                        //   목록을 못 받아 오면 keep 이 null 이라 예전처럼 전부 담는다 (안전한 쪽).
+                        const st = toSlimTimeline(tl.data, tlKeepIds);
                         if (st) { slim.sk = st.sk; slim.it = st.it; statCounters.tl = (statCounters.tl || 0) + 1; }
                     } catch (e) {
                         if (e.response?.status === 429) throw e;   // 429 는 바깥에서 사이클을 끊는다
