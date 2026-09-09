@@ -1726,7 +1726,8 @@ const ITEM_CONSUMABLES = [
 //   자리를 빼면 박제 TYPE_LIST 의 번호가 밀리고, 저장·조회 경로는 type 이름만 보므로 그대로 둔다.
 const TL_TYPES = ['skillord', 'skillpri', 'start', 'early', 'earlyset', 'boots',
     'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6',
-    'skilllv', 'skillord11'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
+    'skilllv', 'skillord11',
+    'tlord11', 'tlord16'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
 // ★ skillord6·skillord10 은 2026-09-09 에 화면에서 빠져 집계도 멈췄다 — 박제 TYPE_LIST 의 자리는 그대로 둔다 (자리 번호가 밀리면 안 된다)
 const TL_MIN_PATCH = [16, 17];    // 이 패치부터 타임라인을 받고·센다
 const TL_START_SEC = 90;          // 이 초 안에 산 것이 시작 아이템
@@ -1889,6 +1890,12 @@ async function buildTimelineFacet(matchCond, opts = {}) {
             { $group: { _id: { c: '$c', pos: '$pos', k: [{ $add: ['$lv', 1] }, '$ord'] }, games: { $sum: 1 }, wins: { $sum: '$w' } } }
         ],
         early: [{ $unwind: '$early' }, grp(['$early'])],
+        // ★★ 11·16레벨 순서 줄의 **픽률 분모** — 그 레벨에 도달한 사람 수다 (2026-09-09).
+        //   `tlall`(타임라인이 있는 판 전부)로 나누면 16레벨 줄들의 픽률 합이 33% 밖에 안 된다.
+        //   실측(리 신 정글): 11,993명 중 11레벨 10,682명 · 16레벨 **3,909명**뿐이다.
+        //   ★ `ordTo(n)` 이 `ord.{n-1}` 로 거르는 것과 **같은 조건**이라야 분자·분모가 맞는다.
+        tlord11: [{ $match: { 'ord.10': { $exists: true } } }, grp([])],
+        tlord16: [{ $match: { [`ord.${TL_SKILL_ORDER_LEVELS - 1}`]: { $exists: true } } }, grp([])],
         // ★★ 신발을 **안 산 판도 센다** (2026-09-09 사용자 요청). 예전엔 'boots.0' 이 있는 판만 세서
         //   "신발 없이 끝낸 판" 이 통계에서 통째로 빠졌다 — 픽률 분모는 전체(tl)라 합이 100% 에 한참 못 미쳤다.
         //   빈 배열(key: [])로 들어오고 화면이 그 줄을 「신발 없음」으로 그린다.

@@ -4157,7 +4157,8 @@ const ARCHIVE_KB = ['5-7', '8-10'];
 const ARCHIVE_TYPE = ['rune', 'keystone', 'spell', 'shard', 'all', 'item',
     'skillord', 'skillpri', 'start', 'core', 'item4', 'item5', 'item6', 'tlall',   // 타임라인 8종은 2026-08-26 에 맨 뒤에 붙였다
     'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk',   // 같은 날 밤 12종 더
-    'skilllv', 'skillord11'];   // 레벨별 스킬 · 11레벨 순서 (2026-09-09)
+    'skilllv', 'skillord11',
+    'tlord11', 'tlord16'];   // 레벨별 스킬 · 11레벨 순서 · 11·16레벨 도달자 수 (2026-09-09)
 
 function expandStatsArchive(a) {
     // champstats 행 — API 의 rows 와 **같은 모양**이라 renderStatsTable() 은 안 바뀐다
@@ -4798,6 +4799,9 @@ function lxBuildData(builds, pos, baseBuilds) {
         return kept.length ? kept : list.slice(0, 1);
     };
     const tl = (of('tlall')[0] || {}).games || 0;
+    // ★ 11·16레벨 순서 줄만 분모가 다르다 — **그 레벨에 도달한 사람 수**. 없으면(옛 박제) tl 로 물러난다
+    const tlAt = type => (type === 'skillord11' ? (of('tlord11')[0] || {}).games
+        : type === 'skillord' ? (of('tlord16')[0] || {}).games : 0) || tl;
     // ★ mode 'win' = 1위 판수의 10% 이상(최소 5판)인 후보 중 승률 최고. 아니면 100% 1판짜리가 뽑힌다
     const pick = (type, mode) => {
         const list = rows(type);
@@ -4819,20 +4823,25 @@ function lxBuildData(builds, pos, baseBuilds) {
     let base = null;
     if (baseBuilds && baseBuilds.rows) {
         const bT = (baseBuilds.totals || {})[pos] || 0;
-        const bTl = (baseBuilds.rows.find(r => r.type === "tlall" && (r.pos == null ? -1 : r.pos) === pos) || {}).games || 0;
+        const bAt = t => (baseBuilds.rows.find(r => r.type === t && (r.pos == null ? -1 : r.pos) === pos) || {}).games || 0;
+        const bTl = bAt("tlall");
+        // ★ 여기도 11·16레벨만 분모가 다르다 (위 tlAt 과 같은 규칙) — 한쪽만 고치면 「평소 대비」가 어긋난다
+        const bTlAt = t => (t === "skillord11" ? bAt("tlord11") : t === "skillord" ? bAt("tlord16") : 0) || bTl;
         base = {};
         baseBuilds.rows.forEach(r => {
             if ((r.pos == null ? -1 : r.pos) !== pos) return;
-            const d = LX_TL_TYPES.has(r.type) ? bTl : bT;
+            const d = LX_TL_TYPES.has(r.type) ? bTlAt(r.type) : bT;
             if (d) base[`${r.type}|${(r.key || []).join(",")}`] = r.games / d * 100;
         });
     }
-    return { rows, pick, sorted, total, tl, base, rebuilding: builds && builds.rebuilding, archived: builds && builds.archived, has: !!builds };
+    return { rows, pick, sorted, total, tl, tlAt, base, rebuilding: builds && builds.rebuilding, archived: builds && builds.archived, has: !!builds };
 }
 
 // 픽률 분모: 타임라인 type 은 tl, 나머지는 total
-const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'skilllv', 'skillord11']);
-function lxDenom(B, type) { return LX_TL_TYPES.has(type) ? B.tl : B.total; }
+const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'skilllv', 'skillord11', 'tlord11', 'tlord16']);
+//   ★ 11·16레벨 순서 줄만 「그 레벨에 도달한 사람 수」로 나눈다 (2026-09-09) — B.tlAt 이 그 값이다.
+//     tlall 로 나누면 16레벨 줄들의 픽률 합이 33% 밖에 안 됐다 (도달한 사람이 그만큼뿐이라서).
+function lxDenom(B, type) { return LX_TL_TYPES.has(type) ? (B.tlAt ? B.tlAt(type) : B.tl) : B.total; }
 
 // 3칸 값 (승률 · 픽률 · 판수) — 카드 줄 공통
 function lxVals3(B, type, r) {
@@ -5047,11 +5056,16 @@ function lxLowerRows(c) {
         .map((t, i) => lxRow({ title: `${i + 1}코어`, metrics: lxM3(B) },
             itemCards(t, B.rows(t).slice(0, LX_ROW_MAX)), { empty: '타임라인 표본을 모으는 중' })).join('');
 
+    // ★ 각주 (2026-09-09 사용자 결정 "A로 하고 구매 순서 기준이라고 써놔") — 코어 줄이 무엇을
+    //   세는지 밝힌다. 판 아이템도 그 자리에 남는다 (`ITEM_SOLD` 를 안 담으므로).
+    //   실측: 코어로 센 아이템이 최종 6칸에 없는 사람이 5.58% 인데 그 대부분은 판 게 아니라
+    //   **변신**이다 (마나무네→무라마나 12,661 · 대천사→포옹 6,714). 진짜 판 건 1.25% 쯤.
     const items = box('lx-items', '',
         lxRow({ title: '신발', metrics: lxM3(B) }, itemCards('boots', B.rows('boots').slice(0, LX_ROW_MAX)), { empty: '타임라인 표본을 모으는 중' })
         + finalRows
         + coreRows
-        + allItemsRow);
+        + allItemsRow
+        + `<div class="lx-foot">신발 · 인기 · 승률 · 전체 아이템은 <b>경기가 끝났을 때 들고 있던 6칸</b> 기준 · 1~6코어는 <b>구매 순서</b> 기준이라 중간에 팔았거나 모습이 바뀐 아이템(마나무네→무라마나)도 그 자리에 남는다</div>`);
     return spells + starting + sets + items;
 }
 
@@ -5134,7 +5148,7 @@ function lxSkillBody(c, type) {
                     <tr>
                         <th class="lx-pri-ord">${r.key.map(n => lxSkill(c, n)).join('<span class="lx-arrow">›</span>')}</th>
                         <td><b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b></td>
-                        <td><span class="lx-lav">${lxPct(r.games, B.tl)}%</span></td>
+                        <td><span class="lx-lav">${lxPct(r.games, lxDenom(B, 'skillpri'))}%</span></td>
                         <td><i>${r.games.toLocaleString()}</i></td>
                     </tr>`).join('')}</tbody>
             </table>`
@@ -5146,8 +5160,10 @@ function lxSkillBody(c, type) {
     }
     // ★★ 레벨별 — 「1레벨에 뭘 찍었나」를 레벨마다 한 줄로 (2026-09-09 사용자 요청).
     //   집계 key 가 `[레벨, 슬롯]` 이라 레벨로 묶고 그 안에서 픽률순으로 세운다.
-    //   ★ 픽률 분모는 다른 줄과 같은 `B.tl`(타임라인이 있는 판) 이라 한 레벨의 합이 100% 근처가 된다
-    //     — 15레벨을 다 안 찍고 끝난 판이 있어 딱 100 은 아니다.
+    //   ★ `skilllv`(왼쪽 1~6레벨 표)의 픽률 분모는 `B.tl`(타임라인이 있는 판)이라 한 레벨의 합이
+    //     100% 근처가 된다 — 그 레벨을 못 찍고 끝난 판이 있어 딱 100 은 아니다.
+    //   ★★ 반면 **11·16레벨 순서 줄은 분모가 다르다** (2026-09-09) — 「그 레벨에 도달한 사람 수」다.
+    //     `B.tl` 로 나누면 16레벨 줄들의 픽률 합이 33% 밖에 안 됐다 (도달자가 그만큼뿐이라서).
     //   ★ 모양은 **표**다 (2026-09-09, 사용자가 lolalytics 하단 스킬 구역을 가리켰다) —
     //     줄이 레벨, 열이 Q·W·E·R, 칸마다 승률·픽률·판수. 줄마다 카드를 늘어놓는 것보다
     //     "같은 레벨에서 뭘 골랐나" 와 "레벨이 오르며 어떻게 바뀌나" 가 한눈에 보인다.
@@ -5156,14 +5172,26 @@ function lxSkillBody(c, type) {
     // 레벨별 스킬 순서 — 세로로 한 줄씩 (순서 + 승률·픽률·판수)
     const list = B.rows(type).slice(0, LX_SEQ_MAX);   // ★ 12 = 집계가 칸마다 담는 상한(BUILD_TOP_N) 과 같다
     if (!list.length) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
+    // ★★ 각주로 **승률이 왜 높아 보이는지** 밝힌다 (2026-09-09). 버그가 아니라 표본이 스스로 치우친 것이다 —
+    //   레벨이 높다는 건 그 판을 이기고 있었다는 뜻이라(이긴 팀이 골드·경험치를 더 먹고, 진 팀은 일찍 항복한다)
+    //   **그 레벨에 도달한 사람만 모으면 승률이 통째로 올라간다.**
+    //   실측(리 신 정글 11,993명): 전체 50.70% · 11레벨 도달 53.12% · **16레벨 도달 66.49%**.
+    //   그래서 이 탭의 승률은 챔피언 평균이 아니라 **그 탭 평균**과 견줘야 한다.
+    const lvName = type === 'skillord11' ? '11레벨' : '16레벨';
+    //   ★ 도달자 평균은 **줄을 더해서 내면 안 된다** — 서버가 칸마다 상위 12개만 저장하므로
+    //     꼬리가 빠진 채로 합해진다 (도감 채택률에서 겪은 `ITEM_TOP_N` 함정과 같은 부류).
+    //     `tlord11`·`tlord16` 줄이 games 와 wins 를 둘 다 들고 있으니 그걸 그대로 쓴다.
+    const rr = (B.rows(type === 'skillord11' ? 'tlord11' : 'tlord16')[0]) || null;
+    const reached = rr ? rr.games : lxDenom(B, type);
+    const foot = `<div class="lx-foot">${lvName}에 도달한 <b>${reached.toLocaleString()}명</b>만 센다 (전체 ${B.tl.toLocaleString()}명 중) · 픽률 분모도 그 수다.<br>★ 레벨이 높다는 건 <b>그 판을 이기고 있었다는 뜻</b>이라 이 탭은 승률이 통째로 높게 나온다 — 챔피언 평균이 아니라 여기 <b>도달자 평균 ${rr ? (rr.wins / rr.games * 100).toFixed(2) + '%' : '-'}</b> 와 견줄 것</div>`;
     return `<div class="lx-seq-list">${list.map(r => `
         <div class="lx-seq">
             <!-- ★ 글자 칸 대신 **스킬 아이콘**이다 (2026-09-09 사용자 요청). 아이콘 우하단의 작은
                  QWER 딱지는 lxSkill 이 원래 붙이는 것이라 무엇을 찍었는지 그대로 읽힌다.
                  ★ 몇 레벨인지는 **자리 순서**가 말해 준다 — 툴팁(title)은 안 붙인다 (같은 요청) -->
             <div class="lx-seq-cells">${r.key.map(n => lxSkill(c, n, true)).join('')}</div>
-            <div class="lx-seq-vals"><span class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</span><span class="lx-lav">${lxPct(r.games, B.tl)}%</span><span class="lx-gray">${r.games.toLocaleString()}판</span></div>
-        </div>`).join('')}</div>`;
+            <div class="lx-seq-vals"><span class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</span><span class="lx-lav">${lxPct(r.games, lxDenom(B, type))}%</span><span class="lx-gray">${r.games.toLocaleString()}판</span></div>
+        </div>`).join('')}</div>${foot}`;
 }
 
 // ── 룬 상자 (전체 / 승률 최고 룬 페이지 / 인기 룬 페이지) ───────────────
