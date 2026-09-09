@@ -4776,7 +4776,7 @@ function lxHeader(c) {
                 ${stat(c.myTier ? `<span class="${tierCls}">${c.myTier.tier}</span>` : '-', '티어', '', c.myTier ? `점수 ${c.myTier.score.toFixed(2)} — 승률·픽률·밴률 합산, 라인 안에서 매김` : '')}
                 ${stat(c.rank ? `${c.rank} / ${c.sameLane.length}` : '-', '순위', '', '같은 라인 안에서 티어 점수 순')}
                 ${stat(c.ban.toFixed(2) + '%', '밴률')}
-                ${stat(c.main.games.toLocaleString(), '판수')}
+                ${stat(c.main.games.toLocaleString(), '표본 수')}
             </div>
         </div>
     </div>`;
@@ -4850,7 +4850,7 @@ function lxVals3(B, type, r) {
     }
     return vals;
 }
-const LX_M3 = [{ t: '승률', cls: 'lx-green' }, { t: '픽률', cls: 'lx-lav' }, { t: '판수', cls: 'lx-gray' }];
+const LX_M3 = [{ t: '승률', cls: 'lx-green' }, { t: '픽률', cls: 'lx-lav' }, { t: '표본 수', cls: 'lx-gray' }];
 // ★ vs 비교면 머리글도 한 칸 는다 (lxVals3 과 짝이라 한쪽만 고치면 어긋난다)
 const lxM3 = B => (B && B.base) ? [...LX_M3, { t: '평소 대비', cls: 'lx-yellow' }] : LX_M3;
 
@@ -4910,8 +4910,8 @@ function lxTrend(c, trend) {
     <div class="lx-graphs">
         ${graph(`${c.kor} 승률`, 'lx-green', wrV, p1)}
         ${graph(`${c.kor} 픽률`, 'lx-blue', pkV, p1)}
-        ${graph(`${c.kor} 판수`, 'lx-white', gV, v => Math.round(v).toLocaleString())}
         ${graph(`${c.kor} 밴률`, 'lx-red', bV, p1)}
+        ${graph(`${c.kor} 표본 수`, 'lx-white', gV, v => Math.round(v).toLocaleString())}
     </div>`;
 }
 
@@ -4968,7 +4968,7 @@ function lxMatchupRows(c, group, sort) {
         weak2: (a, b) => a.d2 - b.d2 || b.games - a.games
     };
     const src = group === 'counter' ? M.counter : M.synergy;
-    const metrics = [{ t: '승률', cls: 'lx-green' }, { t: '간단보정', cls: 'lx-yellow' }, { t: '상세보정', cls: 'lx-yellow' }, { t: '픽률', cls: 'lx-lav' }, { t: '판수', cls: 'lx-gray' }];
+    const metrics = [{ t: '승률', cls: 'lx-green' }, { t: '간단보정', cls: 'lx-yellow' }, { t: '상세보정', cls: 'lx-yellow' }, { t: '픽률', cls: 'lx-lav' }, { t: '표본 수', cls: 'lx-gray' }];
     return STAT_POS.filter(p => src[p.code]).map(p => {
         const list = [...src[p.code]].sort(sorters[sort] || sorters.common).slice(0, LX_ROW_MAX);
         const cards = list.map(r => {
@@ -5024,9 +5024,13 @@ function lxLowerRows(c) {
         return spells + box('lx-items', '', finalRows);
     }
 
+    // ★ 각주로 구간을 밝힌다 (2026-09-09 사용자 요청 "몇 분 이전에 산 것들인지").
+    //   ★★ 90초는 server.js 의 `TL_START_SEC` 이다 — 거길 바꾸면 이 글도 같이 바꿀 것.
+    //     (10분은 `TL_EARLY_SEC`. 초반 아이템 상자는 뺐지만 구간 설명엔 남는다)
     const starting = box('lx-start',
         lxTabBar('start', [{ v: 'item', label: '시작 아이템' }, { v: 'set', label: '시작 아이템 세트' }], 'set'),
-        `<div id="lx-start-body">${lxStartBody(c, 'set')}</div>`);
+        `<div id="lx-start-body">${lxStartBody(c, 'set')}</div>`
+        + `<div class="lx-foot">경기 시작 <b>90초(1분 30초)</b> 안에 산 것 · 물약과 와드는 빼고 센다</div>`);
     // ★ 초반 아이템(10분) 상자는 2026-09-09 에 뺐다 (사용자 요청). 집계(early·earlyset)는 그대로 둔다 —
     //   시작 아이템 줄이 그 자료를 쓰고, 되살리려면 여기 상자만 다시 만들면 된다.
     const sets = box('lx-sets',
@@ -5158,7 +5162,7 @@ function lxSkillBody(c, type) {
                  QWER 딱지는 lxSkill 이 원래 붙이는 것이라 무엇을 찍었는지 그대로 읽힌다.
                  ★ 몇 레벨인지는 **자리 순서**가 말해 준다 — 툴팁(title)은 안 붙인다 (같은 요청) -->
             <div class="lx-seq-cells">${r.key.map(n => lxSkill(c, n, true)).join('')}</div>
-            <div class="lx-seq-vals"><span class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</span><span class="lx-lav">${lxPct(r.games, B.tl)}%</span><span class="lx-gray">${r.games}판</span></div>
+            <div class="lx-seq-vals"><span class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</span><span class="lx-lav">${lxPct(r.games, B.tl)}%</span><span class="lx-gray">${r.games.toLocaleString()}판</span></div>
         </div>`).join('')}</div>`;
 }
 
@@ -5183,7 +5187,7 @@ function lxRuneBody(c, v) {
         if (!list.length) return `<div class="lx-none">표본 없음</div>`;
         const img = (id, cls) => `<img class="build-perk ${cls || ''}" src="${perkIcon(id)}" alt="" title="${perkName(id)}" loading="lazy">`;
         return `<div class="lx-combos">
-            <div class="lx-combo lx-combo-head"><span class="lx-combo-page">룬 페이지 (픽률 순)</span><span>픽률</span><span>승률</span><span>판수</span></div>
+            <div class="lx-combo lx-combo-head"><span class="lx-combo-page">룬 페이지 (픽률 순)</span><span>픽률</span><span>승률</span><span>표본 수</span></div>
             ${list.map(r => {
                 const [ps, ks, m1, m2, m3, ss, s1, s2] = r.key;
                 const sec = perksBySlot(ss, [s1, s2]);
@@ -5199,7 +5203,7 @@ function lxRuneBody(c, v) {
                 </div>`;
             }).join('')}
         </div>
-        <div class="lx-foot">서버가 판수 상위 12개 조합만 저장한다 · 파편은 조합에 안 들어 있다</div>`;
+        <div class="lx-foot">서버가 표본 상위 12개 조합만 저장한다 · 파편은 조합에 안 들어 있다</div>`;
     }
     // ★ 룬은 key [id], 파편은 key [id, 줄] (2026-08-27 — 적응형·체력이 두 줄에 있어 id 로만 세면 픽률이 100% 를 넘었다).
     //   줄 번호 있는 줄이 아직 없으면(재집계 전) 옛 id 값으로 물러난다
