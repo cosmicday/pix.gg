@@ -48,7 +48,8 @@ const KB_LIST = ['5-7', '8-10'];
 //     통째로 다른 뜻이 된다 (파일에는 이름이 아니라 이 배열의 자리 번호가 들어간다).
 const TYPE_LIST = ['rune', 'keystone', 'spell', 'shard', 'all', 'item',
     'skillord', 'skillpri', 'start', 'core', 'item4', 'item5', 'item6', 'tlall',   // 타임라인 8종은 2026-08-26 에 맨 뒤에 붙였다
-    'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk'];   // 같은 날 밤 12종 더
+    'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk',   // 같은 날 밤 12종 더
+    'skilllv'];   // 레벨별 스킬 (2026-09-09)
 
 const OUT_DIR = path.join(__dirname, 'public', 'stats_archive');
 const fileNameOf = (scope) => scope.replace(/:/g, '_') + '.js';

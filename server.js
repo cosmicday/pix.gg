@@ -1722,7 +1722,8 @@ const ITEM_CONSUMABLES = [
 //   ★ 1판짜리 조합은 저장 단계에서 뺀다 (`$match games >= 2`, 조합 type) — 조합 가짓수가 룬 페이지보다도
 //     많아서 1판 꼬리가 컬렉션을 덮는다. 낱개 type(skillpri·item1~6·boots·early)은 가짓수가 적어 그대로 둔다.
 const TL_TYPES = ['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots',
-    'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6'];
+    'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6',
+    'skilllv'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
 const TL_MIN_PATCH = [16, 17];    // 이 패치부터 타임라인을 받고·센다
 const TL_START_SEC = 90;          // 이 초 안에 산 것이 시작 아이템
 const TL_EARLY_SEC = 600;         // 이 초 안(시작 구간 뒤)에 산 것이 초반 아이템
@@ -1847,6 +1848,17 @@ async function buildTimelineFacet(matchCond, opts = {}) {
     const light = {
         skillord: ordTo(TL_SKILL_ORDER_LEVELS), skillord6: ordTo(6), skillord10: ordTo(10),
         skillpri: [{ $match: { 'ord.8': { $exists: true } } }, grp('$pri')],
+        // ★★ 레벨별 스킬 (2026-09-09 사용자 요청) — 「1레벨에 뭘 찍었나」를 레벨마다 따로 센다.
+        //   key 는 `[레벨, 슬롯]` 이고 슬롯은 1=Q 2=W 3=E 4=R (ord 와 같은 번호).
+        //   ★ 순서 조합(`skillord*`)에서 되짚으면 안 된다 — 그쪽은 칸마다 상위 N개로 잘려 있어서
+        //     꼬리가 빠진 채로 합해진다 (아이템 채택률에서 겪은 `ITEM_TOP_N` 함정과 같은 부류).
+        //   ★ `ord` 는 15레벨까지라 이 줄도 15레벨까지다 (TL_SKILL_ORDER_LEVELS).
+        //   ★ 못 읽은 칸은 0 이라 버린다 (`QWER` 밖 글자면 indexOfCP 가 -1 → +1 = 0).
+        skilllv: [
+            { $unwind: { path: '$ord', includeArrayIndex: 'lv' } },
+            { $match: { ord: { $gt: 0 } } },
+            { $group: { _id: { c: '$c', pos: '$pos', k: [{ $add: ['$lv', 1] }, '$ord'] }, games: { $sum: 1 }, wins: { $sum: '$w' } } }
+        ],
         early: [{ $unwind: '$early' }, grp(['$early'])],
         boots: [{ $match: { 'boots.0': { $exists: true } } }, grp('$boots')],
         item1: nth(0), item2: nth(1), item3: nth(2), item4: nth(3), item5: nth(4), item6: nth(5),
@@ -1990,7 +2002,12 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
         //   채택률이 9.5% 였고, 그 아래가 다 사라져서 합계 418.5%(실제 522.7%) · 챔피언 TOP5 는
         //   208개 중 108개만 맞았다. 상세 페이지의 "전체 아이템"(60칸)도 15개까지밖에 못 채웠다.
         //   ★ 대가는 item 줄 11,932 → 40,022 (+7.4MB). 낱개라 가짓수가 원래 적어서 감당된다.
-        const topN = (type === 'all' || type === 'tlall' || type === 'perk' || type === 'item') ? Infinity : BUILD_TOP_N;
+        //   ★★ `skilllv` 도 안 자른다 (2026-09-09). 컷이 **칸(챔피언|라인) 단위**라 「레벨 × 스킬」을
+        //     한 줄씩 세는 이 type 은 상위 12개만 남기면 **레벨마다 1등 하나씩 12레벨까지**만 남는다
+        //     (실제로 그렇게 나왔다 — 리 신 1레벨에 E 만 있고 Q·W 가 사라졌다).
+        //     레벨당 가짓수가 넷(QWER)뿐이라 안 잘라도 칸당 60줄이 상한이다.
+        const topN = (type === 'all' || type === 'tlall' || type === 'perk' || type === 'item' || type === 'skilllv')
+            ? Infinity : BUILD_TOP_N;
         cells.forEach(bucket => {
             const list = [...bucket.values()].sort((a, b) => b.games - a.games);
             docs.push(...list.slice(0, topN));

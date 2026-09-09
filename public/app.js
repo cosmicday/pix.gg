@@ -4156,7 +4156,8 @@ const ARCHIVE_KB = ['5-7', '8-10'];
 // ★ build_stats_archive.js 의 TYPE_LIST 와 **자리가 같아야 한다.** 새 type 은 맨 뒤에.
 const ARCHIVE_TYPE = ['rune', 'keystone', 'spell', 'shard', 'all', 'item',
     'skillord', 'skillpri', 'start', 'core', 'item4', 'item5', 'item6', 'tlall',   // 타임라인 8종은 2026-08-26 에 맨 뒤에 붙였다
-    'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk'];   // 같은 날 밤 12종 더
+    'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk',   // 같은 날 밤 12종 더
+    'skilllv'];   // 레벨별 스킬 (2026-09-09)
 
 function expandStatsArchive(a) {
     // champstats 행 — API 의 rows 와 **같은 모양**이라 renderStatsTable() 은 안 바뀐다
@@ -4828,7 +4829,7 @@ function lxBuildData(builds, pos, baseBuilds) {
 }
 
 // 픽률 분모: 타임라인 type 은 tl, 나머지는 total
-const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6']);
+const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'skilllv']);
 function lxDenom(B, type) { return LX_TL_TYPES.has(type) ? B.tl : B.total; }
 
 // 3칸 값 (승률 · 픽률 · 판수) — 카드 줄 공통
@@ -5053,7 +5054,7 @@ function lxSkillBox(c) {
     if (!B.has || !B.total || !B.tl) return '';   // ★ 타임라인(스킬 로그)이 없는 패치(16.16)는 상자째 안 그린다
     return `<div class="lx-box" id="lx-skills">
         ${lxSkillBuild(c)}
-        ${lxTabBar('skill', [{ v: 'skillpri', label: '전체' }, { v: 'skillord6', label: '6레벨' }, { v: 'skillord10', label: '10레벨' }, { v: 'skillord', label: '15레벨' }], 'skillpri')}
+        ${lxTabBar('skill', [{ v: 'skillpri', label: '전체' }, { v: 'skilllv', label: '레벨별' }, { v: 'skillord6', label: '6레벨' }, { v: 'skillord10', label: '10레벨' }, { v: 'skillord', label: '15레벨' }], 'skillpri')}
         <div class="lx-box-rows" id="lx-skill-body">${lxSkillBody(c, 'skillpri')}</div>
     </div>`;
 }
@@ -5084,6 +5085,27 @@ function lxSkillBody(c, type) {
         const cards = B.rows('skillpri').map(r => ({ top: r.key.map(n => lxSkill(c, n, true)).join('<span class="lx-arrow is-sm">›</span>'), title: r.key.map(n => 'QWER'[n - 1]).join(' > '), vals: lxVals3(B, 'skillpri', r) }));
         return lxRow({ title: '우선순위', metrics: lxM3(B) }, cards, { empty: '타임라인 표본을 모으는 중', topH: 34 });
     }
+    // ★★ 레벨별 — 「1레벨에 뭘 찍었나」를 레벨마다 한 줄로 (2026-09-09 사용자 요청).
+    //   집계 key 가 `[레벨, 슬롯]` 이라 레벨로 묶고 그 안에서 픽률순으로 세운다.
+    //   ★ 픽률 분모는 다른 줄과 같은 `B.tl`(타임라인이 있는 판) 이라 한 레벨의 합이 100% 근처가 된다
+    //     — 15레벨을 다 안 찍고 끝난 판이 있어 딱 100 은 아니다.
+    if (type === 'skilllv') {
+        const byLv = new Map();
+        B.rows('skilllv').forEach(r => {
+            const lv = r.key[0];
+            if (!byLv.has(lv)) byLv.set(lv, []);
+            byLv.get(lv).push(r);
+        });
+        if (!byLv.size) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
+        return [...byLv.keys()].sort((a, b) => a - b).map(lv => {
+            const cards = byLv.get(lv).sort((a, b) => b.games - a.games).map(r => ({
+                top: lxSkill(c, r.key[1], true), title: `${lv}레벨 ${'QWER'[r.key[1] - 1]}`,
+                vals: lxVals3(B, 'skilllv', r)
+            }));
+            return lxRow({ title: `${lv}레벨`, metrics: lxM3(B) }, cards, { topH: 34 });
+        }).join('');
+    }
+
     // 레벨별 스킬 순서 — 세로로 한 줄씩 (순서 + 승률·픽률·판수)
     const list = B.rows(type).slice(0, 8);
     if (!list.length) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
