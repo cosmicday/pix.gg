@@ -3081,6 +3081,10 @@ main {
 .lx-card-top img { width: 37px; height: 37px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.4); box-sizing: border-box; background: rgba(0, 0, 0, 0.3); }
 /* ★ 스킬 배지 안의 img 는 위 37px 규칙을 타면 안 된다 — 24px 배지 밖으로 넘쳐 아래 승률 글자를 덮었다 (2026-08-27) */
 .lx-card-top .lx-skl img { width: 100%; height: 100%; border-radius: 3px; border: 0; }
+/* 신발을 안 산 판 — 아이콘 자리에 들어가는 빈 칸 (2026-09-09). 크기를 img 와 같게 맞춘다 */
+.lx-noitem { width: 37px; height: 37px; display: flex; align-items: center; justify-content: center;
+    box-sizing: border-box; border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 6px;
+    background: rgba(0, 0, 0, 0.25); color: var(--text-faint); font-size: 12px; }
 .lx-v { height: 16px; line-height: 16px; white-space: nowrap; }
 
 /* 스킬 빌드 — 우선순위(Q›E›W) + 스킬 순서 4x18 격자. 스킬 상자 맨 위 (2026-08-27) */

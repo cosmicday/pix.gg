@@ -4329,6 +4329,8 @@ async function loadChampSpellIcons(eng) {
 }
 
 // 승률 색 — 그쪽은 50% 기준 초록/빨강. 표본 5판 미만은 회색
+// ★ 순서 목록에 몇 줄까지 그릴지. 집계가 칸마다 상위 12개만 담으므로(BUILD_TOP_N) 이 위로 올려도 안 늘어난다
+const LX_SEQ_MAX = 12;
 const lxWr = (w, g) => (g < BUILD_MIN_GAMES ? 'lx-dim' : (w / g >= 0.5 ? 'lx-green' : 'lx-red'));
 const lxPct = (a, b) => (b ? (a / b * 100) : 0).toFixed(2);
 const lxSigned = v => (v >= 0 ? '+' : '') + v.toFixed(2);
@@ -4879,7 +4881,15 @@ function lxTrend(c, trend) {
                 ${ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="#222"/><text x="${L - 4}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="#bbb">${fmt(t)}</text>`).join('')}
                 <polyline points="${pts}" fill="none" class="lx-line ${cls}" stroke-width="1.5"/>
                 ${vals.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2" class="lx-dot ${cls}"><title>${days[i].day} · ${fmt(v)}</title></circle>`).join('')}
-                ${days.map((d, i) => `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="8" fill="#bbb">${d.day.slice(5)}</text>`).join('')}
+                <!-- ★★ 날짜는 **수요일만** 적는다 (2026-09-09 사용자 요청). 날이 열흘을 넘으면
+                     매일 적을 때 글자가 서로 겹쳐 못 읽는다. 수요일인 이유는 패치가 수요일에 오기
+                     때문 — 눈금이 곧 패치 경계다.
+                     ★ new Date('2026-09-09') 는 UTC 자정으로 읽히는데 한국은 +9 라 같은 날 09시다.
+                       그래서 getDay() 가 날짜를 안 넘긴다 (하루 밀리지 않는다).
+                     ★★ 이 주석은 템플릿 문자열 안이다 — 백틱을 쓰면 문자열이 거기서 끊긴다
+                        (이번 세션에서 세 번째다: 도감 채택률·도감 dt·여기) -->
+                ${days.map((d, i) => (new Date(d.day).getDay() === 3
+            ? `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="8" fill="#bbb">${d.day.slice(5)}</text>` : '')).join('')}
             </svg>
         </div>`;
     };
@@ -4982,7 +4992,11 @@ function lxLowerRows(c) {
     const B = c.B;
     if (!B.has || !B.total) return '';
     const hasTl = B.tl > 0;
-    const itemCards = (type, list) => list.map(r => ({ icons: [itemIconOf(r.key[0])], title: itemNameOf(r.key[0]), vals: lxVals3(B, type, r) }));
+    // ★ key 가 비면 「신발 없음」이다 (2026-09-09) — 신발을 안 사고 끝낸 판을 세는 줄이라
+    //   아이콘이 없다. 다른 type 은 빈 key 가 안 온다 (신발만 그렇게 담는다).
+    const itemCards = (type, list) => list.map(r => (r.key.length
+        ? { icons: [itemIconOf(r.key[0])], title: itemNameOf(r.key[0]), vals: lxVals3(B, type, r) }
+        : { top: '<span class="lx-noitem">없음</span>', title: '신발을 사지 않은 판', vals: lxVals3(B, type, r) }));
     const setCards = (type, list) => list.map(r => ({ icons: r.key.map(itemIconOf), title: r.key.map(itemNameOf).join(' › '), vals: lxVals3(B, type, r) }));
     const box = (id, tabbar, rowsHtml) => `<div class="lx-box" id="${id}">${tabbar || ''}<div class="lx-box-rows">${rowsHtml}</div></div>`;
 
@@ -5107,7 +5121,7 @@ function lxSkillBody(c, type) {
                 <thead><tr><th></th><th>승률</th><th>픽률</th><th>표본 수</th></tr></thead>
                 <tbody>${pri.slice(0, 8).map(r => `
                     <tr>
-                        <th class="lx-pri-ord">${r.key.map(n => lxSkill(c, n, true)).join('<span class="lx-arrow is-sm">›</span>')}</th>
+                        <th class="lx-pri-ord">${r.key.map(n => lxSkill(c, n)).join('<span class="lx-arrow">›</span>')}</th>
                         <td><b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b></td>
                         <td><span class="lx-lav">${lxPct(r.games, B.tl)}%</span></td>
                         <td><i>${r.games.toLocaleString()}</i></td>
@@ -5129,7 +5143,7 @@ function lxSkillBody(c, type) {
     //   ★ 안 찍은 칸은 「-」로 비워 둔다 (0% 를 적으면 표가 숫자로 꽉 차서 오히려 안 읽힌다)
 
     // 레벨별 스킬 순서 — 세로로 한 줄씩 (순서 + 승률·픽률·판수)
-    const list = B.rows(type).slice(0, 8);
+    const list = B.rows(type).slice(0, LX_SEQ_MAX);   // ★ 12 = 집계가 칸마다 담는 상한(BUILD_TOP_N) 과 같다
     if (!list.length) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
     return `<div class="lx-seq-list">${list.map(r => `
         <div class="lx-seq">

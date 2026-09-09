@@ -1713,7 +1713,8 @@ const ITEM_CONSUMABLES = [
 //   | start       | 시작 아이템 (90초 안 구매, id 정렬)      | 물약·와드는 수집 때 이미 뺐다 (TL_SKIP_ITEMS) — 도란검만 남는다 |
 //   | early       | 초반 아이템 (90초~10분 구매, 낱개)        | Early Items. 시작템은 뺀다 |
 //   | earlyset    | 초반 아이템 세트 (같은 구간, id 정렬)     | Early Item Sets |
-//   | boots       | 처음 산 2단계 이상 장화 (낱개)            | Boots |
+//   | boots       | **최종 6칸 안의 장화** (없으면 빈 배열)     | Boots. ★ 2026-09-09 부터 타임라인이 아니라 최종 아이템에서 센다 —
+//   |             |                                      | 안 산 판(빈 key)도 세야 해서다. 그래서 이 type 만 buildOneBuildScope 의 facet 에 있다 |
 //   | core        | 완성 아이템 첫 3개 (구매 순서)            | Core Build. 완성 = 아래 loadCompletedItems |
 //   | set2/4/5    | 완성 아이템 첫 2·4·5개 (구매 순서)        | Sets (3개는 core) |
 //   | item1~6     | n번째 완성 아이템 (낱개)                 | Item 1~6 |
@@ -1721,6 +1722,8 @@ const ITEM_CONSUMABLES = [
 //
 //   ★ 1판짜리 조합은 저장 단계에서 뺀다 (`$match games >= 2`, 조합 type) — 조합 가짓수가 룬 페이지보다도
 //     많아서 1판 꼬리가 컬렉션을 덮는다. 낱개 type(skillpri·item1~6·boots·early)은 가짓수가 적어 그대로 둔다.
+// ★ 'boots' 는 이름만 여기 남아 있다 — 값은 타임라인 facet 이 아니라 buildOneBuildScope 의 facet 이 낸다.
+//   자리를 빼면 박제 TYPE_LIST 의 번호가 밀리고, 저장·조회 경로는 type 이름만 보므로 그대로 둔다.
 const TL_TYPES = ['skillord', 'skillpri', 'start', 'early', 'earlyset', 'boots',
     'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6',
     'skilllv', 'skillord11'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
@@ -1834,8 +1837,8 @@ async function buildTimelineFacet(matchCond, opts = {}) {
             //   거긴 "그 판에 뭘 갖췄나" 라 신발도 장비의 하나다.
             compnb: ids({ $filter: { input: '$buys', as: 'b', cond: {
                 $and: [{ $in: ['$$b.id', complete] }, { $not: [{ $in: ['$$b.id', boots] }] }]
-            } } }),
-            boots: { $slice: [ids({ $filter: { input: '$buys', as: 'b', cond: { $in: ['$$b.id', boots] } } }), 1] }
+            } } })
+            // (boots 는 2026-09-09 에 **최종 아이템** 쪽으로 옮겼다 — buildOneBuildScope 참고)
         } }
     ];
 
@@ -1861,7 +1864,9 @@ async function buildTimelineFacet(matchCond, opts = {}) {
             { $group: { _id: { c: '$c', pos: '$pos', k: [{ $add: ['$lv', 1] }, '$ord'] }, games: { $sum: 1 }, wins: { $sum: '$w' } } }
         ],
         early: [{ $unwind: '$early' }, grp(['$early'])],
-        boots: [{ $match: { 'boots.0': { $exists: true } } }, grp('$boots')],
+        // ★★ 신발을 **안 산 판도 센다** (2026-09-09 사용자 요청). 예전엔 'boots.0' 이 있는 판만 세서
+        //   "신발 없이 끝낸 판" 이 통계에서 통째로 빠졌다 — 픽률 분모는 전체(tl)라 합이 100% 에 한참 못 미쳤다.
+        //   빈 배열(key: [])로 들어오고 화면이 그 줄을 「신발 없음」으로 그린다.
         item1: nth(0), item2: nth(1), item3: nth(2), item4: nth(3), item5: nth(4), item6: nth(5),
         // 타임라인이 있는 판의 참가자 수 — 위 type 들의 픽률 분모 (화면은 `tlall` 로 받는다)
         tlall: [grp([])]
@@ -1880,6 +1885,11 @@ async function buildTimelineFacet(matchCond, opts = {}) {
 //     `returnDocs` 면 저장하지 않고 줄을 그대로 돌려준다. **안 넘기면 예전과 똑같이 돈다.**
 async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
     const P = i => ({ $arrayElemAt: ['$p', i] });
+    // ★★ 신발은 **최종 아이템**으로 센다 (2026-09-09). 예전엔 타임라인의 「처음 산 2단계 신발」이었는데
+    //   ① 안 산 판이 통계에서 통째로 빠졌고 ② 타임라인은 소급 정리에 다칠 수 있는 자료다
+    //   (실제로 2026-09-09 에 다쳤다 — trim_matchstats_it.js 주석 참고).
+    //   최종 6칸( 9~14)은 손댄 적이 없고 "경기 끝에 무슨 신발을 신고 있었나" 가 곧 답이다.
+    const { boots } = await loadCompletedItems();
 
     // ★ $unwind 를 한 번만 하고 $facet 으로 네 갈래를 낸다. 갈래마다 따로 aggregate 를
     //   돌리면 110만 행짜리 unwind 를 다섯 번 반복하게 된다 (M0 무료 티어라 뼈아프다).
@@ -1921,6 +1931,8 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
                 shardslot: [{ id: P(25), r: 0 }, { id: P(26), r: 1 }, { id: P(27), r: 2 }],
                 // 최종 아이템 6칸 (9~14). 아래 facet 에서 한 번 더 펼쳐 낱개로 센다.
                 item: [P(9), P(10), P(11), P(12), P(13), P(14)],
+                // 최종 6칸 중 신발 하나 (없으면 빈 배열 = 「신발 없음」 줄이 된다)
+                boots: { $slice: [{ $filter: { input: [P(9), P(10), P(11), P(12), P(13), P(14)], as: 'i', cond: { $in: ['$$i', boots] } } }, 1] },
                 // 같은 이유로 주문도 작은 id 를 앞으로. 점멸/점화와 점화/점멸이 갈리면
                 // 표본이 반이 된다.
                 spell: { $cond: [{ $lt: [P(15), P(16)] }, [P(15), P(16)], [P(16), P(15)]] }
@@ -1932,6 +1944,8 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
                 keystone: [{ $group: { _id: { c: '$c', pos: '$pos', k: '$keystone' }, games: { $sum: 1 }, wins: { $sum: '$w' } } }],
                 spell: [{ $group: { _id: { c: '$c', pos: '$pos', k: '$spell' }, games: { $sum: 1 }, wins: { $sum: '$w' } } }],
                 shard: [{ $group: { _id: { c: '$c', pos: '$pos', k: '$shard' }, games: { $sum: 1 }, wins: { $sum: '$w' } } }],
+                // ★ 신발 — 최종 6칸 안의 신발 하나. **빈 배열이면 「신발 없음」**이라 그 판도 세어진다
+                boots: [{ $group: { _id: { c: '$c', pos: '$pos', k: '$boots' }, games: { $sum: 1 }, wins: { $sum: '$w' } } }],
                 // ★ 아이템은 **낱개**로 센다 (조합이 아니다). 6칸을 펼쳐서 하나씩 세므로
                 //   한 사람이 6줄에 기여하고, 그래서 픽률은 "이 챔피언 판의 몇 %에서 이 아이템이
                 //   최종까지 남았나" 가 된다 — 합이 100%를 넘는 게 정상이다.

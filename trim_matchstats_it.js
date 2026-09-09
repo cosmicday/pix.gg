@@ -21,7 +21,10 @@ const axios = require('axios');
 
 const WRITE = process.argv.includes('--write');
 const TL_EARLY_SEC = 600;
-const TL_COMPLETE_GOLD = 1500;
+// ★★★ **server.js 의 값과 반드시 같아야 한다** (거기는 1000). 2026-09-09 에 여기만 1500 으로 적어
+//   1000~1499 짜리 완성 아이템 — **2단계 신발 11종 전부** — 를 "완성이 아님" 으로 보고
+//   10분 뒤 구매를 지워 버렸다. 그 패치의 신발 통계가 통째로 망가졌다.
+const TL_COMPLETE_GOLD = 1000;
 const ITEM_CONSUMABLES = [2003, 2031, 2033, 2055, 2138, 2139, 2140, 2010, 2052];
 const mb = (b) => (b / 1024 / 1024).toFixed(1) + 'MB';
 
