@@ -160,7 +160,11 @@ window.statsArchive['${SCOPE}'] = ${body};
             const sum = (a, i) => a.reduce((s, x) => s + x[i], 0);
             if (sum(back.r, 3) !== cs.reduce((s, x) => s + x.games, 0)) problems.push('champstats games 합계가 다르다');
             if (sum(back.r, 4) !== cs.reduce((s, x) => s + x.wins, 0)) problems.push('champstats wins 합계가 다르다');
-            if (sum(back.b, 2) !== cb.reduce((s, x) => s + x.games, 0)) problems.push('champbuilds games 합계가 다르다');
+            // ★★ 자리 번호를 틀리면 **멀쩡한 박제가 「대조 실패」로 막힌다** (2026-09-09 실제로 걸렸다).
+            //   champbuilds 줄은 `[champ, pos, type, games, wins, ...key]` 라 games 는 **3번**이다
+            //   (2번은 type). 위 `r`·`m` 은 원래 3번이 맞아서 이 한 줄만 어긋나 있었다.
+            if (sum(back.b, 3) !== cb.reduce((s, x) => s + x.games, 0)) problems.push('champbuilds games 합계가 다르다');
+            if (sum(back.b, 4) !== cb.reduce((s, x) => s + x.wins, 0)) problems.push('champbuilds wins 합계가 다르다');
             if (sum(back.m || [], 3) !== cm.reduce((s, x) => s + x.games, 0)) problems.push('상성 games 합계가 다르다');
         }
 
