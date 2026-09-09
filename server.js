@@ -2487,9 +2487,14 @@ async function startJobs() {
         const LIMIT = Number(process.env.BACKFILL_LIMIT) || 0;
         const GAP = Number(process.env.BACKFILL_GAP) || 1250;
         const col = mongoose.connection.db.collection('matchstats');
+        // ★ `tlv`(타임라인 규칙 판) 로 이어 돌린다. 30시간짜리라 반드시 끊긴다고 봐야 한다 —
+        //   다시 돌리면 이미 채운 판을 건너뛰고 남은 것부터 간다. `BACKFILL_ALL=1` 이면 전부 다시.
+        const TL_VER = 2;   // 2 = 시작 구간 소모품 + 서포터 아이템 (2026-09-09)
         const q = { v: { $exists: true } };
+        if (process.env.BACKFILL_ALL !== '1') q.tlv = { $ne: TL_VER };
+        const doneAlready = await mongoose.connection.db.collection('matchstats').countDocuments({ tlv: TL_VER });
         const total = await col.countDocuments(q);
-        console.log(`[Backfill] 대상 ${total.toLocaleString()}건 · 판당 ${GAP}ms → 예상 ${(total * GAP / 3600000).toFixed(1)}시간`);
+        console.log(`[Backfill] 대상 ${total.toLocaleString()}건 (이미 채운 것 ${doneAlready.toLocaleString()}건은 건너뛴다) · 판당 ${GAP}ms → 예상 ${(total * GAP / 3600000).toFixed(1)}시간`);
         let seen = 0, done = 0, fail = 0, skip = 0, before = 0, after = 0;
         const t0 = Date.now();
         const cursor = col.find(q, { projection: { matchId: 1, p: 1, v: 1, it: 1 } }).sort({ _id: 1 });
@@ -2497,14 +2502,24 @@ async function startJobs() {
             if (LIMIT && seen >= LIMIT) break;
             seen++;
             if (!patchAtLeast(d.v, TL_MIN_PATCH)) { skip++; continue; }
-            let tl;
-            try {
-                tl = (await riotApi.get(`https://asia.api.riotgames.com/lol/match/v5/matches/${d.matchId}/timeline`)).data;
-            } catch (e) {
-                const st = e.response?.status;
-                if (st === 429) { console.warn('[Backfill] 429 — 10초 쉰다'); await sleep(10000); seen--; continue; }
+            // ★★ 429 는 **같은 판을 다시** 시도한다. 예전엔 다음 판으로 넘어가서 그 판을 통째로 잃었다
+            //   (`seen--` 는 셈만 되돌릴 뿐 커서는 이미 넘어가 있다). 5번까지 물러서며 기다린다.
+            let tl = null, err = null;
+            for (let tryN = 0; tryN < 5 && !tl; tryN++) {
+                try {
+                    tl = (await riotApi.get(`https://asia.api.riotgames.com/lol/match/v5/matches/${d.matchId}/timeline`)).data;
+                } catch (e) {
+                    err = e;
+                    const st = e.response?.status;
+                    if (st !== 429 && st !== 503 && st !== 500) break;   // 404 같은 건 다시 해도 소용없다
+                    const wait = 10000 * (tryN + 1);
+                    console.warn(`[Backfill] ${st} — ${wait / 1000}초 쉬고 다시 (${d.matchId})`);
+                    await sleep(wait);
+                }
+            }
+            if (!tl) {
                 fail++;
-                if (fail <= 5) console.warn(`[Backfill] ${d.matchId} 실패 ${st || e.message}`);
+                if (fail <= 5) console.warn(`[Backfill] ${d.matchId} 포기 ${err?.response?.status || err?.message}`);
                 await sleep(GAP);
                 continue;
             }
@@ -2514,7 +2529,7 @@ async function startJobs() {
             if (st) {
                 before += (d.it || []).length / 3;
                 after += st.it.length / 3;
-                await col.updateOne({ _id: d._id }, { $set: { sk: st.sk, it: st.it } });
+                await col.updateOne({ _id: d._id }, { $set: { sk: st.sk, it: st.it, tlv: TL_VER } });
                 done++;
             }
             if (seen % 200 === 0) {
