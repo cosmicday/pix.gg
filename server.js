@@ -1192,8 +1192,11 @@ function perkValues(p) {
 // ★★ 타임라인에서 **빌드에 쓰는 것만** 뽑는다 (2026-08-26 신설).
 //   원본이 판당 759KB 라 통째로는 못 담는다 — 실측 기준 이 함수가 3.4KB 로 줄인다.
 //
-//   ★ 소모품·장신구는 뺀다. 물약·와드는 "빌드" 가 아니라 잡음인데 **구매 건수의 3분의 1**을
-//     차지한다. 시작 아이템(도란검·롱소드)과 완성템은 그대로 남는다.
+//   ★★ 소모품·장신구는 **시작 구간(≤90초)에서만** 담는다 (2026-09-09 사용자 요청 — 그 전엔 통째로 버렸다).
+//     물약·와드는 경기 내내 사는 잡음이라 전체로는 구매 건수의 3분의 1을 차지하는데,
+//     **시작 아이템에서는 「도란링 + 물약 2개 + 렌즈」 처럼 선택의 일부**다.
+//     실측(판 5개): 시작 구간에서 버려지던 게 판당 20.8건 — 체력 물약 14.2 · 투명 와드 5.0 ·
+//     렌즈 0.8 · 제어 와드 0.6 · 충전형 0.2. 한 패치(48,723판)에 +25.6MB.
 //   ★ `ITEM_UNDO`(되사기 취소)는 **직전 구매를 지운다.** 안 지우면 "샀다 무른" 아이템이
 //     빌드에 섞인다 — 상점에서 잘못 눌렀다 무르는 일이 흔하다.
 const TL_SKIP_ITEMS = new Set([
@@ -1209,23 +1212,34 @@ const TL_SKIP_ITEMS = new Set([
 //   집계(buildOneTimelineScope)가 보는 건 시작(≤90초) · 초반(90~600초) · 완성 아이템(코어 순서)뿐이라
 //   **1코어·2코어·시작템·신발 통계에 손실이 없다.** 빠지는 건 600초 뒤에 산 조합 재료다.
 //   실측: 판당 149건 → 80건(53%). 안 주면(null) 예전처럼 전부 담는다.
-function toSlimTimeline(timeline, keepIds) {
+// ★★ `supIdx` = 서폿 자리(pos=4) 참가자 번호들. 안 넘기면 예전과 똑같이 돈다.
+function toSlimTimeline(timeline, keepIds, supIdx) {
     const frames = timeline?.info?.frames;
     if (!Array.isArray(frames)) return null;
 
     const skills = {};           // 참가자 → 스킬 슬롯 배열
     const buys = [];             // [초, 참가자0~9, 아이템id]
+    // ★★★ 서포터 아이템(세계 지도집)은 **participantId 가 0 으로 온다** (2026-09-09에 알아냄).
+    //   산 게 아니라 0초에 공짜로 주는 것이라 라이엇이 임자를 안 적는다. 그래서 예전엔
+    //   아래 `pid < 1` 걸림돌에 막혀 **서폿템이 통계에 단 한 건도 안 들어와 있었다** (실측 0.0%).
+    //   실측 4판 모두 「0초 · pid=0 · 3865 두 건」으로 똑같았다 — 팀마다 하나씩이다.
+    //   건수와 서폿 자리 수가 맞을 때만 하나씩 나눠 준다 (안 맞으면 잘못 붙이느니 버린다).
+    const granted = [];
 
     frames.forEach(f => (f.events || []).forEach(e => {
         const pid = e.participantId;
-        if (!pid || pid < 1 || pid > 10) return;
+        if (!pid || pid < 1 || pid > 10) {
+            if (e.type === 'ITEM_PURCHASED' && !pid) granted.push(e.itemId);
+            return;
+        }
 
         if (e.type === 'SKILL_LEVEL_UP') {
             const ch = 'QWER'[(e.skillSlot || 0) - 1];
             if (ch) (skills[pid] || (skills[pid] = [])).push(ch);
         } else if (e.type === 'ITEM_PURCHASED') {
-            if (TL_SKIP_ITEMS.has(e.itemId)) return;
             const sec = Math.round((e.timestamp || 0) / 1000);
+            // ★ 소모품·장신구는 **시작 구간 밖에서만** 버린다 (2026-09-09)
+            if (TL_SKIP_ITEMS.has(e.itemId) && sec > TL_START_SEC) return;
             // ★ 되무름(ITEM_UNDO)이 뒤에서 찾아 지우므로 **거르는 건 여기서** 해야 짝이 맞는다
             if (keepIds && sec > TL_EARLY_SEC && !keepIds.has(e.itemId)) return;
             buys.push([sec, pid - 1, e.itemId]);
@@ -1238,6 +1252,11 @@ function toSlimTimeline(timeline, keepIds) {
             }
         }
     }));
+
+    // 공짜로 준 것(서포터 아이템)을 서폿 자리에 하나씩. 0초라 맨 앞에 붙인다 (구매 순서가 시간순이어야 한다)
+    if (Array.isArray(supIdx) && supIdx.length && granted.length === supIdx.length) {
+        granted.forEach((id, i) => buys.unshift([0, supIdx[i], id]));
+    }
 
     // 참가자 순서대로 문자열 10칸. 없는 자리는 빈 문자열이라 자리는 유지된다.
     const sk = Array.from({ length: 10 }, (_, i) => (skills[i + 1] || []).join(''));
@@ -1518,7 +1537,10 @@ async function fetchMatchStats() {
                         );
                         // ★★ `it` 는 **집계가 쓰는 구매만** 담는다 (2026-09-09, Atlas 512MB 가 차서).
                         //   목록을 못 받아 오면 keep 이 null 이라 예전처럼 전부 담는다 (안전한 쪽).
-                        const st = toSlimTimeline(tl.data, tlKeepIds);
+                        // ★ 서폿 자리(pos=4)를 같이 넘긴다 — 공짜로 주는 서포터 아이템의 임자를
+                        //   라이엇이 안 적어서(participantId 0) 여기서 붙여 줘야 한다
+                        const supIdx = (slim.p || []).map((p, i) => (p && p[1] === 4) ? i : -1).filter(i => i >= 0);
+                        const st = toSlimTimeline(tl.data, tlKeepIds, supIdx);
                         if (st) { slim.sk = st.sk; slim.it = st.it; statCounters.tl = (statCounters.tl || 0) + 1; }
                     } catch (e) {
                         if (e.response?.status === 429) throw e;   // 429 는 바깥에서 사이클을 끊는다
@@ -1726,7 +1748,8 @@ const ITEM_CONSUMABLES = [
 //   자리를 빼면 박제 TYPE_LIST 의 번호가 밀리고, 저장·조회 경로는 type 이름만 보므로 그대로 둔다.
 const TL_TYPES = ['skillord', 'skillpri', 'start', 'early', 'earlyset', 'boots',
     'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6',
-    'skilllv', 'skillord11'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
+    'skilllv', 'skillord11',
+    'sup'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
 // ★ skillord6·skillord10 은 2026-09-09 에 화면에서 빠져 집계도 멈췄다 — 박제 TYPE_LIST 의 자리는 그대로 둔다 (자리 번호가 밀리면 안 된다)
 const TL_MIN_PATCH = [16, 17];    // 이 패치부터 타임라인을 받고·센다
 const TL_START_SEC = 90;          // 이 초 안에 산 것이 시작 아이템
@@ -1785,8 +1808,18 @@ async function loadCompletedItems() {
         if (realInto(it).length && !bootsSet.has(n)) continue;
         complete.push(n);
     }
-    completedItemCache = { ver: currentVersion, data: { complete, boots } };
-    console.log(`[Stat] 완성 아이템 목록 ${complete.length}개 · 장화 ${boots.length}개 (DD ${currentVersion})`);
+    // ★★ 서포터 아이템 — **태그 `GoldPer` + `Lane` 을 둘 다** 가진 것이다 (2026-09-09).
+    //   계보(`into`)로는 못 찾는다: `3865 세계 지도집` 의 into 가 비어 있어서 3866·3867 로 이어지지 않는다.
+    //   실측으로 이 규칙이 정확히 8종을 잡고 헛것이 없다 — 3865·3866·3867 + 최종 5종(3869·3870·3871·3876·3877).
+    //   `3400 수당`(GoldPer 만) · `4646 폭풍 쇄도`(GoldPer 만) 는 안 걸린다.
+    const supports = [];
+    for (const [id, it] of Object.entries(data)) {
+        if (!it.maps?.['11']) continue;
+        const t = it.tags || [];
+        if (t.includes('GoldPer') && t.includes('Lane')) supports.push(Number(id));
+    }
+    completedItemCache = { ver: currentVersion, data: { complete, boots, supports } };
+    console.log(`[Stat] 완성 아이템 목록 ${complete.length}개 · 장화 ${boots.length}개 · 서포터 아이템 ${supports.length}개 (DD ${currentVersion})`);
     return completedItemCache.data;
 }
 
@@ -1914,7 +1947,7 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
     //   ① 안 산 판이 통계에서 통째로 빠졌고 ② 타임라인은 소급 정리에 다칠 수 있는 자료다
     //   (실제로 2026-09-09 에 다쳤다 — trim_matchstats_it.js 주석 참고).
     //   최종 6칸( 9~14)은 손댄 적이 없고 "경기 끝에 무슨 신발을 신고 있었나" 가 곧 답이다.
-    const { boots } = await loadCompletedItems();
+    const { boots, supports } = await loadCompletedItems();
 
     // ★ $unwind 를 한 번만 하고 $facet 으로 네 갈래를 낸다. 갈래마다 따로 aggregate 를
     //   돌리면 110만 행짜리 unwind 를 다섯 번 반복하게 된다 (M0 무료 티어라 뼈아프다).
@@ -1958,6 +1991,10 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
                 item: [P(9), P(10), P(11), P(12), P(13), P(14)],
                 // 최종 6칸 중 신발 하나 (없으면 빈 배열 = 「신발 없음」 줄이 된다)
                 boots: { $slice: [{ $filter: { input: [P(9), P(10), P(11), P(12), P(13), P(14)], as: 'i', cond: { $in: ['$$i', boots] } } }, 1] },
+                // ★ 서포터 아이템도 같은 방식 (2026-09-09 사용자 요청). **기본형과 업그레이드 전부** 한 목록이다.
+                //   타임라인으로는 못 센다 — 0초에 공짜로 주는 것이라 라이엇이 임자(participantId)를 안 적는다.
+                //   최종 6칸은 그 사고와 무관하게 온전하므로 여기서 세면 **소급 없이 16.17 도 바로 나온다.**
+                sup: { $slice: [{ $filter: { input: [P(9), P(10), P(11), P(12), P(13), P(14)], as: 'i', cond: { $in: ['$$i', supports] } } }, 1] },
                 // 같은 이유로 주문도 작은 id 를 앞으로. 점멸/점화와 점화/점멸이 갈리면
                 // 표본이 반이 된다.
                 spell: { $cond: [{ $lt: [P(15), P(16)] }, [P(15), P(16)], [P(16), P(15)]] }
@@ -1971,6 +2008,8 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
                 shard: [{ $group: { _id: { c: '$c', pos: '$pos', k: '$shard' }, games: { $sum: 1 }, wins: { $sum: '$w' } } }],
                 // ★ 신발 — 최종 6칸 안의 신발 하나. **빈 배열이면 「신발 없음」**이라 그 판도 세어진다
                 boots: [{ $group: { _id: { c: '$c', pos: '$pos', k: '$boots' }, games: { $sum: 1 }, wins: { $sum: '$w' } } }],
+                // ★ 서폿템은 **서폿 자리(pos 4)만** 센다 — 다른 라인은 전부 「없음」이라 줄이 헛돈다
+                sup: [{ $match: { pos: 4 } }, { $group: { _id: { c: '$c', pos: '$pos', k: '$sup' }, games: { $sum: 1 }, wins: { $sum: '$w' } } }],
                 // ★ 아이템은 **낱개**로 센다 (조합이 아니다). 6칸을 펼쳐서 하나씩 세므로
                 //   한 사람이 6줄에 기여하고, 그래서 픽률은 "이 챔피언 판의 몇 %에서 이 아이템이
                 //   최종까지 남았나" 가 된다 — 합이 100%를 넘는 게 정상이다.
@@ -2423,6 +2462,69 @@ async function startJobs() {
         //   조용히 DB 에 덮인다** — 화면의 ddragonVersion 함정과 같은 부류다.
         await updateVersion();
         await buildChampStats();
+        process.exit(0);
+    }
+
+    // ★★ `BACKFILL_TL=1 node server.js` — 이미 쌓인 matchstats 의 `sk`/`it` 을
+    //   **라이엇 타임라인을 다시 받아** 지금 규칙으로 다시 채운다 (2026-09-09 사용자 요청).
+    //
+    //   ★ 왜: ① 시작 구간(<=90초)의 물약·와드·장신구를 이제 담는다 (예전엔 통째로 버렸다)
+    //         ② 서포터 아이템은 participantId 0 으로 와서 **한 건도 안 들어와 있었다**
+    //         ③ 덤 — 9/9 의 trim 상수 사고(2단계 신발이 지워진 것)도 같이 복구된다
+    //
+    //   ★★ **별도 스크립트로 만들지 않았다.** 규칙(toSlimTimeline·완성 아이템 목록·상수)을
+    //     두 벌로 적으면 또 어긋난다 — 9/9 에 TL_COMPLETE_GOLD 를 1500 으로 잘못 옮겨 적어
+    //     신발 구매를 통째로 지운 게 정확히 그 사고다. 여기 두면 한 벌이다.
+    //
+    //   ★★ 라이엇 호출이 판당 1회다. 개인 키가 2분에 100회라 판당 1.25초가 상한이고
+    //     48,723판이면 **약 17시간**이다. **도는 동안 평소 수집 잡은 안 뜬다** (아래 return).
+    //   ★ 중단해도 안전하다 — 같은 값으로 덮어쓰는 멱등 연산이라 다시 돌리면 이어진다.
+    //   ★ `BACKFILL_LIMIT=20` 으로 앞부분만, `BACKFILL_GAP=1250` 으로 간격을 조절한다.
+    if (process.env.BACKFILL_TL === '1') {
+        await updateVersion();
+        const ci = await loadCompletedItems();
+        const keepIds = new Set(ci.complete);
+        const LIMIT = Number(process.env.BACKFILL_LIMIT) || 0;
+        const GAP = Number(process.env.BACKFILL_GAP) || 1250;
+        const col = mongoose.connection.db.collection('matchstats');
+        const q = { v: { $exists: true } };
+        const total = await col.countDocuments(q);
+        console.log(`[Backfill] 대상 ${total.toLocaleString()}건 · 판당 ${GAP}ms → 예상 ${(total * GAP / 3600000).toFixed(1)}시간`);
+        let seen = 0, done = 0, fail = 0, skip = 0, before = 0, after = 0;
+        const t0 = Date.now();
+        const cursor = col.find(q, { projection: { matchId: 1, p: 1, v: 1, it: 1 } }).sort({ _id: 1 });
+        for await (const d of cursor) {
+            if (LIMIT && seen >= LIMIT) break;
+            seen++;
+            if (!patchAtLeast(d.v, TL_MIN_PATCH)) { skip++; continue; }
+            let tl;
+            try {
+                tl = (await riotApi.get(`https://asia.api.riotgames.com/lol/match/v5/matches/${d.matchId}/timeline`)).data;
+            } catch (e) {
+                const st = e.response?.status;
+                if (st === 429) { console.warn('[Backfill] 429 — 10초 쉰다'); await sleep(10000); seen--; continue; }
+                fail++;
+                if (fail <= 5) console.warn(`[Backfill] ${d.matchId} 실패 ${st || e.message}`);
+                await sleep(GAP);
+                continue;
+            }
+            // ★ 서폿 자리를 같이 넘긴다 — 공짜로 주는 서포터 아이템의 임자를 라이엇이 안 적는다
+            const supIdx = (d.p || []).map((p, i) => (p && p[1] === 4) ? i : -1).filter(i => i >= 0);
+            const st = toSlimTimeline(tl, keepIds, supIdx);
+            if (st) {
+                before += (d.it || []).length / 3;
+                after += st.it.length / 3;
+                await col.updateOne({ _id: d._id }, { $set: { sk: st.sk, it: st.it } });
+                done++;
+            }
+            if (seen % 200 === 0) {
+                const el = (Date.now() - t0) / 1000;
+                console.log(`[Backfill] ${seen.toLocaleString()}/${total.toLocaleString()} · 채움 ${done.toLocaleString()} · 실패 ${fail} · 남은 시간 약 ${((total - seen) * (el / seen) / 3600).toFixed(1)}시간`);
+            }
+            await sleep(GAP);
+        }
+        console.log(`[Backfill] 끝 — 훑음 ${seen.toLocaleString()} · 채움 ${done.toLocaleString()} · 실패 ${fail} · 건너뜀 ${skip}`);
+        if (done) console.log(`[Backfill] 구매 판당 ${(before / done).toFixed(1)} → ${(after / done).toFixed(1)}건`);
         process.exit(0);
     }
     await loadResolvedNames();

@@ -4157,7 +4157,8 @@ const ARCHIVE_KB = ['5-7', '8-10'];
 const ARCHIVE_TYPE = ['rune', 'keystone', 'spell', 'shard', 'all', 'item',
     'skillord', 'skillpri', 'start', 'core', 'item4', 'item5', 'item6', 'tlall',   // 타임라인 8종은 2026-08-26 에 맨 뒤에 붙였다
     'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk',   // 같은 날 밤 12종 더
-    'skilllv', 'skillord11'];   // 레벨별 스킬 · 11레벨 순서 (2026-09-09)
+    'skilllv', 'skillord11',
+    'sup'];   // 레벨별 스킬 · 11레벨 순서 · 서포터 아이템 (2026-09-09)
 
 function expandStatsArchive(a) {
     // champstats 행 — API 의 rows 와 **같은 모양**이라 renderStatsTable() 은 안 바뀐다
@@ -4831,7 +4832,11 @@ function lxBuildData(builds, pos, baseBuilds) {
 }
 
 // 픽률 분모: 타임라인 type 은 tl, 나머지는 total
-const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'skilllv', 'skillord11']);
+// ★★ `boots`·`sup` 은 **여기 없다** (2026-09-09). 둘은 타임라인이 아니라 **최종 6칸**에서 세므로
+//   타임라인이 없는 판까지 분자에 들어간다 — `tl`(타임라인 있는 판)로 나누면 100% 를 넘을 수 있다.
+//   16.17 은 921칸 전부 `all === tlall` 이라 지금은 값이 같지만, 타임라인 수집이 한 번이라도
+//   실패하면 그때 어긋난다. 분자와 분모의 출처를 맞춰 둔다.
+const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'skilllv', 'skillord11']);
 function lxDenom(B, type) { return LX_TL_TYPES.has(type) ? B.tl : B.total; }
 
 // 3칸 값 (승률 · 픽률 · 판수) — 카드 줄 공통
@@ -4999,11 +5004,12 @@ function lxLowerRows(c) {
     const B = c.B;
     if (!B.has || !B.total) return '';
     const hasTl = B.tl > 0;
-    // ★ key 가 비면 「신발 없음」이다 (2026-09-09) — 신발을 안 사고 끝낸 판을 세는 줄이라
-    //   아이콘이 없다. 다른 type 은 빈 key 가 안 온다 (신발만 그렇게 담는다).
+    // ★ key 가 비면 「없음」이다 (2026-09-09) — 최종 6칸에서 세는 줄(신발·서포터 아이템)은
+    //   그 아이템 없이 끝난 판도 세므로 아이콘이 없는 줄이 나온다. 다른 type 은 빈 key 가 안 온다.
+    const noneTitle = { boots: '신발을 사지 않은 판', sup: '서포터 아이템 없이 끝난 판' };
     const itemCards = (type, list) => list.map(r => (r.key.length
         ? { icons: [itemIconOf(r.key[0])], title: itemNameOf(r.key[0]), vals: lxVals3(B, type, r) }
-        : { top: '<span class="lx-noitem">없음</span>', title: '신발을 사지 않은 판', vals: lxVals3(B, type, r) }));
+        : { top: '<span class="lx-noitem">없음</span>', title: noneTitle[type] || '없이 끝난 판', vals: lxVals3(B, type, r) }));
     const setCards = (type, list) => list.map(r => ({ icons: r.key.map(itemIconOf), title: r.key.map(itemNameOf).join(' › '), vals: lxVals3(B, type, r) }));
     const box = (id, tabbar, rowsHtml) => `<div class="lx-box" id="${id}">${tabbar || ''}<div class="lx-box-rows">${rowsHtml}</div></div>`;
 
@@ -5051,8 +5057,14 @@ function lxLowerRows(c) {
     //   세는지 밝힌다. 판 아이템도 그 자리에 남는다 (`ITEM_SOLD` 를 안 담으므로).
     //   실측: 코어로 센 아이템이 최종 6칸에 없는 사람이 5.58% 인데 그 대부분은 판 게 아니라
     //   **변신**이다 (마나무네→무라마나 12,661 · 대천사→포옹 6,714). 진짜 판 건 1.25% 쯤.
+    // ★ 서포터 아이템 줄 — **서폿 자리에서만** 그린다 (2026-09-09 사용자 요청). 기본형(세계 지도집)과
+    //   업그레이드 5종이 한 줄에 같이 나온다. 최종 6칸에서 세므로 타임라인이 없어도 나온다.
+    const supRow = c.pos === 4
+        ? lxRow({ title: '서포터 아이템', metrics: lxM3(B) }, itemCards('sup', B.rows('sup').slice(0, LX_ROW_MAX)), { empty: '표본을 모으는 중' })
+        : '';
     const items = box('lx-items', '',
-        lxRow({ title: '신발', metrics: lxM3(B) }, itemCards('boots', B.rows('boots').slice(0, LX_ROW_MAX)), { empty: '타임라인 표본을 모으는 중' })
+        supRow
+        + lxRow({ title: '신발', metrics: lxM3(B) }, itemCards('boots', B.rows('boots').slice(0, LX_ROW_MAX)), { empty: '타임라인 표본을 모으는 중' })
         + finalRows
         + coreRows
         + allItemsRow
