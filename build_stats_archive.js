@@ -49,8 +49,7 @@ const KB_LIST = ['5-7', '8-10'];
 const TYPE_LIST = ['rune', 'keystone', 'spell', 'shard', 'all', 'item',
     'skillord', 'skillpri', 'start', 'core', 'item4', 'item5', 'item6', 'tlall',   // 타임라인 8종은 2026-08-26 에 맨 뒤에 붙였다
     'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk',   // 같은 날 밤 12종 더
-    'skilllv', 'skillord11',
-    'tlord11', 'tlord16'];   // 레벨별 스킬 · 11레벨 순서 · 11·16레벨 도달자 수 (2026-09-09)
+    'skilllv', 'skillord11'];   // 레벨별 스킬 · 11레벨 순서 (2026-09-09)
 
 const OUT_DIR = path.join(__dirname, 'public', 'stats_archive');
 const fileNameOf = (scope) => scope.replace(/:/g, '_') + '.js';
