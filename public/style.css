@@ -3103,6 +3103,21 @@ main {
 .lx-seq-cell.k1 { background: #23405f; } .lx-seq-cell.k2 { background: #2f4f2f; } .lx-seq-cell.k3 { background: #5a3f22; } .lx-seq-cell.k4 { background: #4d2a5c; }
 .lx-seq-vals { display: flex; gap: 10px; font-size: 12px; }
 
+/* ★★ 레벨별 스킬 표 (2026-09-09) — 줄이 레벨, 열이 Q·W·E·R.
+   칸마다 승률(굵게) · 픽률 · 판수를 세 줄로 쌓는다 (다른 상자의 카드와 같은 차례).
+   ★ 자리를 아끼려고 표로 갔다 — 카드로 늘어놓으면 15레벨이 화면 세 배가 된다.
+   ★ 폰에서는 좁아지므로 자기 상자가 가로 스크롤한다 (표는 안 접는다 — 접으면 레벨 비교가 안 된다) */
+.lx-skt { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.lx-skt th, .lx-skt td { padding: 5px 6px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.lx-skt thead th { color: var(--text-muted); font-weight: 500; padding-bottom: 7px; }
+.lx-skt tbody th { color: var(--text-bright); font-weight: 700; width: 52px; }
+.lx-skt td b { display: block; font-size: 13px; }
+.lx-skt td span { display: block; color: #c4b5fd; }
+.lx-skt td i { display: block; font-style: normal; font-size: 11px; color: var(--text-faint); }
+.lx-skt td.is-none { color: rgba(255, 255, 255, 0.15); }
+/* 표는 상자 안쪽 여백을 자기가 쓴다 (.lx-box-rows 가 이미 패딩을 주는 자리가 아니다) */
+#lx-skill-body > .lx-skt { padding: 0; }
+
 /* 룬 표 — 계열 5개 + 파편, 룬마다 픽률·승률 */
 .lx-pk-trees { display: flex; gap: 8px; padding: 10px; overflow-x: auto; }
 .lx-pk-tree { flex: 1; min-width: 150px; }

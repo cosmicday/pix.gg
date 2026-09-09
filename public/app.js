@@ -5089,21 +5089,27 @@ function lxSkillBody(c, type) {
     //   집계 key 가 `[레벨, 슬롯]` 이라 레벨로 묶고 그 안에서 픽률순으로 세운다.
     //   ★ 픽률 분모는 다른 줄과 같은 `B.tl`(타임라인이 있는 판) 이라 한 레벨의 합이 100% 근처가 된다
     //     — 15레벨을 다 안 찍고 끝난 판이 있어 딱 100 은 아니다.
+    //   ★ 모양은 **표**다 (2026-09-09, 사용자가 lolalytics 하단 스킬 구역을 가리켰다) —
+    //     줄이 레벨, 열이 Q·W·E·R, 칸마다 승률·픽률·판수. 줄마다 카드를 늘어놓는 것보다
+    //     "같은 레벨에서 뭘 골랐나" 와 "레벨이 오르며 어떻게 바뀌나" 가 한눈에 보인다.
+    //   ★ 안 찍은 칸은 「-」로 비워 둔다 (0% 를 적으면 표가 숫자로 꽉 차서 오히려 안 읽힌다)
     if (type === 'skilllv') {
         const byLv = new Map();
         B.rows('skilllv').forEach(r => {
-            const lv = r.key[0];
-            if (!byLv.has(lv)) byLv.set(lv, []);
-            byLv.get(lv).push(r);
+            const [lv, slot] = r.key;
+            if (!byLv.has(lv)) byLv.set(lv, {});
+            byLv.get(lv)[slot] = r;
         });
-        if (!byLv.size) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
-        return [...byLv.keys()].sort((a, b) => a - b).map(lv => {
-            const cards = byLv.get(lv).sort((a, b) => b.games - a.games).map(r => ({
-                top: lxSkill(c, r.key[1], true), title: `${lv}레벨 ${'QWER'[r.key[1] - 1]}`,
-                vals: lxVals3(B, 'skilllv', r)
-            }));
-            return lxRow({ title: `${lv}레벨`, metrics: lxM3(B) }, cards, { topH: 34 });
-        }).join('');
+        const lvs = [...byLv.keys()].sort((a, b) => a - b);
+        if (!lvs.length) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
+        const cell = r => r
+            ? `<td><b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b><span class="lx-lav">${lxPct(r.games, B.tl)}%</span><i>${r.games.toLocaleString()}</i></td>`
+            : `<td class="is-none">-</td>`;
+        return `<table class="lx-skt">
+            <thead><tr><th>레벨</th>${[1, 2, 3, 4].map(n => `<th>${lxSkill(c, n, true)}</th>`).join('')}</tr></thead>
+            <tbody>${lvs.map(lv =>
+            `<tr><th>${lv}</th>${[1, 2, 3, 4].map(n => cell(byLv.get(lv)[n])).join('')}</tr>`).join('')}</tbody>
+        </table>`;
     }
 
     // 레벨별 스킬 순서 — 세로로 한 줄씩 (순서 + 승률·픽률·판수)
