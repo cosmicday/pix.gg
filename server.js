@@ -1784,7 +1784,8 @@ async function buildTimelineFacet(matchCond, opts = {}) {
     } });
     const grp = k => ({ $group: { _id: { c: '$c', pos: '$pos', k }, games: { $sum: 1 }, wins: { $sum: '$w' } } });
     const min2 = { $match: { games: { $gte: 2 } } };
-    const nth = i => [{ $match: { [`comp.${i}`]: { $exists: true } } }, grp([at('$comp', i)])];
+    // ★ N코어 = **신발을 뺀** 완성 아이템의 N번째 (2026-09-09). 신발은 자기 줄이 따로 있다
+    const nth = i => [{ $match: { [`compnb.${i}`]: { $exists: true } } }, grp([at('$compnb', i)])];
     const firstN = n => [{ $match: { [`comp.${n - 1}`]: { $exists: true } } }, grp({ $slice: ['$comp', n] }), min2];
     const ordTo = n => [{ $match: { [`ord.${n - 1}`]: { $exists: true } } }, grp({ $slice: ['$ord', n] }), min2];
     const ids = arr => ({ $map: { input: arr, as: 'b', in: '$$b.id' } });
@@ -1825,6 +1826,13 @@ async function buildTimelineFacet(matchCond, opts = {}) {
             start: { $sortArray: { input: ids(inWindow(-1, TL_START_SEC)), sortBy: 1 } },
             early: ids(inWindow(TL_START_SEC, TL_EARLY_SEC)),
             comp: ids({ $filter: { input: '$buys', as: 'b', cond: { $in: ['$$b.id', complete] } } }),
+            // ★★ 코어 순서(1~6코어)는 **신발을 빼고** 센다 (2026-09-09 사용자 요청).
+            //   신발은 바로 위에 자기 줄(`boots`)이 따로 있는데 코어에도 끼면 "1코어 = 신발" 인
+            //   챔피언이 생겨서 두 줄이 같은 말을 한다. 세트(`core`·`set2/4/5`)는 **그대로 둔다** —
+            //   거긴 "그 판에 뭘 갖췄나" 라 신발도 장비의 하나다.
+            compnb: ids({ $filter: { input: '$buys', as: 'b', cond: {
+                $and: [{ $in: ['$$b.id', complete] }, { $not: [{ $in: ['$$b.id', boots] }] }]
+            } } }),
             boots: { $slice: [ids({ $filter: { input: '$buys', as: 'b', cond: { $in: ['$$b.id', boots] } } }), 1] }
         } }
     ];
