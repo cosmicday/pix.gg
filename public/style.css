@@ -3019,6 +3019,9 @@ main {
 .lx-line.lx-blue { stroke: var(--accent); } .lx-dot.lx-blue { fill: var(--accent); }
 .lx-line.lx-white { stroke: var(--text-bright); } .lx-dot.lx-white { fill: var(--text-bright); }
 .lx-line.lx-red { stroke: #f87171; } .lx-dot.lx-red { fill: #f87171; }
+/* 수요일(패치 경계) 세로 점선 — 아래 날짜 글자와 이어진다 (2026-09-09).
+   가로 눈금선(#222)보다 한 단계만 밝게 둔다. 더 밝으면 꺾은선을 이긴다. */
+.lx-wed { stroke: #33333d; stroke-width: 1; stroke-dasharray: 2 3; }
 
 /* ── 상성 상자: 왼쪽 라벨(상성/시너지) + 탭 바 두 줄, 아래 라인별 카드 줄 */
 .lx-mu-tabs { border-bottom: 1px solid var(--lx-bd); }
@@ -3118,7 +3121,11 @@ main {
 /* (칸 제목 「선마 순서」·「레벨별」은 2026-09-09 에 뺐다 — 아이콘과 표 머리만으로 읽힌다) */
 
 /* 왼쪽 선마 순서 표 — 오른쪽 레벨 표(.lx-skt)와 같은 규칙을 쓰고, 순서 칸만 왼쪽 정렬이다 */
-.lx-pri-tb .lx-pri-ord { display: flex; align-items: center; gap: 2px; width: auto; text-align: left; padding-left: 2px; }
+/* ★★ 이 칸에 display:flex 를 주면 안 된다 (2026-09-09 에 걸렸다) — th 가 표 칸이 아니게 되어
+   **줄 높이(60px)로 안 늘어나고 내용 높이(47px)로 줄어든다.** 그러면 칸 아래 구분선만 13px 위로
+   올라가서 오른쪽 표와 줄이 어긋나 보인다. 자식이 전부 inline-block 이라 flex 없이도 한 줄로 선다. */
+.lx-pri-tb .lx-pri-ord { width: auto; text-align: left; padding-left: 2px; white-space: nowrap; }
+.lx-pri-tb .lx-pri-ord > * { vertical-align: middle; }
 .lx-pri-tb td b { font-size: 13px; }
 .lx-pri-tb td i { font-style: normal; font-size: 12px; color: var(--text-faint); }
 

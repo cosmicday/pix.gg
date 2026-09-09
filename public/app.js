@@ -4864,6 +4864,9 @@ function lxSkill(c, n, small) {
 // ── 추이 그래프 4개 (승률 · 픽률 · 판수 · 밴률, 최근 7일) ────────────────
 function lxTrend(c, trend) {
     const days = (trend && trend.days) || [];
+    // ★ 수요일 = 패치 경계. 눈금선과 날짜 글자 둘 다 이 날에만 그린다.
+    //   new Date('2026-09-09') 는 UTC 자정으로 읽히는데 한국은 +9 라 같은 날 09시다 — 하루 안 밀린다.
+    const isWed = d => new Date(d.day).getDay() === 3;
     const graph = (title, cls, vals, fmt) => {
         const W = 244, H = 150, L = 34, R = 8, T = 30, Bm = 26;
         if (days.length < 2) return `<div class="lx-graph"><div class="lx-graph-t ${cls}">${title}</div><div class="lx-none">최근 7일 표본이 아직 없습니다</div></div>`;
@@ -4879,6 +4882,10 @@ function lxTrend(c, trend) {
             <div class="lx-graph-t ${cls}">${title}</div>
             <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
                 ${ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="#222"/><text x="${L - 4}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="#bbb">${fmt(t)}</text>`).join('')}
+                <!-- 수요일 세로 점선 — 위 눈금선 다음, 꺾은선 앞에 그려야 선 뒤로 깔린다.
+                     y2 는 H-16 = 아래 날짜 글자의 윗변이라 눈금과 날짜가 이어져 보인다. -->
+                ${days.map((d, i) => (isWed(d)
+            ? `<line x1="${x(i).toFixed(1)}" x2="${x(i).toFixed(1)}" y1="${T}" y2="${H - 16}" class="lx-wed"/>` : '')).join('')}
                 <polyline points="${pts}" fill="none" class="lx-line ${cls}" stroke-width="1.5"/>
                 ${vals.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2" class="lx-dot ${cls}"><title>${days[i].day} · ${fmt(v)}</title></circle>`).join('')}
                 <!-- ★★ 날짜는 **수요일만** 적는다 (2026-09-09 사용자 요청). 날이 열흘을 넘으면
@@ -4888,7 +4895,7 @@ function lxTrend(c, trend) {
                        그래서 getDay() 가 날짜를 안 넘긴다 (하루 밀리지 않는다).
                      ★★ 이 주석은 템플릿 문자열 안이다 — 백틱을 쓰면 문자열이 거기서 끊긴다
                         (이번 세션에서 세 번째다: 도감 채택률·도감 dt·여기) -->
-                ${days.map((d, i) => (new Date(d.day).getDay() === 3
+                ${days.map((d, i) => (isWed(d)
             ? `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="8" fill="#bbb">${d.day.slice(5)}</text>` : '')).join('')}
             </svg>
         </div>`;
