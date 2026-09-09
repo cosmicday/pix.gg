@@ -1790,7 +1790,16 @@ async function buildTimelineFacet(matchCond, opts = {}) {
     const ids = arr => ({ $map: { input: arr, as: 'b', in: '$$b.id' } });
     const inWindow = (lo, hi) => ({ $filter: { input: '$buys', as: 'b', cond: { $and: [{ $gt: ['$$b.t', lo] }, { $lte: ['$$b.t', hi] }] } } });
 
-    const rows = await MatchStat.aggregate([
+    // ★★★ `$facet` 은 **결과 문서 하나가 16MB… 가 아니라 100MB** 를 넘으면 통째로 실패한다
+    //   (2026-09-09 실제로 걸렸다: `document constructed by $facet is 104,858,026 bytes`).
+    //   갈래 중 **아이템 조합을 묶는 것들**(시작템 세트·초반템 세트·코어 2/3/4/5개)이 판이 쌓일수록
+    //   서로 다른 조합 수가 폭발해서, 어느 날 갑자기 한도를 넘는다. 한 번 넘으면 그 패치 집계가
+    //   통째로 안 돌아 **champbuilds 가 비어 버린다.**
+    //   ★ 그래서 **두 번에 나눠 돌린다** — 무거운 「조합」 갈래와 가벼운 「낱개」 갈래.
+    //     앞 단계(참가자 펼치기)를 두 번 타는 대신 한도에 안 걸린다. 예전엔 다섯 번이었으니
+    //     두 번은 그 절충안이다 (M0 무료 티어라 되도록 적게 돌린다).
+    //   ★ 나중에 또 넘치면 **셋으로 쪼개면 된다** — `heavy` 를 반으로 가르는 게 제일 쉽다.
+    const prefix = [
         { $match: { ...matchCond, sk: { $exists: true } } },
         { $project: { p: 1, sk: 1, it: { $ifNull: ['$it', []] } } },
         // 참가자 10명을 한 줄씩으로. `it` 는 [초, 참가자, 아이템] 이 평평하게 이어진 배열이라 3칸씩 끊는다.
@@ -1817,21 +1826,32 @@ async function buildTimelineFacet(matchCond, opts = {}) {
             early: ids(inWindow(TL_START_SEC, TL_EARLY_SEC)),
             comp: ids({ $filter: { input: '$buys', as: 'b', cond: { $in: ['$$b.id', complete] } } }),
             boots: { $slice: [ids({ $filter: { input: '$buys', as: 'b', cond: { $in: ['$$b.id', boots] } } }), 1] }
-        } },
-        { $facet: {
-            skillord: ordTo(TL_SKILL_ORDER_LEVELS), skillord6: ordTo(6), skillord10: ordTo(10),
-            skillpri: [{ $match: { 'ord.8': { $exists: true } } }, grp('$pri')],
-            start: [{ $match: { 'start.0': { $exists: true } } }, grp('$start'), min2],
-            early: [{ $unwind: '$early' }, grp(['$early'])],
-            earlyset: [{ $match: { 'early.0': { $exists: true } } }, grp({ $sortArray: { input: '$early', sortBy: 1 } }), min2],
-            boots: [{ $match: { 'boots.0': { $exists: true } } }, grp('$boots')],
-            core: firstN(3), set2: firstN(2), set4: firstN(4), set5: firstN(5),
-            item1: nth(0), item2: nth(1), item3: nth(2), item4: nth(3), item5: nth(4), item6: nth(5),
-            // 타임라인이 있는 판의 참가자 수 — 위 type 들의 픽률 분모 (화면은 `tlall` 로 받는다)
-            tlall: [grp([])]
         } }
-    ]).allowDiskUse(true);
-    return rows[0] || {};
+    ];
+
+    // 무거운 쪽 — 조합(여러 아이템을 한 묶음으로 세는 것). 서로 다른 조합 수가 판수와 함께 는다
+    const heavy = {
+        start: [{ $match: { 'start.0': { $exists: true } } }, grp('$start'), min2],
+        earlyset: [{ $match: { 'early.0': { $exists: true } } }, grp({ $sortArray: { input: '$early', sortBy: 1 } }), min2],
+        core: firstN(3), set2: firstN(2), set4: firstN(4), set5: firstN(5)
+    };
+    // 가벼운 쪽 — 낱개(아이템 하나·스킬 순서). 가짓수가 아이템·스킬 수로 묶여 있다
+    const light = {
+        skillord: ordTo(TL_SKILL_ORDER_LEVELS), skillord6: ordTo(6), skillord10: ordTo(10),
+        skillpri: [{ $match: { 'ord.8': { $exists: true } } }, grp('$pri')],
+        early: [{ $unwind: '$early' }, grp(['$early'])],
+        boots: [{ $match: { 'boots.0': { $exists: true } } }, grp('$boots')],
+        item1: nth(0), item2: nth(1), item3: nth(2), item4: nth(3), item5: nth(4), item6: nth(5),
+        // 타임라인이 있는 판의 참가자 수 — 위 type 들의 픽률 분모 (화면은 `tlall` 로 받는다)
+        tlall: [grp([])]
+    };
+
+    const runFacet = async (facets) => {
+        const r = await MatchStat.aggregate([...prefix, { $facet: facets }]).allowDiskUse(true);
+        return r[0] || {};
+    };
+    const [a, b] = [await runFacet(light), await runFacet(heavy)];
+    return { ...a, ...b };
 }
 
 // 챔피언별 룬·주문 빌드 집계. **패치 scope 에만 부른다** (champBuildSchema 주석 참고)
@@ -2332,6 +2352,11 @@ async function startJobs() {
     //   라이엇 호출은 0 이다 — DB 안에서만 돈다.
     if (process.env.REBUILD_STATS === '1') {
         console.log('[System] REBUILD_STATS=1 — 집계만 한 번 돌리고 끝낸다');
+        // ★★ **버전을 먼저 맞춰야 한다** (2026-09-09에 데어 봤다). 안 하면 `currentVersion` 이
+        //   부팅 기본값 `16.1.1` 이라 `loadCompletedItems()` 가 **옛 패치의 완성 아이템 목록**
+        //   (154개, 지금은 141개)을 받아 온다. 그 목록으로 코어 순서를 세면 **틀린 빌드 통계가
+        //   조용히 DB 에 덮인다** — 화면의 ddragonVersion 함정과 같은 부류다.
+        await updateVersion();
         await buildChampStats();
         process.exit(0);
     }
