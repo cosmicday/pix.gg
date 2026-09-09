@@ -331,71 +331,76 @@ async function getJson(url) {
         return C.calcs[lc] !== undefined ? C.calcs[lc] : C.calcs['{' + fnv1a(lc) + '}'];
     };
 
-    // 계산식 하나를 그 레벨에서 재서 `{ n, terms }` 로. 계산식 종류 네 가지를 여기서 푼다.
-    function calcAt(calc, C, lv, depth = 0) {
+    // 계산식 하나를 그 레벨·그 사거리에서 재서 `{ n, terms }` 로. 계산식 종류 넷을 여기서 푼다.
+    //   ★★ `ranged` 를 **끝까지 들고 내려간다** (2026-09-09). 근접/원거리 갈림이 **두 겹**으로 오기 때문이다 —
+    //     크라켄의 「최대 피해」는 `GameCalculationModified`(× 1.75) 안에 원거리 배수(× 0.8)가 든
+    //     계산식이 들어 있어서, 바깥에서만 갈라 적으면 **최대치가 근접 값 하나로만** 나갔다
+    //     (사용자 인게임 확인: 원거리 최대는 210~280 인데 우리는 262.5~350 하나만 적고 있었다).
+    function calcAt(calc, C, lv, ranged, depth = 0) {
         if (!calc || depth > 4) return null;
         const type = calc.__type || '';
 
         // 다른 계산식을 가리키는 자리
-        if (type === '{f3cbe7b2}') return calcAt(findCalc(C, calc.mSpellCalculationKey), C, lv, depth + 1);
+        if (type === '{f3cbe7b2}') return calcAt(findCalc(C, calc.mSpellCalculationKey), C, lv, ranged, depth + 1);
+
+        // 조건으로 갈리는 계산식. **근접/원거리 갈림만** 다룬다 — 다른 조건이면 기본 쪽을 쓴다
+        //   (그러면 근접·원거리 문장이 같아져서 갈라 적지 않는다)
+        if (type === 'GameCalculationConditional') {
+            const req = (calc.mConditionalCalculationRequirements || {}).__type || '';
+            const useCond = ranged && /IsRanged/i.test(req);
+            return calcAt(findCalc(C, useCond ? calc.mConditionalGameCalculation : calc.mDefaultGameCalculation),
+                C, lv, ranged, depth + 1);
+        }
 
         // 배수가 붙은 계산식 (루덴의 메아리 「단일 대상 최대」 = 기본 피해 × 2)
         if (type === 'GameCalculationModified') {
-            const inner = calcAt(findCalc(C, calc.mModifiedGameCalculation), C, lv, depth + 1);
+            const inner = calcAt(findCalc(C, calc.mModifiedGameCalculation), C, lv, ranged, depth + 1);
             const mul = itemPart(calc.mMultiplier, C, lv, depth + 1);
             if (!inner || !mul || mul.n === undefined) return null;
             return {
                 n: inner.n * mul.n,
-                terms: inner.terms.map(t => ({ name: t.name, coef: t.coef * mul.n }))
+                terms: inner.terms.map(t => ({ name: t.name, coef: t.coef * mul.n })),
+                pct: inner.pct
             };
         }
 
         const s = sumParts(calc.mFormulaParts, C, lv, depth + 1);
         if (!s) return null;
-        const k = calc.mDisplayAsPercent ? 100 : 1;
+        let k = calc.mDisplayAsPercent ? 100 : 1;
+        // 원거리 배수 (이름 없는 해시 타입이 들고 있다)
+        if (ranged && calc.mRangedMultiplier) {
+            const m = itemPart(calc.mRangedMultiplier, C, lv, depth + 1);
+            if (!m || m.n === undefined) return null;
+            k *= m.n;
+        }
         return { n: s.n * k, terms: s.terms.map(t => ({ name: t.name, coef: t.coef * k })), pct: !!calc.mDisplayAsPercent };
     }
 
-    // 계산식 → 화면에 나갈 글. 레벨에 따라 변하면 1레벨과 18레벨을 재서 "A~B" 로 적는다.
-    function itemCalc(key, C, depth = 0) {
+    // 계산식 → 화면에 나갈 글. 레벨에 따라 변하면 1레벨과 18레벨을 재서 "A~B",
+    // 근접·원거리가 다르면 "근접 A / 원거리 B" 로 적는다.
+    function itemCalc(key, C) {
         const calc = findCalc(C, key);
-        if (!calc || depth > 4) return null;
+        if (!calc) return null;
 
-        // 근접/원거리로 갈리는 자리 — 둘 다 적는다
-        if ((calc.__type || '') === 'GameCalculationConditional') {
-            const a = itemCalc(calc.mDefaultGameCalculation, C, depth + 1);
-            const b = itemCalc(calc.mConditionalGameCalculation, C, depth + 1);
+        const side = (ranged) => {
+            const lo = calcAt(calc, C, 1, ranged), hi = calcAt(calc, C, 18, ranged);
+            if (!lo || !hi) return null;
+            const suffix = lo.pct ? '%' : '';
+            // 스탯 항은 레벨과 무관해야 한다 (레벨에 따라 계수가 변하는 자리는 아직 없다)
+            const loT = lo.terms.map(termText), hiT = hi.terms.map(termText);
+            if (loT.some(x => x === null) || loT.join('|') !== hiT.join('|')) return null;
+            const a = inum(lo.n), b = inum(hi.n);
             if (a === null || b === null) return null;
-            return a === b ? a : `근접 ${a} / 원거리 ${b}`;
-        }
+            const head = a === b ? a + suffix : `${a}~${b}${suffix}`;
+            if (!loT.length) return head;
+            return (Number(a) === 0 && Number(b) === 0 ? loT : [head, ...loT]).join(' + ');
+        };
 
-        const lo = calcAt(calc, C, 1), hi = calcAt(calc, C, 18);
-        if (!lo || !hi) return null;
-        const suffix = lo.pct ? '%' : '';
-
-        // 스탯 항은 레벨과 무관해야 한다 (레벨에 따라 계수가 변하는 자리는 아직 없다)
-        const loT = lo.terms.map(termText), hiT = hi.terms.map(termText);
-        if (loT.some(x => x === null) || loT.join('|') !== hiT.join('|')) return null;
-
-        const a = inum(lo.n), b = inum(hi.n);
-        if (a === null || b === null) return null;
-        let head = a === b ? a + suffix : `${a}~${b}${suffix}`;
-
-        // 원거리 배수가 붙은 계산식 (이름 없는 해시 타입) — 근접/원거리를 갈라 적는다
-        if (calc.mRangedMultiplier) {
-            const m = itemPart(calc.mRangedMultiplier, C, 1);
-            if (!m || m.n === undefined) return null;
-            if (m.n !== 1) {
-                if (loT.length) return null;      // 스탯 항까지 겹치면 문장이 너무 길어진다
-                const ra = inum(lo.n * m.n), rb = inum(hi.n * m.n);
-                if (ra === null || rb === null) return null;
-                return `근접 ${head} / 원거리 ${ra === rb ? ra + suffix : `${ra}~${rb}${suffix}`}`;
-            }
-        }
-
-        if (!loT.length) return head;
-        return (Number(a) === 0 && Number(b) === 0 ? loT : [head, ...loT]).join(' + ');
+        const melee = side(false), ranged = side(true);
+        if (melee === null || ranged === null) return null;
+        return melee === ranged ? melee : `근접 ${melee} / 원거리 ${ranged}`;
     }
+
     // stringtable 의 `{{ 키 }}` 를 펼친다. 끼워 넣은 문장 안에 또 `{{ }}` 가 있다.
     //   ★ 근접/원거리 갈림(`Item_Melee_Ranged_Split_Dynamic`)은 챔피언마다 다른 자리라
     //     정적으로는 못 고른다 — 두 계산식을 **둘 다** 적는 우리 문장으로 바꿔 끼운다.
