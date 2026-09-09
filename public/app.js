@@ -5099,16 +5099,20 @@ function lxSkillBody(c, type) {
     //   ★ 오른쪽 표를 6레벨까지만 자르는 건 **R 첫 포인트가 6레벨**이라서다 — 그 뒤는 11·16레벨 탭이 받는다.
     if (type === 'skillpri') {
         const pri = B.rows('skillpri');
+        // ★★ 왼쪽도 **표**다 (2026-09-09 사용자 요청) — 맨 윗줄에 승률·픽률·표본 수 이름을 달고
+        //   그 아래로 값이 열을 맞춰 선다. 오른쪽 레벨 표와 **같은 `.lx-skt`** 를 쓰므로
+        //   머리 높이·줄 높이가 저절로 같다 (줄 높이는 CSS 에서 60px 로 못 박아 뒀다).
         const left = pri.length
-            ? `<div class="lx-pri-list">${pri.slice(0, 8).map(r => `
-                <div class="lx-pri-row">
-                    <div class="lx-pri-ord">${r.key.map(n => lxSkill(c, n, true)).join('<span class="lx-arrow is-sm">›</span>')}</div>
-                    <div class="lx-pri-vals">
-                        <b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b>
-                        <span class="lx-lav">${lxPct(r.games, B.tl)}%</span>
-                        <i>${r.games.toLocaleString()}</i>
-                    </div>
-                </div>`).join('')}</div>`
+            ? `<table class="lx-skt lx-pri-tb">
+                <thead><tr><th></th><th>승률</th><th>픽률</th><th>표본 수</th></tr></thead>
+                <tbody>${pri.slice(0, 8).map(r => `
+                    <tr>
+                        <th class="lx-pri-ord">${r.key.map(n => lxSkill(c, n, true)).join('<span class="lx-arrow is-sm">›</span>')}</th>
+                        <td><b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b></td>
+                        <td><span class="lx-lav">${lxPct(r.games, B.tl)}%</span></td>
+                        <td><i>${r.games.toLocaleString()}</i></td>
+                    </tr>`).join('')}</tbody>
+            </table>`
             : `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
         return `<div class="lx-sk2">
             <div class="lx-sk2-col">${left}</div>

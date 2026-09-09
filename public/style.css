@@ -3113,12 +3113,10 @@ main {
 .lx-sk2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 18px; padding: 4px 2px; }
 /* (칸 제목 「선마 순서」·「레벨별」은 2026-09-09 에 뺐다 — 아이콘과 표 머리만으로 읽힌다) */
 
-.lx-pri-list { display: flex; flex-direction: column; }
-.lx-pri-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-.lx-pri-ord { display: flex; align-items: center; gap: 2px; }
-.lx-pri-vals { display: flex; align-items: baseline; gap: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
-.lx-pri-vals b { font-size: 13px; }
-.lx-pri-vals i { font-style: normal; font-size: 11px; color: var(--text-faint); }
+/* 왼쪽 선마 순서 표 — 오른쪽 레벨 표(.lx-skt)와 같은 규칙을 쓰고, 순서 칸만 왼쪽 정렬이다 */
+.lx-pri-tb .lx-pri-ord { display: flex; align-items: center; gap: 2px; width: auto; text-align: left; padding-left: 2px; }
+.lx-pri-tb td b { font-size: 13px; }
+.lx-pri-tb td i { font-style: normal; font-size: 12px; color: var(--text-faint); }
 
 @media (max-width: 768px) {
     .lx-sk2 { grid-template-columns: 1fr; gap: 14px; }
@@ -3130,6 +3128,12 @@ main {
    ★ 폰에서는 좁아지므로 자기 상자가 가로 스크롤한다 (표는 안 접는다 — 접으면 레벨 비교가 안 된다) */
 .lx-skt { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
 .lx-skt th, .lx-skt td { padding: 5px 6px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+/* ★ 줄 높이를 못 박는다 (2026-09-09) — 왼쪽 선마 표는 한 줄짜리라 그냥 두면 30px 이 되어
+   오른쪽 레벨 표(세 줄, 59.6px)와 눈높이가 안 맞는다. 오른쪽은 원래 이 값이라 무변화 */
+.lx-skt tbody tr { height: 60px; }
+/* 머리줄도 같이 못 박는다 — 오른쪽은 스킬 아이콘(24px)이 들어 39.7px 인데 왼쪽은 글자뿐이라
+   그냥 두면 28.7px 이라 두 표의 첫 줄이 어긋난다 */
+.lx-skt thead tr { height: 40px; }
 .lx-skt thead th { color: var(--text-muted); font-weight: 500; padding-bottom: 7px; }
 .lx-skt tbody th { color: var(--text-bright); font-weight: 700; width: 52px; }
 .lx-skt td b { display: block; font-size: 13px; }
