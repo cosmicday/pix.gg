@@ -4994,9 +4994,9 @@ function lxLowerRows(c) {
     const fin = B.rows('item');
     const floor = Math.max(BUILD_MIN_GAMES, (fin[0]?.games || 0) * LX_WIN_MIN_SHARE);
     const finalRows = lxRow({ title: '인기 아이템', metrics: lxM3(B) }, itemCards('item', fin.slice(0, LX_ROW_MAX)))
-        + lxRow({ title: '승률 아이템', metrics: lxM3(B) }, itemCards('item', fin.filter(r => r.games >= floor).sort((a, b) => b.wins / b.games - a.wins / a.games).slice(0, LX_ROW_MAX)))
-        // ★ '전체 아이템' 줄은 **타임라인 없는 패치(16.16)에서만** 뺀다 (2026-08-27, 사용자 요청) — 16.17 은 그쪽과 같이 다 보여준다
-        + (hasTl ? lxRow({ title: '전체 아이템', metrics: lxM3(B) }, itemCards('item', fin.slice(0, 60))) : '');
+        + lxRow({ title: '승률 아이템', metrics: lxM3(B) }, itemCards('item', fin.filter(r => r.games >= floor).sort((a, b) => b.wins / b.games - a.wins / a.games).slice(0, LX_ROW_MAX)));
+    // ★ '전체 아이템' 줄은 **타임라인 없는 패치(16.16)에서만** 뺀다 (2026-08-27, 사용자 요청) — 16.17 은 그쪽과 같이 다 보여준다
+    const allItemsRow = hasTl ? lxRow({ title: '전체 아이템', metrics: lxM3(B) }, itemCards('item', fin.slice(0, 60))) : '';
 
     if (!hasTl) {
         return spells + box('lx-items', '', finalRows);
@@ -5011,10 +5011,22 @@ function lxLowerRows(c) {
     const sets = box('lx-sets',
         lxTabBar('sets', [{ v: 'set2', label: '아이템 2개' }, { v: 'core', label: '아이템 3개' }, { v: 'set4', label: '아이템 4개' }, { v: 'set5', label: '아이템 5개' }], 'core'),
         `<div id="lx-sets-body">${lxRow({ title: '세트', metrics: lxM3(B) }, setCards('core', B.rows('core').slice(0, 12)), { empty: '타임라인 표본을 모으는 중' })}</div>`);
+    // ★★ 코어별 줄 — **몇 번째로 완성한 아이템인가**를 칸마다 나눠 픽률순으로 세운다
+    //   (2026-09-09 사용자 요청: 「승률 아이템 아래에 코어별로 쭈루룩 · 코어템별 승률·픽률」).
+    //   ★ `item1`~`item6` 은 집계의 `nth(0..5)` — **완성 아이템만** 순서대로 센 것이라 곧 1~6코어다.
+    //     `B.rows()` 가 판수(=픽) 순으로 주므로 정렬을 따로 안 한다.
+    //   ★ 6코어를 새로 넣었다 (2026-09-09). 데이터는 원래 있었는데 줄만 5개까지 그리고 있었다.
+    //   ★★ 자리는 **승률 아이템 바로 아래**다 — 「인기 → 승률 → 코어별 → 전체」 순.
+    //     맨 아래가 '전체 아이템'(60칸)인 건 그 줄이 제일 길어서다.
+    const coreRows = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6']
+        .map((t, i) => lxRow({ title: `${i + 1}코어`, metrics: lxM3(B) },
+            itemCards(t, B.rows(t).slice(0, LX_ROW_MAX)), { empty: '타임라인 표본을 모으는 중' })).join('');
+
     const items = box('lx-items', '',
         lxRow({ title: '신발', metrics: lxM3(B) }, itemCards('boots', B.rows('boots').slice(0, LX_ROW_MAX)), { empty: '타임라인 표본을 모으는 중' })
-        + ['item1', 'item2', 'item3', 'item4', 'item5'].map((t, i) => lxRow({ title: `${i + 1}번째 아이템`, metrics: lxM3(B) }, itemCards(t, B.rows(t).slice(0, LX_ROW_MAX)), { empty: '타임라인 표본을 모으는 중' })).join('')
-        + finalRows);
+        + finalRows
+        + coreRows
+        + allItemsRow);
     return spells + starting + early + sets + items;
 }
 
