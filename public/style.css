@@ -3103,6 +3103,22 @@ main {
 .lx-seq-cell.k1 { background: #23405f; } .lx-seq-cell.k2 { background: #2f4f2f; } .lx-seq-cell.k3 { background: #5a3f22; } .lx-seq-cell.k4 { background: #4d2a5c; }
 .lx-seq-vals { display: flex; gap: 10px; font-size: 12px; }
 
+/* ★★ 「스킬 순서」 탭 — 왼쪽 선마 순서, 오른쪽 1~6레벨 표 (2026-09-09, lolalytics 배치).
+   ★ 폰에서는 위아래로 쌓는다 (좌우로 두면 한 칸이 180px 라 숫자가 겹친다) */
+.lx-sk2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 18px; padding: 4px 2px; }
+.lx-sk2-head { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+.lx-pri-list { display: flex; flex-direction: column; }
+.lx-pri-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.lx-pri-ord { display: flex; align-items: center; gap: 2px; }
+.lx-pri-vals { display: flex; align-items: baseline; gap: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.lx-pri-vals b { font-size: 13px; }
+.lx-pri-vals i { font-style: normal; font-size: 11px; color: var(--text-faint); }
+
+@media (max-width: 768px) {
+    .lx-sk2 { grid-template-columns: 1fr; gap: 14px; }
+}
+
 /* ★★ 레벨별 스킬 표 (2026-09-09) — 줄이 레벨, 열이 Q·W·E·R.
    칸마다 승률(굵게) · 픽률 · 판수를 세 줄로 쌓는다 (다른 상자의 카드와 같은 차례).
    ★ 자리를 아끼려고 표로 갔다 — 카드로 늘어놓으면 15레벨이 화면 세 배가 된다.

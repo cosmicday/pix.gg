@@ -1721,13 +1721,14 @@ const ITEM_CONSUMABLES = [
 //
 //   ★ 1판짜리 조합은 저장 단계에서 뺀다 (`$match games >= 2`, 조합 type) — 조합 가짓수가 룬 페이지보다도
 //     많아서 1판 꼬리가 컬렉션을 덮는다. 낱개 type(skillpri·item1~6·boots·early)은 가짓수가 적어 그대로 둔다.
-const TL_TYPES = ['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots',
+const TL_TYPES = ['skillord', 'skillpri', 'start', 'early', 'earlyset', 'boots',
     'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6',
-    'skilllv'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
+    'skilllv', 'skillord11'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
+// ★ skillord6·skillord10 은 2026-09-09 에 화면에서 빠져 집계도 멈췄다 — 박제 TYPE_LIST 의 자리는 그대로 둔다 (자리 번호가 밀리면 안 된다)
 const TL_MIN_PATCH = [16, 17];    // 이 패치부터 타임라인을 받고·센다
 const TL_START_SEC = 90;          // 이 초 안에 산 것이 시작 아이템
 const TL_EARLY_SEC = 600;         // 이 초 안(시작 구간 뒤)에 산 것이 초반 아이템
-const TL_SKILL_ORDER_LEVELS = 15; // 스킬 순서 조합 키 길이
+const TL_SKILL_ORDER_LEVELS = 16; // 스킬 순서 조합 키 길이 (2026-09-09: 15 → 16. R 셋째 포인트가 16레벨이다)
 const TL_COMPLETE_GOLD = 1000;    // 완성 아이템 하한 (도란 450 · 1단계 장화 300 은 밑, 2단계 장화 1000~ 은 위)
 
 // "16.16" 같은 게임 버전 문자열이 [16, 17] 이상인가. 문자열 비교는 안 된다 ("16.9" > "16.17")
@@ -1846,7 +1847,7 @@ async function buildTimelineFacet(matchCond, opts = {}) {
     };
     // 가벼운 쪽 — 낱개(아이템 하나·스킬 순서). 가짓수가 아이템·스킬 수로 묶여 있다
     const light = {
-        skillord: ordTo(TL_SKILL_ORDER_LEVELS), skillord6: ordTo(6), skillord10: ordTo(10),
+        skillord: ordTo(TL_SKILL_ORDER_LEVELS), skillord11: ordTo(11),
         skillpri: [{ $match: { 'ord.8': { $exists: true } } }, grp('$pri')],
         // ★★ 레벨별 스킬 (2026-09-09 사용자 요청) — 「1레벨에 뭘 찍었나」를 레벨마다 따로 센다.
         //   key 는 `[레벨, 슬롯]` 이고 슬롯은 1=Q 2=W 3=E 4=R (ord 와 같은 번호).

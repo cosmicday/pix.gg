@@ -4157,7 +4157,7 @@ const ARCHIVE_KB = ['5-7', '8-10'];
 const ARCHIVE_TYPE = ['rune', 'keystone', 'spell', 'shard', 'all', 'item',
     'skillord', 'skillpri', 'start', 'core', 'item4', 'item5', 'item6', 'tlall',   // 타임라인 8종은 2026-08-26 에 맨 뒤에 붙였다
     'skillord6', 'skillord10', 'early', 'earlyset', 'boots', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'perk',   // 같은 날 밤 12종 더
-    'skilllv'];   // 레벨별 스킬 (2026-09-09)
+    'skilllv', 'skillord11'];   // 레벨별 스킬 · 11레벨 순서 (2026-09-09)
 
 function expandStatsArchive(a) {
     // champstats 행 — API 의 rows 와 **같은 모양**이라 renderStatsTable() 은 안 바뀐다
@@ -4829,7 +4829,7 @@ function lxBuildData(builds, pos, baseBuilds) {
 }
 
 // 픽률 분모: 타임라인 type 은 tl, 나머지는 total
-const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'skilllv']);
+const LX_TL_TYPES = new Set(['skillord', 'skillord6', 'skillord10', 'skillpri', 'start', 'early', 'earlyset', 'boots', 'core', 'set2', 'set4', 'set5', 'item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'skilllv', 'skillord11']);
 function lxDenom(B, type) { return LX_TL_TYPES.has(type) ? B.tl : B.total; }
 
 // 3칸 값 (승률 · 픽률 · 판수) — 카드 줄 공통
@@ -5006,9 +5006,8 @@ function lxLowerRows(c) {
     const starting = box('lx-start',
         lxTabBar('start', [{ v: 'item', label: '시작 아이템' }, { v: 'set', label: '시작 아이템 세트' }], 'set'),
         `<div id="lx-start-body">${lxStartBody(c, 'set')}</div>`);
-    const early = box('lx-early',
-        lxTabBar('early', [{ v: 'item', label: '초반 아이템 (10분)' }, { v: 'set', label: '초반 아이템 세트 (10분)' }], 'item'),
-        `<div id="lx-early-body">${lxEarlyBody(c, 'item')}</div>`);
+    // ★ 초반 아이템(10분) 상자는 2026-09-09 에 뺐다 (사용자 요청). 집계(early·earlyset)는 그대로 둔다 —
+    //   시작 아이템 줄이 그 자료를 쓰고, 되살리려면 여기 상자만 다시 만들면 된다.
     const sets = box('lx-sets',
         lxTabBar('sets', [{ v: 'set2', label: '아이템 2개' }, { v: 'core', label: '아이템 3개' }, { v: 'set4', label: '아이템 4개' }, { v: 'set5', label: '아이템 5개' }], 'core'),
         `<div id="lx-sets-body">${lxRow({ title: '세트', metrics: lxM3(B) }, setCards('core', B.rows('core').slice(0, 12)), { empty: '타임라인 표본을 모으는 중' })}</div>`);
@@ -5028,7 +5027,7 @@ function lxLowerRows(c) {
         + finalRows
         + coreRows
         + allItemsRow);
-    return spells + starting + early + sets + items;
+    return spells + starting + sets + items;
 }
 
 function lxStartBody(c, v) {
@@ -5052,38 +5051,69 @@ function lxEarlyBody(c, v) {
 function lxSkillBox(c) {
     const B = c.B;
     if (!B.has || !B.total || !B.tl) return '';   // ★ 타임라인(스킬 로그)이 없는 패치(16.16)는 상자째 안 그린다
+    // ★★ 2026-09-09 개편 (사용자 요청, lolalytics 하단 스킬 구역 모양):
+    //   ① 탭 위에 있던 「스킬 우선순위 + 4x18 격자」(lxSkillBuild)를 뺐다 — 그 내용이 아래
+    //      「스킬 순서」 탭 안으로 들어왔다 (왼쪽 선마 순서 · 오른쪽 1~6레벨 표).
+    //   ② 탭은 셋이다: 스킬 순서 · 11레벨 · 16레벨. R 을 찍는 6·11·16 이 기준점이라
+    //      첫 탭이 6레벨까지를 표로 보여주고, 나머지 둘이 그 뒤 순서를 이어 받는다.
     return `<div class="lx-box" id="lx-skills">
-        ${lxSkillBuild(c)}
-        ${lxTabBar('skill', [{ v: 'skillpri', label: '전체' }, { v: 'skilllv', label: '레벨별' }, { v: 'skillord6', label: '6레벨' }, { v: 'skillord10', label: '10레벨' }, { v: 'skillord', label: '15레벨' }], 'skillpri')}
+        ${lxTabBar('skill', [{ v: 'skillpri', label: '스킬 순서' }, { v: 'skillord11', label: '11레벨' }, { v: 'skillord', label: '16레벨' }], 'skillpri')}
         <div class="lx-box-rows" id="lx-skill-body">${lxSkillBody(c, 'skillpri')}</div>
     </div>`;
 }
-// ★ 스킬 빌드 — 가장 많이 쓰는 선마 순서(Q›E›W)와 스킬 순서 4x18 격자 (2026-08-27, 사용자 요청으로 아이템과 룬 사이에).
-//   빌드 상자를 뺄 때 같이 사라졌던 그 격자다. 찍은 칸에 레벨 숫자, 15레벨 뒤 3칸은 흐리게(집계가 15까지만 센다).
-function lxSkillBuild(c) {
+// (lxSkillBuild — 탭 위에 있던 「스킬 우선순위 + 4x18 격자」는 2026-09-09 에 뺐다.
+//  우선순위는 「스킬 순서」 탭 왼쪽으로 옮겼고, 격자는 같은 내용을 표가 대신한다.
+//  되살리려면 git log 에서 이 자리 함수를 꺼내 lxSkillBox 안에서 부르면 된다)
+// ★★ 레벨별 스킬 표 — 줄이 레벨, 열이 Q·W·E·R, 칸마다 승률·픽률·판수 (2026-09-09).
+//   사용자가 가리킨 lolalytics 하단 스킬 구역의 오른쪽 판이 이 모양이다.
+//   ★ `maxLv` 를 주면 그 레벨까지만 (스킬 순서 탭은 6레벨까지 — R 첫 포인트가 거기다).
+//   ★ 안 찍은 칸은 「-」로 비워 둔다 (0% 를 적으면 표가 숫자로 꽉 차서 오히려 안 읽힌다).
+//   ★ 픽률 분모는 다른 줄과 같은 `B.tl`(타임라인이 있는 판)이라 한 레벨의 합이 100% 근처가 된다
+//     — 그 레벨까지 못 가고 끝난 판이 있어 딱 100 은 아니다.
+function lxSkillLvTable(c, maxLv) {
     const B = c.B;
-    const pri = B.pick('skillpri', 'common'), ord = B.pick('skillord', 'common');
-    const under = r => r ? `<div class="lx-under"><span class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}% 승률</span> <span class="lx-lav">${lxPct(r.games, B.tl)}% 픽률</span> <span class="lx-gray">${r.games}판</span></div>` : '';
-    const priHtml = pri
-        ? `<div class="lx-pri">${pri.key.map(n => lxSkill(c, n)).join('<span class="lx-arrow">›</span>')}</div>${under(pri)}`
-        : `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
-    const ordHtml = ord ? `
-        <div class="lx-so">${[1, 2, 3, 4].map(n => `
-            <div class="lx-so-row">${lxSkill(c, n, true)}${Array.from({ length: 18 }, (_, i) => ord.key[i] === n
-                ? `<span class="lx-so-cell on">${i + 1}</span>` : `<span class="lx-so-cell${i >= 15 ? ' is-off' : ''}"></span>`).join('')}</div>`).join('')}
-        </div>${under(ord)}` : `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
-    return `
-    <div class="lx-sb">
-        <div class="lx-sb-col"><div class="lx-blk-h">스킬 우선순위</div>${priHtml}</div>
-        <div class="lx-sb-col lx-sb-ord"><div class="lx-blk-h">스킬 순서</div>${ordHtml}</div>
-    </div>`;
+    const byLv = new Map();
+    B.rows('skilllv').forEach(r => {
+        const [lv, slot] = r.key;
+        if (maxLv && lv > maxLv) return;
+        if (!byLv.has(lv)) byLv.set(lv, {});
+        byLv.get(lv)[slot] = r;
+    });
+    const lvs = [...byLv.keys()].sort((a, b) => a - b);
+    if (!lvs.length) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
+    const cell = r => r
+        ? `<td><b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b><span class="lx-lav">${lxPct(r.games, B.tl)}%</span><i>${r.games.toLocaleString()}</i></td>`
+        : `<td class="is-none">-</td>`;
+    return `<table class="lx-skt">
+        <thead><tr><th>레벨</th>${[1, 2, 3, 4].map(n => `<th>${lxSkill(c, n, true)}</th>`).join('')}</tr></thead>
+        <tbody>${lvs.map(lv =>
+        `<tr><th>${lv}</th>${[1, 2, 3, 4].map(n => cell(byLv.get(lv)[n])).join('')}</tr>`).join('')}</tbody>
+    </table>`;
 }
 
 function lxSkillBody(c, type) {
     const B = c.B;
+    // ★★ 「스킬 순서」 탭 — 왼쪽 선마 순서, 오른쪽 1~6레벨 표 (2026-09-09 사용자 요청).
+    //   lolalytics 하단 스킬 구역과 같은 배치다. 예전엔 우선순위를 가로 카드 줄로 그렸는데,
+    //   좌우로 나누면 "무슨 순서로 선마하나" 와 "레벨마다 뭘 찍나" 를 한 화면에서 대조할 수 있다.
+    //   ★ 오른쪽 표를 6레벨까지만 자르는 건 **R 첫 포인트가 6레벨**이라서다 — 그 뒤는 11·16레벨 탭이 받는다.
     if (type === 'skillpri') {
-        const cards = B.rows('skillpri').map(r => ({ top: r.key.map(n => lxSkill(c, n, true)).join('<span class="lx-arrow is-sm">›</span>'), title: r.key.map(n => 'QWER'[n - 1]).join(' > '), vals: lxVals3(B, 'skillpri', r) }));
-        return lxRow({ title: '우선순위', metrics: lxM3(B) }, cards, { empty: '타임라인 표본을 모으는 중', topH: 34 });
+        const pri = B.rows('skillpri');
+        const left = pri.length
+            ? `<div class="lx-pri-list">${pri.slice(0, 8).map(r => `
+                <div class="lx-pri-row" title="${r.key.map(n => 'QWER'[n - 1]).join(' > ')}">
+                    <div class="lx-pri-ord">${r.key.map(n => lxSkill(c, n, true)).join('<span class="lx-arrow is-sm">›</span>')}</div>
+                    <div class="lx-pri-vals">
+                        <b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b>
+                        <span class="lx-lav">${lxPct(r.games, B.tl)}%</span>
+                        <i>${r.games.toLocaleString()}</i>
+                    </div>
+                </div>`).join('')}</div>`
+            : `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
+        return `<div class="lx-sk2">
+            <div class="lx-sk2-col"><div class="lx-sk2-head">선마 순서</div>${left}</div>
+            <div class="lx-sk2-col"><div class="lx-sk2-head">레벨별 (1~6)</div>${lxSkillLvTable(c, 6)}</div>
+        </div>`;
     }
     // ★★ 레벨별 — 「1레벨에 뭘 찍었나」를 레벨마다 한 줄로 (2026-09-09 사용자 요청).
     //   집계 key 가 `[레벨, 슬롯]` 이라 레벨로 묶고 그 안에서 픽률순으로 세운다.
@@ -5093,24 +5123,6 @@ function lxSkillBody(c, type) {
     //     줄이 레벨, 열이 Q·W·E·R, 칸마다 승률·픽률·판수. 줄마다 카드를 늘어놓는 것보다
     //     "같은 레벨에서 뭘 골랐나" 와 "레벨이 오르며 어떻게 바뀌나" 가 한눈에 보인다.
     //   ★ 안 찍은 칸은 「-」로 비워 둔다 (0% 를 적으면 표가 숫자로 꽉 차서 오히려 안 읽힌다)
-    if (type === 'skilllv') {
-        const byLv = new Map();
-        B.rows('skilllv').forEach(r => {
-            const [lv, slot] = r.key;
-            if (!byLv.has(lv)) byLv.set(lv, {});
-            byLv.get(lv)[slot] = r;
-        });
-        const lvs = [...byLv.keys()].sort((a, b) => a - b);
-        if (!lvs.length) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
-        const cell = r => r
-            ? `<td><b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b><span class="lx-lav">${lxPct(r.games, B.tl)}%</span><i>${r.games.toLocaleString()}</i></td>`
-            : `<td class="is-none">-</td>`;
-        return `<table class="lx-skt">
-            <thead><tr><th>레벨</th>${[1, 2, 3, 4].map(n => `<th>${lxSkill(c, n, true)}</th>`).join('')}</tr></thead>
-            <tbody>${lvs.map(lv =>
-            `<tr><th>${lv}</th>${[1, 2, 3, 4].map(n => cell(byLv.get(lv)[n])).join('')}</tr>`).join('')}</tbody>
-        </table>`;
-    }
 
     // 레벨별 스킬 순서 — 세로로 한 줄씩 (순서 + 승률·픽률·판수)
     const list = B.rows(type).slice(0, 8);
