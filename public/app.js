@@ -5101,7 +5101,7 @@ function lxSkillBody(c, type) {
         const pri = B.rows('skillpri');
         const left = pri.length
             ? `<div class="lx-pri-list">${pri.slice(0, 8).map(r => `
-                <div class="lx-pri-row" title="${r.key.map(n => 'QWER'[n - 1]).join(' > ')}">
+                <div class="lx-pri-row">
                     <div class="lx-pri-ord">${r.key.map(n => lxSkill(c, n, true)).join('<span class="lx-arrow is-sm">›</span>')}</div>
                     <div class="lx-pri-vals">
                         <b class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</b>
@@ -5111,8 +5111,8 @@ function lxSkillBody(c, type) {
                 </div>`).join('')}</div>`
             : `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
         return `<div class="lx-sk2">
-            <div class="lx-sk2-col"><div class="lx-sk2-head">선마 순서</div>${left}</div>
-            <div class="lx-sk2-col"><div class="lx-sk2-head">레벨별 (1~6)</div>${lxSkillLvTable(c, 6)}</div>
+            <div class="lx-sk2-col">${left}</div>
+            <div class="lx-sk2-col">${lxSkillLvTable(c, 6)}</div>
         </div>`;
     }
     // ★★ 레벨별 — 「1레벨에 뭘 찍었나」를 레벨마다 한 줄로 (2026-09-09 사용자 요청).
@@ -5129,7 +5129,10 @@ function lxSkillBody(c, type) {
     if (!list.length) return `<div class="lx-none">타임라인 표본을 모으는 중</div>`;
     return `<div class="lx-seq-list">${list.map(r => `
         <div class="lx-seq">
-            <div class="lx-seq-cells">${r.key.map((n, i) => `<span class="lx-seq-cell k${n}" title="${i + 1}레벨">${'QWER'[n - 1]}</span>`).join('')}</div>
+            <!-- ★ 글자 칸 대신 **스킬 아이콘**이다 (2026-09-09 사용자 요청). 아이콘 우하단의 작은
+                 QWER 딱지는 lxSkill 이 원래 붙이는 것이라 무엇을 찍었는지 그대로 읽힌다.
+                 ★ 몇 레벨인지는 **자리 순서**가 말해 준다 — 툴팁(title)은 안 붙인다 (같은 요청) -->
+            <div class="lx-seq-cells">${r.key.map(n => lxSkill(c, n, true)).join('')}</div>
             <div class="lx-seq-vals"><span class="${lxWr(r.wins, r.games)}">${lxPct(r.wins, r.games)}%</span><span class="lx-lav">${lxPct(r.games, B.tl)}%</span><span class="lx-gray">${r.games}판</span></div>
         </div>`).join('')}</div>`;
 }
