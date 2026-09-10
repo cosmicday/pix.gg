@@ -2340,7 +2340,6 @@ async function ensureStatIndexes() {
         { col: 'matchcaches', key: { createdAt: 1 }, ttl: 3 * 86400 },
         { col: 'matchstats', key: { createdAt: 1 }, ttl: 21 * 86400 },
         { col: 'matchseens', key: { createdAt: 1 }, ttl: 5 * 86400 },
-        { col: 'ranksnapshots', key: { createdAt: 1 }, ttl: 7 * 86400 },
         // 조회용 — 선언만 돼 있고 실제로 없던 것들
         { col: 'matchcaches', key: { 'detail.metadata.participants': 1, 'detail.info.gameEndTimestamp': -1 } },
         { col: 'summonercaches', key: { displayName: 1 } },
@@ -2359,9 +2358,11 @@ async function ensureStatIndexes() {
         { col: 'mythicshops', key: { date: 1, section: 1 }, unique: true },
         { col: 'mythicshops', key: { 'items.catalogId': 1, date: -1 } },   // "마지막 등장일" 조회용
         { col: 'mythicshops', key: { section: 1, date: -1 } },             // 구획별 최신 조회용
-        // 날짜별 명단 스냅샷 (2026-08-17). TTL 5일 — 필요한 건 어제 것뿐이고 넉넉히 남긴다.
+        // 날짜별 명단 스냅샷 (2026-08-17). TTL 7일 (2026-09-10, 5 → 7) — matchseens(5일) 이 남아 있는 동안
+        //   그 날짜 명단도 있어야 수집이 k 를 세고 scanDone 을 본다. ★ 같은 인덱스를 두 번 적으면 매 부팅마다
+        //   TTL 이 앞뒤로 두 번 바뀐다 (9/10 에 실제로 7 → 5 로 되돌아갔다). **한 곳에만** 적을 것.
         { col: 'ranksnapshots', key: { day: 1 }, unique: true },
-        { col: 'ranksnapshots', key: { createdAt: 1 }, ttl: 5 * 86400 },
+        { col: 'ranksnapshots', key: { createdAt: 1 }, ttl: 7 * 86400 },
         // 상위 티어 어긋남 눈금 (2026-08-17). 한 줄 60B 라 7일이면 100KB 도 안 된다
         { col: 'apexdrifts', key: { t: -1 } },
         { col: 'apexdrifts', key: { createdAt: 1 }, ttl: 7 * 86400 },
