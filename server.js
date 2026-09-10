@@ -57,7 +57,10 @@ const matchSeenSchema = new mongoose.Schema({
     day: { type: String },                      // 이 경기가 속한 날짜 (KST "2026-08-14")
     cnt: { type: Number, default: 1 },          // 명단 유저 몇 명에게서 보였나
     done: { type: Boolean, default: false },    // detail 처리를 끝냈나
-    createdAt: { type: Date, expires: '3d', default: Date.now }
+    // ★ 5일이다 (2026-09-10, 3 → 5). 9/9 쓰기 잠금으로 수집이 이틀 밀렸을 때 3일짜리 목록이
+    //   먼저 사라질 뻔했다. 1.8MB 짜리 컬렉션이라 늘려도 용량 부담이 없다.
+    //   ★ ranksnapshots(7일)보다 짧아야 한다 — 수집이 그 날짜 명단으로 k 를 세고 scanDone 을 본다.
+    createdAt: { type: Date, expires: '5d', default: Date.now }
 });
 matchSeenSchema.index({ done: 1, cnt: -1 });
 const MatchSeen = mongoose.model('MatchSeen', matchSeenSchema);
@@ -84,7 +87,9 @@ const rankSnapshotSchema = new mongoose.Schema({
     //   수집이 전날 잔량을 따라잡을 때 이 표시가 있는 날만 손댄다 — 순회가 덜 된 날은
     //   등장 횟수(cnt)가 하한조차 못 되어 어떤 판이 5명 이상인지 모른다.
     scanDone: { type: Boolean, default: false },
-    createdAt: { type: Date, expires: '5d', default: Date.now }
+    // ★ 7일이다 (2026-09-10, 5 → 7). matchseens(5일) 이 남아 있는 동안은 그 날짜 명단도 있어야
+    //   수집이 k 를 제대로 세고 scanDone 을 볼 수 있다. 하루 0.9MB 라 7일이면 6MB 남짓.
+    createdAt: { type: Date, expires: '7d', default: Date.now }
 });
 const RankSnapshot = mongoose.model('RankSnapshot', rankSnapshotSchema);
 
@@ -1401,9 +1406,10 @@ async function scanDoneOn(day) {
 }
 
 // ★ 수집 창에서 빠져나간 날짜의 결산을 한 줄 남긴다 (2026-08-27).
-//   창은 {대상일, 그 전날} 이라 자정에 대상일이 넘어가면 "그저께" 가 빠진다 — 그 순간이
-//   그 날짜의 최종 처리량이 확정되는 때다. 이 줄이 "그날 통계가 얼마나 온전한가" 의 기록이다.
-//   matchseens TTL 이 3일이라 이때까진 문서가 남아 있다 (순회는 경기 다음 날 아침이므로 ~2일).
+//   ★ 2026-09-10 부터 수집 창은 「대기열에 남은 모든 날짜」라 그저께가 창 밖으로 나가진 않는다.
+//     그래도 결산은 예전 자리(대상일 − 2일) 그대로 찍는다 — 정상이면 그때 다 끝나 있고,
+//     밀린 날은 "놓침" 이 찍힌 뒤에도 남은 판을 계속 따라잡는다 (TTL 5일 안).
+//   matchseens TTL 이 5일이라 이때까진 문서가 남아 있다 (순회는 경기 다음 날 아침이므로 ~2일).
 let statWindowDay = null;
 async function reportClosedStatDay() {
     const day = scanTargetDay();
@@ -1499,16 +1505,23 @@ async function fetchMatchStats() {
         //   ★ 전날 판이 늦게 들어오면 매시간 집계가 그 날짜를 다시 계산해 숫자가 조금 오른다.
         //     전체 재계산 구조라 값은 정확해지는 방향이다.
         // 사람이 많이 낀 판부터 처리한다. 명단 커버리지가 높은 판이 통계 가치도 높다.
+        // ★★ 창은 {대상일, 그 전날} 둘이 아니라 **대기열에 남은 모든 날짜**다 (2026-09-10).
+        //   9/9 쓰기 잠금으로 이틀치가 밀렸을 때, 이틀 전 날짜는 자정이 지나는 순간 창 밖으로
+        //   나가 **한 번도 안 뽑힌 채 TTL 로 사라질** 판이었다. 남아 있는 한 전부 대상이다.
+        //   ★ 순서는 **오래된 날짜부터**다 — TTL 소멸이 임박한 쪽이 먼저다. 같은 날짜 안에서는
+        //     예전대로 사람이 많이 낀 판부터.
+        //   ★ 대상일보다 오래된 날짜는 예전처럼 순회가 끝까지 돈 날(`scanDone`)만 손댄다.
         const day = scanTargetDay();
         const pending = (d, n) => MatchSeen
             .find({ done: { $ne: true }, cnt: { $gte: STAT_MIN_K }, day: d })
             .sort({ cnt: -1 }).limit(n).lean();
-        let targets = await pending(day, FETCH_PER_CYCLE);
-        if (targets.length < FETCH_PER_CYCLE) {
-            const prev = kstDay(Date.now() - 2 * 86400000);
-            if (await scanDoneOn(prev)) {
-                targets = targets.concat(await pending(prev, FETCH_PER_CYCLE - targets.length));
-            }
+        const days = (await MatchSeen.distinct('day', { done: { $ne: true }, cnt: { $gte: STAT_MIN_K } }))
+            .filter(d => d && d <= day).sort();
+        let targets = [];
+        for (const d of days) {
+            if (targets.length >= FETCH_PER_CYCLE) break;
+            if (d !== day && !(await scanDoneOn(d))) continue;
+            targets = targets.concat(await pending(d, FETCH_PER_CYCLE - targets.length));
         }
 
         for (const t of targets) {
@@ -1598,6 +1611,19 @@ const DAILY_SCOPE_DAYS = 7;        // 최근 며칠치 일별 집계를 **다시
 const DAILY_KEEP_DAYS = 42;        // 일별 집계를 며칠치 보관할지 (현재 + 직전 패치를 덮는 폭)
 const PATCH_FREEZE_DAYS = 3;       // 최신이 아닌 패치의 마지막 경기가 이만큼 지나면 재집계를 멈춘다 (2026-08-27)
 let frozenLoggedKey = '';          // 얼어붙은 패치 목록 로그를 바뀔 때만 찍으려고
+const dailySkipLogged = new Set(); // 원본이 빠져 건너뛴 일별 scope 를 한 번만 찍으려고
+// ★★ 세대 교체는 새 세대를 넣은 뒤 옛 세대를 지우므로 **그 몇 분 동안 두 벌**이 있다 (2026-09-10 실측:
+//   16.17 champbuilds 24만 줄 = 데이터+인덱스 59MB). Atlas 512MB 는 그 순간에도 세므로, 논리 합이
+//   이 값을 넘으면 **옛 세대를 먼저 지우고** 넣는다. 화면은 그 몇 분 동안 "표본을 모으는 중" 을 볼 수
+//   있지만, 반대편은 쓰기 잠금(9/9) 이라 수집·백필이 통째로 서는 것이다. 패치 교체 직전처럼 원본이
+//   가장 부푼 며칠만 여기 걸린다.
+const STAT_TIGHT_MB = Number(process.env.STAT_TIGHT_MB) || 430;
+let statTightMode = false;
+async function swapOldFirstIfTight(Model, scopeKey) {
+    if (!statTightMode) return;
+    const r = await Model.deleteMany({ scope: scopeKey });
+    if (r.deletedCount) console.log(`[Stat] 용량이 빠듯해 ${scopeKey} 의 옛 세대 ${r.deletedCount}줄을 먼저 지웠다 (${Model.modelName})`);
+}
 
 // 한국시간 기준 날짜 문자열. 경기 시각(t)이 UTC epoch 라 그냥 자르면 하루가 밀린다.
 // (한국시간 날짜 헬퍼는 위 수집 절의 kstDay 를 그대로 쓴다)
@@ -1680,6 +1706,7 @@ async function buildOneScope(scopeKey, matchCond) {
     const docs = [...agg.values()];
     const gen = Date.now();
     docs.forEach(d => { d.g = gen; });
+    await swapOldFirstIfTight(ChampStat, scopeKey);
     if (docs.length) await ChampStat.insertMany(docs, { ordered: false });
 
     await StatScope.bulkWrite(f.totals.map(t => ({
@@ -2099,6 +2126,7 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
     // champstats 와 같은 세대 교체 (2026-08-31) — 넣고 → 딱지(genB) → 옛 세대 삭제.
     const gen = Date.now();
     docs.forEach(d => { d.g = gen; });
+    await swapOldFirstIfTight(ChampBuild, scopeKey);
     if (docs.length) await ChampBuild.insertMany(docs, { ordered: false });
     await StatScope.updateMany({ scope: scopeKey }, { $set: { genB: gen } });
     await ChampBuild.deleteMany({ scope: scopeKey, g: { $ne: gen } });
@@ -2148,6 +2176,7 @@ async function buildOneMatchupScope(scopeKey, matchCond) {
     // champstats·champbuilds 와 같은 세대 교체 (2026-08-31) — 넣고 → 딱지(genM) → 옛 세대 삭제.
     const gen = Date.now();
     docs.forEach(d => { d.g = gen; });
+    await swapOldFirstIfTight(ChampMatchup, scopeKey);
     if (docs.length) await ChampMatchup.insertMany(docs, { ordered: false });
     await StatScope.updateMany({ scope: scopeKey }, { $set: { genM: gen } });
     await ChampMatchup.deleteMany({ scope: scopeKey, g: { $ne: gen } });
@@ -2177,6 +2206,17 @@ async function buildChampStats() {
     const started = Date.now();
 
     try {
+        // ★ 논리 합(dataSize + indexSize)이 Atlas 가 세는 값이다 — storageSize 를 보면 틀린다 (8/16·9/9 교훈)
+        try {
+            const st = await mongoose.connection.db.stats();
+            const logicalMB = (st.dataSize + st.indexSize) / 1048576;
+            const tight = logicalMB > STAT_TIGHT_MB;
+            if (tight !== statTightMode) console.log(`[Stat] 논리 합 ${logicalMB.toFixed(0)}MB — 세대 교체를 ${tight ? '「옛 세대 먼저 삭제」로 바꾼다' : '평소대로 되돌린다'} (기준 ${STAT_TIGHT_MB}MB)`);
+            statTightMode = tight;
+        } catch (e) {
+            console.warn('[Stat] db.stats 실패, 세대 교체는 평소대로:', e.message);
+            statTightMode = false;
+        }
         const scopes = [];
 
         // 패치별 — MatchStat 에 실제로 들어 있는 패치만
@@ -2227,7 +2267,23 @@ async function buildChampStats() {
         for (let i = 0; i < DAILY_SCOPE_DAYS; i++) {
             const day = kstDay(now - i * 86400000);
             const from = Math.floor(Date.parse(`${day}T00:00:00+09:00`) / 1000);
-            scopes.push({ key: `d:${day}`, cond: { t: { $gte: from, $lt: from + 86400 } } });
+            const cond = { t: { $gte: from, $lt: from + 86400 } };
+            // ★★ 원본이 줄어든 날짜는 다시 계산하지 않는다 (2026-09-10).
+            //   닫힌 패치의 원본을 위에서 지우면(패치 교체 +3일) 그 마지막 며칠이 아직 7일 창 안에 있다.
+            //   그대로 다시 세면 0판(또는 새 패치 몫만)으로 집계돼 **세대 교체가 멀쩡한 일별 줄을 통째로
+            //   지운다** — 16.16→16.17 때 d:08-26 이 새 패치 몫(2,761)만 남은 게 이것이다.
+            //   일별 원본은 TTL(21일) 전엔 줄어들 이유가 없으므로, "지금 원본 < 저장된 판수" 면
+            //   원본이 빠진 것이다. 그 날짜는 건드리지 않고 남겨 둔다.
+            const have = await MatchStat.countDocuments(cond);
+            const cur = await StatScope.findOne({ scope: `d:${day}`, kb: K_BAND_ALL }).select('games').lean();
+            if (cur && have < cur.games) {
+                if (!dailySkipLogged.has(day)) {
+                    dailySkipLogged.add(day);
+                    console.log(`[Stat] d:${day} 는 원본이 ${have}판뿐(저장 ${cur.games}판)이라 다시 세지 않는다`);
+                }
+                continue;
+            }
+            scopes.push({ key: `d:${day}`, cond });
         }
 
         let total = 0;
@@ -2283,7 +2339,8 @@ async function ensureStatIndexes() {
         // ★ 스키마의 `expires` 와 **같은 값이어야 한다** — 여기가 실제로 DB 에 반영하는 자리다
         { col: 'matchcaches', key: { createdAt: 1 }, ttl: 3 * 86400 },
         { col: 'matchstats', key: { createdAt: 1 }, ttl: 21 * 86400 },
-        { col: 'matchseens', key: { createdAt: 1 }, ttl: 3 * 86400 },
+        { col: 'matchseens', key: { createdAt: 1 }, ttl: 5 * 86400 },
+        { col: 'ranksnapshots', key: { createdAt: 1 }, ttl: 7 * 86400 },
         // 조회용 — 선언만 돼 있고 실제로 없던 것들
         { col: 'matchcaches', key: { 'detail.metadata.participants': 1, 'detail.info.gameEndTimestamp': -1 } },
         { col: 'summonercaches', key: { displayName: 1 } },
@@ -2606,17 +2663,17 @@ async function startJobs() {
         //   예전엔 "한 것" 만 찍어서 429 로 아무것도 못 하는 10분은 로그 자체가 없었다 —
         //   **밀리고 있다는 사실이 제일 안 보이던 순간**이다. 남은 게 있으면 활동이 0 이어도 찍는다.
         const day = scanTargetDay();
-        const prev = kstDay(Date.now() - 2 * 86400000);
         const leftCond = { done: { $ne: true }, cnt: { $gte: STAT_MIN_K } };
+        // ★ "전날" 하나가 아니라 대상일보다 오래된 날짜 전부를 센다 (수집 창과 같은 규칙, 2026-09-10)
         const [leftDay, leftPrev] = await Promise.all([
-            MatchSeen.countDocuments({ ...leftCond, day }), MatchSeen.countDocuments({ ...leftCond, day: prev })
+            MatchSeen.countDocuments({ ...leftCond, day }), MatchSeen.countDocuments({ ...leftCond, day: { $lt: day } })
         ]).catch(() => [0, 0]);
         if (c.scan || c.fetch || leftDay || leftPrev) {
             const left = scanPending();
             const phase = left > 0 ? `순회 ${left}명 남음` : '수집';
             // ★ 타임라인은 곁가지라 받은 수·실패 수를 따로 적는다 — 실패가 쌓이면 여기서 드러난다
             const tl = (c.tl || c.tlFail) ? ` / 타임라인 ${c.tl || 0}건${c.tlFail ? ` (실패 ${c.tlFail})` : ''}` : '';
-            const rest = ` / 남은 판 ${leftDay}` + (leftPrev ? ` (+전날 ${leftPrev})` : '');
+            const rest = ` / 남은 판 ${leftDay}` + (leftPrev ? ` (+이전 날짜 ${leftPrev})` : '');
             console.log(`[Stat] 최근 10분(${phase}): 명단 ${c.scan}명 훑음 / 매치 ${c.seen}건 관측 / detail ${c.fetch}건 (저장 ${c.save} · 제외 ${c.skip})${tl}${rest}`);
             statCounters = { scan: 0, seen: 0, fetch: 0, save: 0, skip: 0 };
         }
