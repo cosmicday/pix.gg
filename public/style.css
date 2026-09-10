@@ -50,7 +50,7 @@
     --dogu-gnb-panel: #16112a;                  /* 폰 햄버거 메뉴 패널 — 반투명이면 뒤 글자가 비쳐 겹친다 (2026-08-27) */
     /* ★ 본문 폭을 1200 으로 통일하면서 헤더·푸터·준비중 상자(.dogu-wrap)도 같은 축에 맞췄다 (2026-08-28).
        공통 기본값은 1120(내용 1088)이라 pixlol 만 덮는다 — 다른 dogu 사이트는 그대로다. 내용 폭 = 1232 - 패딩 32 = 1200 */
-    --dogu-wrap: 1232px;
+    /* --dogu-wrap 1232 오버라이드는 2026-09-10 에 뺐다 — 다른 4개 사이트와 같은 1120. 본문도 아래서 같은 토큰을 쓴다 */
     /* 블러는 공통 기본값 0 — 예전의 blur(5px) 는 규격에 따라 걷어냈다 */
 }
 
@@ -157,8 +157,8 @@ main {
 .mythic-shop-container {
     margin-top: 70px;    /* 80 → 110 (2026-08-18) → 70 (2026-09-08 사용자 요청: 검색창과 너무 떨어져 있었다) */
     width: 100%;
-    max-width: 1240px;   /* 내용 1200 + 패딩 40 (2026-08-28 본문 폭 통일) */
-    padding: 0 20px;
+    max-width: var(--dogu-wrap);   /* 공통 1120 (2026-09-10) — 내용 1088 + 패딩 32 */
+    padding: 0 16px;
 }
 
 /* ★★ 홈 위젯 — 라인별 추천 챔피언 (2026-09-01 신설, 로드맵 A-6).
@@ -168,8 +168,8 @@ main {
 .home-tier-container {
     margin-top: 70px;    /* 110 → 70 (2026-09-08 사용자 요청). 신화상점 단독일 때와 같은 값을 유지한다 */
     width: 100%;
-    max-width: 1240px;   /* 신화상점·패치노트와 같은 통 폭 */
-    padding: 0 20px;
+    max-width: var(--dogu-wrap);   /* 신화상점·패치노트와 같은 통 폭 */
+    padding: 0 16px;
 }
 
 .home-tier-container + .mythic-shop-container { margin-top: 40px; }
@@ -181,14 +181,14 @@ main {
 .home-tier-list {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12px;
+    gap: 8px;                          /* 12 → 8 (2026-09-10): 통이 1200 → 1168 로 줄어 열마다 이름 몫을 되찾는다 */
 }
 
 .home-tier-col {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--dogu-r-card);
-    padding: 10px;
+    padding: 10px 8px;                 /* 좌우 10 → 8 (같은 이유) */
 }
 
 /* ★ 좌우 3px 은 줄(.home-tier-row)의 padding 과 같은 값이다 — 안 맞추면 열 머리의 「승률·픽률」이
@@ -516,8 +516,8 @@ main {
     display: flex;
     gap: 20px;
     width: 100%;
-    max-width: 1240px;   /* 내용 1200 + 패딩 40 (2026-08-28 본문 폭 통일) */
-    padding: 0 20px;
+    max-width: var(--dogu-wrap);   /* 공통 1120 (2026-09-10) — 내용 1088 + 패딩 32 */
+    padding: 0 16px;
     margin-top: 40px;
     /* 홈이 짧을 때 푸터가 바짝 붙지 않게 아래 여백을 준다 */
     margin-bottom: 20px;
@@ -628,7 +628,7 @@ main {
    ========================================= */
 #result-container {
     display: none;
-    max-width: 1200px;   /* 1089 → 1200 (2026-08-28 본문 폭 통일) */
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */   /* 1089 → 1200 (2026-08-28 본문 폭 통일) */
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
@@ -2531,16 +2531,23 @@ main {
    ========================================= */
 #stats-container {
     display: none;
-    max-width: 1200px;   /* 1000 → 1200 (2026-08-28 본문 폭 통일) */
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */   /* 1000 → 1200 (2026-08-28 본문 폭 통일) */
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
     min-height: 100vh;
 }
 
+/* 페이지 머리 — er 의 .page-head 와 같은 배치 (2026-09-10 통일): 왼쪽 제목, 오른쪽 검색/컨트롤, 아래 한 줄 설명.
+   예전엔 가운데 정렬 + 위아래 20px 패딩이라 다른 4개 사이트와 첫인상이 달랐다 */
 .stats-header {
-    text-align: center;
-    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    min-height: 36px;
+    text-align: left;
+    padding: 0;
     margin-bottom: 20px;
 }
 
@@ -2651,15 +2658,17 @@ main {
 /* ===== 통계 탭 (2026-08-15 실제 집계로 교체하면서 추가) ===== */
 
 .stats-sub {
+    flex-basis: 100%;                  /* 제목 줄 아래 한 줄 (er .page-desc) */
+    order: 10;
     color: var(--text-muted);
-    margin-top: 8px;
+    margin: 0;
     font-size: 13px;
 }
 
 .stats-controls {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;       /* 가운데 → 왼쪽 (2026-09-10) */
     gap: 10px;
     margin-bottom: 14px;
     flex-wrap: wrap;
@@ -2782,7 +2791,7 @@ main {
     --lx-box: var(--surface);
     --lx-box2: rgba(255, 255, 255, 0.03);
     --lx-gray: var(--text-muted);
-    max-width: 1200px;   /* 1040 → 1200 (2026-08-28 본문 폭 통일) */
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */   /* 1040 → 1200 (2026-08-28 본문 폭 통일) */
     margin: 0 auto 60px;
     padding: 0 0 30px;
     color: var(--text-bright);
@@ -3389,7 +3398,7 @@ main {
    ========================================= */
 #masters-container {
     display: none;
-    max-width: 1200px;   /* 1500 → 1200 (2026-08-28 본문 폭 통일, 비공개 페이지) */
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */   /* 1500 → 1200 (2026-08-28 본문 폭 통일, 비공개 페이지) */
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
@@ -3518,17 +3527,13 @@ main {
    ========================================= */
 .ranking-title {
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
+    display: block;                    /* 가운데 flex → 왼쪽 (2026-09-10) */
+    margin: 0;
     color: #fff;
     font-size: 24px;   /* 28/normal → 24/800 (2026-09-10 통일 2편: 페이지 제목) */
     font-weight: 800;
     letter-spacing: var(--dogu-title-ls);
     text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
-    width: fit-content;
-    margin: 0 auto;
 }
 
 .summoner-link {
@@ -4125,8 +4130,10 @@ main {
 
 
     .stats-controls {
-        padding: 0 10px;
+        padding: 0 16px;               /* 10 → 16 (2026-09-10 공통 좌우 여백) */
     }
+    /* 페이지 머리가 왼쪽 정렬로 바뀌면서(2026-09-10) 컨테이너에 좌우 패딩이 없는 게 드러났다 — 머리만 16 준다 (표는 풀폭 유지) */
+    .stats-header { padding: 0 16px; }
 
     /* 폰은 픽률 커트라인 입력칸을 숨기고 기본값 1% 로 고정한다 (자리가 안 나온다) */
     .stats-pickcut {
@@ -4151,13 +4158,8 @@ main {
         grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
     }
 
-    /* 랭킹 타이틀 정렬 (제목 왼쪽 메달 그림은 2026-08-19에 지워서 img 규칙도 같이 뺐다) */
-    .ranking-title {
-        font-size: 20px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-    }
+    /* 폰: 제목은 24 그대로(13절 — 폰이라서 작게 금지). 검색칸만 제목 아래 한 줄로 */
+    .rank-search-box { width: 100%; margin: 0; }
 }
 /* ================================
    닉네임 자동완성 드롭다운
@@ -5455,8 +5457,8 @@ main {
    칸의 최소 내용 폭이 그 텍스트 폭으로 잡혀 285 지정인데 301px 이 됐다
    (그만큼 순위·티어·LP 칸이 밀려 좁아진다). max-width 는 auto 배치에서도 지켜진다. */
 .rank-table .rank-name {
-    width: 285px;
-    max-width: 285px;
+    width: 275px;                      /* 285 → 275 (2026-09-10): 통 1168 에 맞춰 커트라인 카드 280 에 10 양보 */
+    max-width: 275px;
     text-align: left;
     padding-left: 30px;
 }
@@ -5569,9 +5571,11 @@ main {
      서버가 내려주는 실제 소속을 쓰므로, 예전처럼 순위 번호로 짐작하지 않는다.
    ----------------------------------------- */
 .rank-updated {
+    flex-basis: 100%;                  /* 제목 줄 아래 (2026-09-10) */
+    order: 10;
     color: var(--text-muted);
-    margin-top: 10px;
-    font-size: 14px;
+    margin: 0;
+    font-size: 13px;
 }
 
 /* ★ 이 툴팁만 글자 **아래**로 띄운다. 공용 [data-tooltip] 은 위(bottom:130%)에 뜨는데,
@@ -5585,9 +5589,9 @@ main {
 
 .rank-search-box {
     position: relative;
-    width: 320px;
+    width: 280px;                      /* er .page-head .search-input 과 같은 폭, 제목 줄 오른쪽 끝 */
     max-width: 100%;
-    margin: 16px auto 0 auto;
+    margin: 0 0 0 auto;
 }
 
 .rank-search {
@@ -5785,13 +5789,13 @@ main {
      (스킨 탭에서 겪은 것과 같은 함정이다)
    ----------------------------------------- */
 /* ★★ 폭이 여섯 칸 합으로 정해진다 (2026-08-18).
-   순위 60 + 닉네임 285 + 티어 110 + LP 100 + 승률 155 + 숙련도 168 = 878px 이고,
-   여기에 그래프 칸 300 + gap 20 을 더해 1200px 이다.
+   순위 60 + 닉네임 275 + 티어 110 + LP 100 + 승률 155 + 숙련도 168 = 868px 이고,
+   여기에 그래프 칸 280 + gap 20 을 더해 1168px(공통 --dogu-wrap 1200 − 32) 이다 (2026-09-10).
    ★ 통을 이 합보다 넓게 두면 **남는 폭이 여섯 칸에 비례로 퍼져** 승률·숙련도 칸이
      지정값보다 넓어진다 — 승률 칸이 173 지정인데 195px 이던 게 그 증상이었다.
      칸 폭을 바꾸면 여기 합계도 같이 고칠 것. */
 #result-container.is-ranking {
-    max-width: 1200px;
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */
 }
 
 
@@ -5810,7 +5814,7 @@ main {
    시작한다. 그래프 카드도 같은 만큼 내려야 위 모서리가 나란해진다.
    (.rank-count 는 글자 14px + margin-bottom 8px + 여백이라 실측 25px 이다) */
 .rank-side {
-    width: 300px;
+    width: 280px;                      /* 300 → 280 (2026-09-10): 통 1168(공통 1200 − 32) = 표 868 + gap 20 + 280. 270 이면 축 라벨이 두 줄로 접힌다 */
     flex-shrink: 0;
     margin-top: 25px;
     display: flex;
@@ -6912,7 +6916,7 @@ main {
     /* ★ 왼쪽 목록이 280 → 560px 로 넓어지면서 같이 올렸다 (1100 → 1400, 2026-08-16).
        안 올리면 오른쪽 상세가 776 → 520px 으로 쪼그라든다. 지금은 820px 이라 오히려 넓다.
        ★★ 2026-08-28 본문 폭 통일로 1400 → 1200. 왼쪽 칸도 740 → 680 (아래). 상세는 아이템 500 / 룬 588 / 주문 736 */
-    max-width: 1200px;
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
@@ -6926,7 +6930,7 @@ main {
    ============================================================ */
 #patch-container {
     display: none;
-    max-width: 1200px;   /* 1000 → 1200 (2026-08-28 본문 폭 통일) */
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */   /* 1000 → 1200 (2026-08-28 본문 폭 통일) */
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
@@ -8170,7 +8174,7 @@ main {
 
 #mythic-container {
     display: none;
-    max-width: 1200px;   /* 1100 → 1200 (2026-08-28 본문 폭 통일) */
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */   /* 1100 → 1200 (2026-08-28 본문 폭 통일) */
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
@@ -8594,7 +8598,7 @@ main {
    ========================================== */
 #patch-impact-container {
     display: none;
-    max-width: 1200px;
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
@@ -8873,7 +8877,7 @@ main {
 #duo-container,
 #trend-container {
     display: none;
-    max-width: 1200px;
+    max-width: calc(var(--dogu-wrap) - 32px);   /* 공통 1120 − 좌우 16 (2026-09-10) */
     margin: 40px auto;
     padding-bottom: 50px;
     animation: fadeIn 0.6s ease;

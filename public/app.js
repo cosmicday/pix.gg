@@ -863,7 +863,7 @@ function showComingPage(containerId, title, path, navId) {
     const box = document.getElementById(containerId);
     box.style.display = 'block';
     box.innerHTML = `
-        <div class="stats-header" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 15px; height: 80px;">
+        <div class="stats-header">
             <h1 class="ranking-title">${title}</h1>
         </div>` +
         (window.DoguUI ? DoguUI.comingSoonHtml(DOGU_BRAND) : '');
@@ -6667,7 +6667,7 @@ async function showMasters(requestedChampId = null) {
         mastersContainer.innerHTML = `
             <div class="stats-header">
                 <h1 class="ranking-title">한국서버 장인 랭킹</h1>
-                <p style="color: var(--text-muted); margin-top: 10px; font-size: 14px;">데이터베이스 이슈로 시즌15 마감기준 데이터가 제공됩니다.</p>
+                <p class="stats-sub">데이터베이스 이슈로 시즌15 마감기준 데이터가 제공됩니다.</p>
             </div>
             <div class="masters-wrap">
                 <div class="masters-left"><div class="champ-grid" id="masters-champ-grid"></div></div>

@@ -40,7 +40,7 @@
     --dogu-gnb-text: #a9bcd9;
     --dogu-gnb-text-strong: #ffffff;
     --dogu-radius: 10px;
-    --dogu-wrap: 1120px;
+    --dogu-wrap: 1200px;                      /* 1120 → 1200 (2026-09-10): pixlol 이 1200 기준으로 열 폭을 맞춰 둔 페이지가 많아 5사이트를 이쪽으로 맞췄다. 사이트 본문도 이 토큰을 쓴다 (14-5) */
     --dogu-font: 'Pretendard', 'Malgun Gothic', system-ui, sans-serif;
 
     /* ── 디자인 토큰 (2026-09-10, DOGU_UI.md 14절) — 사이트 CSS 가 참조하는 유일한 --dogu-* 무리.
