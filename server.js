@@ -1554,7 +1554,7 @@ async function fetchMatchStats() {
                         //   라이엇이 안 적어서(participantId 0) 여기서 붙여 줘야 한다
                         const supIdx = (slim.p || []).map((p, i) => (p && p[1] === 4) ? i : -1).filter(i => i >= 0);
                         const st = toSlimTimeline(tl.data, tlKeepIds, supIdx);
-                        if (st) { slim.sk = st.sk; slim.it = st.it; statCounters.tl = (statCounters.tl || 0) + 1; }
+                        if (st) { slim.sk = st.sk; slim.it = st.it; slim.tlv = TL_VER; statCounters.tl = (statCounters.tl || 0) + 1; }
                     } catch (e) {
                         if (e.response?.status === 429) throw e;   // 429 는 바깥에서 사이클을 끊는다
                         statCounters.tlFail = (statCounters.tlFail || 0) + 1;
@@ -1779,6 +1779,10 @@ const TL_TYPES = ['skillord', 'skillpri', 'start', 'early', 'earlyset', 'boots',
     'sup'];   // ★ 새 type 은 맨 뒤에 (박제 TYPE_LIST 와 자리를 맞춘다)
 // ★ skillord6·skillord10 은 2026-09-09 에 화면에서 빠져 집계도 멈췄다 — 박제 TYPE_LIST 의 자리는 그대로 둔다 (자리 번호가 밀리면 안 된다)
 const TL_MIN_PATCH = [16, 17];    // 이 패치부터 타임라인을 받고·센다
+// ★ 타임라인 규칙 판. 수집(fetchMatchStats)과 백필(BACKFILL_TL) 이 같은 값을 찍는다 — 수집이 안 찍으면
+//   백필이 **새 규칙으로 막 들어온 판까지** 다시 받는다 (9/10 에 약 5,500판 = 3시간 반이 그렇게 낭비됐다).
+//   규칙을 바꾸면 여기를 올린다: 2 = 시작 구간 소모품 + 서포터 아이템 (2026-09-09)
+const TL_VER = 2;
 const TL_START_SEC = 90;          // 이 초 안에 산 것이 시작 아이템
 const TL_EARLY_SEC = 600;         // 이 초 안(시작 구간 뒤)에 산 것이 초반 아이템
 const TL_SKILL_ORDER_LEVELS = 16; // 스킬 순서 조합 키 길이 (2026-09-09: 15 → 16. R 셋째 포인트가 16레벨이다)
@@ -2547,7 +2551,6 @@ async function startJobs() {
         const col = mongoose.connection.db.collection('matchstats');
         // ★ `tlv`(타임라인 규칙 판) 로 이어 돌린다. 30시간짜리라 반드시 끊긴다고 봐야 한다 —
         //   다시 돌리면 이미 채운 판을 건너뛰고 남은 것부터 간다. `BACKFILL_ALL=1` 이면 전부 다시.
-        const TL_VER = 2;   // 2 = 시작 구간 소모품 + 서포터 아이템 (2026-09-09)
         const q = { v: { $exists: true } };
         if (process.env.BACKFILL_ALL !== '1') q.tlv = { $ne: TL_VER };
         const doneAlready = await mongoose.connection.db.collection('matchstats').countDocuments({ tlv: TL_VER });
