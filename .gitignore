@@ -11,3 +11,6 @@ database.sqlite
 !/CLAUDE.md
 # 파이프라인 중간 산출물 (확인 후 이름을 바꿔 쓰는 파일)
 *.new.js
+
+# 수집 대기열 스냅샷 (TTL 로 사라지기 전에 떠 둔 목록, 1MB+)
+pending_queue_backup.json
