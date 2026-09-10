@@ -2555,6 +2555,18 @@ async function startJobs() {
         console.log(`[Backfill] 대상 ${total.toLocaleString()}건 (이미 채운 것 ${doneAlready.toLocaleString()}건은 건너뛴다) · 판당 ${GAP}ms → 예상 ${(total * GAP / 3600000).toFixed(1)}시간`);
         let seen = 0, done = 0, fail = 0, skip = 0, before = 0, after = 0;
         const t0 = Date.now();
+        // ★★ 감시견 (2026-09-10). 9/10 16:44 에 루프가 **에러 없이 6시간 멈춰 있었다** — 프로세스는 살아서
+        //   매시간 잡 로그만 찍고, 진행은 3,800 에서 그대로였다. 라이엇 쪽은 10초 타임아웃이 있으니 DB 쪽 대기로
+        //   보인다. 밖에서는 "죽은 것" 과 구별이 안 되므로 **10분간 진행이 없으면 코드 3 으로 스스로 끝낸다.**
+        //   `C:\Users\admin\backfill_run.ps1` 이 코드 3 이면 다시 띄운다 (tlv 로 이어 돌린다).
+        let wdSeen = -1, wdMoved = Date.now();
+        const watchdog = setInterval(() => {
+            if (seen !== wdSeen) { wdSeen = seen; wdMoved = Date.now(); return; }
+            if (Date.now() - wdMoved > 10 * 60 * 1000) {
+                console.error(`[Backfill] 10분째 진행이 없다 (${seen.toLocaleString()}/${total.toLocaleString()}) — 멈춘 것으로 보고 종료한다. 다시 띄우면 이어진다`);
+                process.exit(3);
+            }
+        }, 60 * 1000);
         const cursor = col.find(q, { projection: { matchId: 1, p: 1, v: 1, it: 1 } }).sort({ _id: 1 });
         for await (const d of cursor) {
             if (LIMIT && seen >= LIMIT) break;
@@ -2596,6 +2608,7 @@ async function startJobs() {
             }
             await sleep(GAP);
         }
+        clearInterval(watchdog);
         console.log(`[Backfill] 끝 — 훑음 ${seen.toLocaleString()} · 채움 ${done.toLocaleString()} · 실패 ${fail} · 건너뜀 ${skip}`);
         if (done) console.log(`[Backfill] 구매 판당 ${(before / done).toFixed(1)} → ${(after / done).toFixed(1)}건`);
         process.exit(0);
