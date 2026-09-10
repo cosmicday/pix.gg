@@ -26,6 +26,14 @@
     <!-- ★ dogu.gg 공통 UI (2026-08-22). 헤더·히어로 검색창·푸터·배경 구조가 여기서 온다.
          사이트 CSS 보다 **앞에** 둬야 style.css 의 :root 가 사이트별 변수를 덮어쓸 수 있다.
          public/dogu-ui.css · dogu-header.js 는 복사본이라 여기서 고치지 말 것 (DOGU_UI.md) -->
+    <!-- 글꼴 (2026-09-10 5사이트 통일). static 판 고정 — variable 판은 'Pretendard Variable' 로 등록돼 --dogu-font 가 못 찾는다.
+         비블로킹 로드: media=print 로 받아 두고 onload 에서 all 로 바꾼다. 그동안은 폴백(맑은 고딕)으로 먼저 그린다 -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css"
+          integrity="sha384-V1aeodcjJTo8c7lEQKPTnsMG6Yk8y6O/1kzqU/BCXw78Yw1W8XYFJGgjYa3oInYZ" crossorigin="anonymous"
+          media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css"
+          integrity="sha384-V1aeodcjJTo8c7lEQKPTnsMG6Yk8y6O/1kzqU/BCXw78Yw1W8XYFJGgjYa3oInYZ" crossorigin="anonymous"></noscript>
     <link rel="stylesheet" href="/dogu-ui.css">
     <link rel="stylesheet" href="/style.css">
     <!-- 파비콘 — 마법사 모자 쓴 시바 (2026-08-21 교체). 원본은 _archive/favicon_lol.png(1254px, 2026-09-03 에 public/ 밖으로).
@@ -301,10 +309,10 @@
         <div id="privacy-container" class="page-container" 
             style="display: none; max-width: 800px; margin: 40px auto; padding: 40px 30px; line-height: 1.8; color: var(--text-bright); background: #1a1a2e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; animation: fadeIn 0.6s ease; min-height: 60vh;">
             
-            <h2 style="color: #fff; margin-bottom: 20px; text-align: center; font-size: 28px;">개인정보 처리방침</h2>
+            <h2 style="color: #fff; margin-bottom: 20px; text-align: center; font-size: 24px; font-weight: 800;">개인정보 처리방침</h2>
             <p style="margin-bottom: 15px;"><b>pixlol.kr</b>(이하 '본 사이트')는 이용자의 개인정보를 중요시하며, 안전하게 보호하기 위해 최선을 다하고 있습니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">1. 수집하는 개인정보 항목</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">1. 수집하는 개인정보 항목</h3>
             <p style="margin-bottom: 15px;">본 사이트는 리그 오브 레전드 전적 검색 서비스를 제공하기 위해 라이엇 게임즈(Riot Games) API를 사용합니다. 본 사이트가 저장하는 정보는 <b>라이엇 API를 통해 공개적으로 제공되는 게임 데이터</b>에 한하며, 구체적으로 다음과 같습니다.</p>
             <ul style="margin-bottom: 15px; padding-left: 20px; line-height: 1.9;">
                 <li>소환사명 및 태그, 프로필 아이콘, 소환사 레벨</li>
@@ -314,17 +322,17 @@
             </ul>
             <p style="margin-bottom: 15px;">본 사이트는 회원가입 절차가 없으며, 이메일·연락처·결제 정보 등 <b>라이엇 API에서 제공되지 않는 개인 식별 정보는 일절 수집하지 않습니다.</b></p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">2. 개인정보의 처리 목적 및 보관 기간</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">2. 개인정보의 처리 목적 및 보관 기간</h3>
             <p style="margin-bottom: 15px;">수집된 게임 데이터는 전적 검색 결과 제공, 소환사명 자동완성, 랭킹 및 통계 표시, 그리고 라이엇 API 호출량을 줄이기 위한 캐시(임시 저장) 용도로만 사용됩니다.</p>
             <p style="margin-bottom: 15px;">경기 기록 원본은 저장 시점으로부터 <b>7일이 지나면 자동으로 삭제</b>되며, 소환사명 정보는 검색 편의를 위해 보관하되 주기적으로 최신 정보로 갱신됩니다. 통계 산출에 쓰인 경기 데이터는 <b>개인을 식별할 수 없는 형태</b>(챔피언·승패 등 집계 수치)로만 보관됩니다. 저장된 정보의 삭제를 원하시는 경우 아래 5항의 이메일로 요청해 주시기 바랍니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">3. 제3자 제공 및 위탁</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">3. 제3자 제공 및 위탁</h3>
             <p style="margin-bottom: 15px;">본 사이트는 사용자의 어떠한 개인정보도 영리 목적을 위해 제3자에게 제공하지 않습니다. 다만 서비스 운영을 위해 클라우드 인프라(호스팅·데이터베이스·CDN)를 이용하며, 수집된 게임 데이터는 해당 인프라에 저장되거나 이를 경유하여 전송됩니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">4. 쿠키(Cookie) 및 로컬 저장소 운용</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">4. 쿠키(Cookie) 및 로컬 저장소 운용</h3>
             <p style="margin-bottom: 15px;">본 사이트는 사용자의 편의(즐겨찾기, 최근 검색 기록 등)를 위해 최소한의 브라우저 로컬 저장소(Local Storage)를 사용할 수 있으나, 이는 사용자의 브라우저에만 저장되며 언제든지 브라우저 설정을 통해 삭제할 수 있습니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">5. 문의 및 피드백</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">5. 문의 및 피드백</h3>
             <p style="margin-bottom: 15px;">서비스 이용 중 발생하는 건의사항, 버그 리포트 또는 개인정보 처리방침과 관련된 문의는 아래의 이메일 채널을 통해 연락해 주시기 바랍니다.<br>
             ▶ 이메일: <a href="mailto:00.y4no@gmail.com" style="color: var(--accent); text-decoration: none; font-weight: bold;">00.y4no@gmail.com</a></p>
 
@@ -334,21 +342,21 @@
         <div id="terms-container" class="page-container" 
             style="display: none; max-width: 800px; margin: 40px auto; padding: 40px 30px; line-height: 1.8; color: var(--text-bright); background: #1a1a2e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; animation: fadeIn 0.6s ease; min-height: 60vh;">
             
-            <h2 style="color: #fff; margin-bottom: 20px; text-align: center; font-size: 28px;">이용약관</h2>
+            <h2 style="color: #fff; margin-bottom: 20px; text-align: center; font-size: 24px; font-weight: 800;">이용약관</h2>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제1조 (목적)</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">제1조 (목적)</h3>
             <p style="margin-bottom: 15px;">본 약관은 <b>pixlol.kr</b>(이하 '본 사이트')가 제공하는 리그 오브 레전드 전적 검색 및 관련 통계 서비스의 이용 조건 및 제반 사항을 규정함을 목적으로 합니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제2조 (라이엇 게임즈와의 관계)</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">제2조 (라이엇 게임즈와의 관계)</h3>
             <p style="margin-bottom: 15px;">본 사이트는 라이엇 게임즈(Riot Games)의 공식 서비스가 아니며, 라이엇 게임즈 또는 리그 오브 레전드의 제작 및 관리에 공식적으로 관여하는 당사자의 견해나 의견을 반영하지 않습니다. 리그 오브 레전드 및 라이엇 게임즈는 Riot Games, Inc.의 상표 또는 등록 상표입니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제3조 (서비스의 제공 및 변경)</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">제3조 (서비스의 제공 및 변경)</h3>
             <p style="margin-bottom: 15px;">본 사이트는 라이엇 API를 기반으로 데이터를 제공하므로, API 서버 상태나 운영 상황에 따라 서비스가 사전 예고 없이 지연, 변경, 또는 중단될 수 있습니다. 본 사이트는 이로 인해 발생하는 이용자의 불편에 대해 법적 책임을 지지 않습니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제4조 (이용자의 의무)</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">제4조 (이용자의 의무)</h3>
             <p style="margin-bottom: 15px;">이용자는 본 사이트를 이용함에 있어 비정상적인 접근(매크로, 봇 등)을 통해 서버에 과도한 부하를 주거나, 제공되는 데이터를 무단 가공 및 재배포하는 행위를 하여서는 안 됩니다.</p>
 
-            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 18px;">제5조 (면책 조항)</h3>
+            <h3 style="color: var(--accent); margin-top: 25px; margin-bottom: 10px; font-size: 15px; font-weight: 800;">제5조 (면책 조항)</h3>
             <p style="margin-bottom: 15px;">본 사이트에서 제공하는 데이터는 라이엇 API를 바탕으로 자동 처리되므로 데이터의 완벽한 정확성을 보증하지 않으며, 이를 바탕으로 한 이용자의 게임 내 의사결정에 대한 책임은 본인에게 있습니다.</p>
         </div>
 

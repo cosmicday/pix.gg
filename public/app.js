@@ -784,7 +784,7 @@ async function showPatchNotes(kind) {
 
     box.innerHTML = patchTabsHtml(cur) +
         `<div class="patch-page-list" id="patch-page-list">
-            ${Array.from({ length: 6 }, () => '<div class="skel" style="height:96px;border-radius:12px"></div>').join('')}
+            ${Array.from({ length: 6 }, () => '<div class="skel" style="height:96px;border-radius: 10px"></div>').join('')}
         </div>`;
 
     let data = null;
@@ -1096,7 +1096,7 @@ async function executeSearch() {
                     masteryData.forEach((mastery, index) => {
                         const champEngName = championIdMap[mastery.championId] || '0';
                         sidebarHtml += `
-                            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; transition: background 0.2s;">
+                            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; transition: background var(--dogu-ease);">
                                 <div style="font-size: 12px; color: var(--text-faint); width: 12px; text-align: center; font-weight: 700;">${index + 1}</div>
                                 <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${champEngName}.png" 
                                      style="width: 36px; height: 36px; border-radius: 4px; object-fit: cover; border: 2px solid var(--accent-mid);" 
@@ -1892,13 +1892,13 @@ function renderMatches(matches, append = false) {
                     <div class="build-box">
                         <div class="build-title">스킬 빌드</div>
                         <div id="skill-body-${game.matchId}">
-                            <div class="skel" style="height:72px;border-radius:8px;margin:8px 0;"></div>
+                            <div class="skel" style="height:72px;border-radius: 10px;margin:8px 0;"></div>
                         </div>
                     </div>
                     <div class="build-box">
                         <div class="build-title">아이템 빌드</div>
                         <div id="item-body-${game.matchId}">
-                            <div class="skel" style="height:72px;border-radius:8px;margin:8px 0;"></div>
+                            <div class="skel" style="height:72px;border-radius: 10px;margin:8px 0;"></div>
                         </div>
                     </div>
                 </div>
@@ -1959,7 +1959,7 @@ function renderAramSummaryHtml(matches) {
         </div>`;
 
     return `
-        <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 8px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4);">
+        <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 10px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4);">
 
             <div style="display: flex; align-items: center; gap: 22px; width: 195px;">
                 <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -1975,7 +1975,7 @@ function renderAramSummaryHtml(matches) {
                     <div style="font-size: 12px; color: #ffffff; font-weight: 700;">
                         ${avgK} / <span style="color: var(--lose-text);">${avgD}</span> / ${avgA}
                     </div>
-                    <div style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">
+                    <div style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: var(--dogu-title-ls);">
                         ${kdaRatio} <span style="font-size: 14px; font-weight: normal; color: #ffffff;">: 1</span>
                     </div>
                     <div style="font-size: 12px; color: var(--lose-text); font-weight: 700;">
@@ -2114,7 +2114,7 @@ function renderArenaSummaryHtml(matches) {
     }).join('');
 
     return `
-        <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 8px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4);">
+        <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 10px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4);">
 
             <div style="display: flex; align-items: center; gap: 22px; width: 195px;">
                 <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -2131,7 +2131,7 @@ function renderArenaSummaryHtml(matches) {
                     <div style="font-size: 12px; color: #ffffff; font-weight: 700;">
                         ${avgK} / <span style="color: var(--lose-text);">${avgD}</span> / ${avgA}
                     </div>
-                    <div style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">
+                    <div style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: var(--dogu-title-ls);">
                         ${kdaRatio} <span style="font-size: 14px; font-weight: normal; color: #ffffff;">: 1</span>
                     </div>
                     <div style="font-size: 12px; color: var(--lose-text); font-weight: 700;">
@@ -2297,7 +2297,7 @@ function renderSummaryStats(matchesToCalc) {
     } else {
         // '전체'인데 협곡 판이 하나도 없는 경우 — 섞어서 평균 내지 않고 안내만
         statsArea.innerHTML = `
-            <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 8px; padding: 22px 30px; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4); text-align: center; color: var(--text-muted); font-size: 13px; line-height: 1.7;">
+            <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 10px; padding: 22px 30px; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4); text-align: center; color: var(--text-muted); font-size: 13px; line-height: 1.7;">
                 협곡 전적이 없어 종합 통계를 낼 수 없습니다.<br>
                 <span style="font-size: 12px; color: var(--text-faint);">칼바람 · 아레나 · 봇은 각각의 필터 버튼에서 확인할 수 있습니다.</span>
             </div>`;
@@ -2416,7 +2416,7 @@ function renderSummaryStats(matchesToCalc) {
     const wrColor = winRate >= 50 ? 'var(--win)' : 'var(--lose)';
 
     statsArea.innerHTML = `
-        <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 8px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4);">
+        <div style="background: linear-gradient(135deg, var(--surface-hover), #161625); border-radius: 10px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border: 1px solid rgba(107, 70, 193, 0.4);">
             
             <div style="display: flex; align-items: center; gap: 22px; width: 195px;">
                 <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -2432,7 +2432,7 @@ function renderSummaryStats(matchesToCalc) {
                     <div style="font-size: 12px; color: #ffffff; font-weight: 700;">
                         ${avgK} / <span style="color: var(--lose-text);">${avgD}</span> / ${avgA}
                     </div>
-                    <div style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">
+                    <div style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: var(--dogu-title-ls);">
                         ${kdaRatio} <span style="font-size: 14px; font-weight: normal; color: #ffffff;">: 1</span>
                     </div>
                     <div style="font-size: 12px; color: var(--lose-text); font-weight: 700;">
@@ -5337,8 +5337,8 @@ async function showPatchImpact() {
     const box = document.getElementById('patch-impact-container');
     box.style.display = 'block';
     box.innerHTML = `<div class="pi-head"><h1 class="ranking-title">패치 영향</h1></div>
-        <div class="skel" style="height:140px;border-radius:12px;margin-bottom:16px"></div>
-        <div class="skel" style="height:300px;border-radius:12px"></div>`;
+        <div class="skel" style="height:140px;border-radius: 10px;margin-bottom:16px"></div>
+        <div class="skel" style="height:300px;border-radius: 10px"></div>`;
 
     let pc = null;
     try { [pc] = await Promise.all([loadPatchChanges(), fetchChampionMap()]); } catch (e) { }
@@ -5414,7 +5414,7 @@ async function loadPatchImpactDetail(pc) {
     const el = document.getElementById('pi-detail');
     if (!el || !piChamp) return;
     const eng = piChamp, ver = piVer;
-    el.innerHTML = `<div class="skel" style="height:280px;border-radius:12px"></div>`;
+    el.innerHTML = `<div class="skel" style="height:280px;border-radius: 10px"></div>`;
 
     // 영문 키 → 숫자 id (championIdMap 은 id → 영문 키라 뒤집어 찾는다)
     const champId = Number(Object.keys(championIdMap).find(k => championIdMap[k] === eng));
@@ -5706,7 +5706,7 @@ async function showTrendPage(laneKey) {
     const box = document.getElementById('trend-container');
     box.style.display = 'block';
     box.innerHTML = `<div class="pi-head"><h1 class="ranking-title">픽률 추이</h1></div>
-        <div class="skel" style="height:420px;border-radius:12px"></div>`;
+        <div class="skel" style="height:420px;border-radius: 10px"></div>`;
 
     await fetchChampionMap();
     const pos = STAT_POS.find(p => p.key === trendLane).code;
@@ -6812,7 +6812,7 @@ function renderMasterTable() {
         if (tUpper === "C" || tUpper.includes("CHALLENGER")) tierBadgeClass = "c"; else if (tUpper === "GM" || tUpper.includes("GRANDMASTER")) tierBadgeClass = "gm"; else if (tUpper.includes("D")) tierBadgeClass = "d"; else if (tUpper.includes("E")) tierBadgeClass = "e";
 
         const fullTierName = getFullTierName(player.tier);
-        const lpDisplay = player.lp > 0 ? `<span style="font-weight: 700; color: #fff; font-size: 16px;">${player.lp} <span style="font-weight: normal; color: var(--text-muted); font-size: 12px;">LP</span></span>` : '';
+        const lpDisplay = player.lp > 0 ? `<span style="font-weight: 700; color: #fff; font-size: 17px;">${player.lp} <span style="font-weight: normal; color: var(--text-muted); font-size: 12px;">LP</span></span>` : '';
 
         tableHtml += `
             <tr>
@@ -8516,11 +8516,11 @@ async function showChampions(requestedChampId = null, classicMode = false) {
         html += champList.map(champ => `
             <div onclick="selectChampion('${champ.id}', '${champ.name}')" id="champ-item-${champ.id}" class="champ-sidebar-item"
                  data-search="${champSearchKey(champ)}" data-roles="${champ.tags.map(t => t.toLowerCase()).join(' ')}"
-                 style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid transparent; border-radius: 8px; cursor: pointer; transition: all 0.2s;"
+                 style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid transparent; border-radius: 8px; cursor: pointer; transition: all var(--dogu-ease);"
                  onmouseover="if(!this.classList.contains('active')) this.style.background='rgba(255,255,255,0.08)'"
                  onmouseout="if(!this.classList.contains('active')) this.style.background='rgba(255,255,255,0.02)'">
                 <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${champ.id}.png" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/0.png'" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">
-                <div style="font-size: 14px; font-weight: 500; color: #fff;">${champ.name}</div>
+                <div style="font-size: 14px; font-weight: 400; color: #fff;">${champ.name}</div>
             </div>
         `).join('');
 
@@ -8533,7 +8533,7 @@ async function showChampions(requestedChampId = null, classicMode = false) {
             </div>
                 <div id="champ-detail-area" class="champ-detail-pane">
                     <img src="https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/0.png" style="width: 80px; opacity: 0.3; margin-bottom: 20px;">
-                    <div style="color: var(--text-muted); font-size: 18px;">👈 왼쪽에서 챔피언을 선택해주세요.</div>
+                    <div style="color: var(--text-muted); font-size: 17px;">👈 왼쪽에서 챔피언을 선택해주세요.</div>
                 </div>
                 </div>
             </div>
@@ -8602,12 +8602,12 @@ window.selectChampion = async function (champId, champName) {
                     <div style="text-align: left; display: flex; align-items: center; gap: 15px;">
                         <div>
                             <div style="color: var(--accent); font-weight: 700; font-size: 13px; margin-bottom: 2px;">${champ.title}</div>
-                            <h2 style="color: #fff; font-size: 26px; margin: 0; line-height: 1;">${champ.name}</h2>
+                            <h2 style="color: #fff; font-size: 24px; margin: 0; line-height: 1;">${champ.name}</h2>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px;">
                             <!-- ★ PICK/BAN → 픽 대사/밴 대사 + 아웃라인(보조 버튼) 꼴 (2026-08-31, 260830 디자인 6번 — 뜻이 안 보인다는 지적) -->
-                            <button onclick="playChampVoice('${champ.key}', 'pick')" style="background: transparent; border: 1px solid rgba(167, 139, 250, 0.5); color: var(--text-bright); border-radius: 8px; padding: 2px 10px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; white-space: nowrap;" onmouseover="this.style.background='rgba(107, 70, 193, 0.3)'" onmouseout="this.style.background='transparent'">픽 대사</button>
-                            <button onclick="playChampVoice('${champ.key}', 'ban')" style="background: transparent; border: 1px solid rgba(167, 139, 250, 0.5); color: var(--text-bright); border-radius: 8px; padding: 2px 10px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; white-space: nowrap;" onmouseover="this.style.background='rgba(107, 70, 193, 0.3)'" onmouseout="this.style.background='transparent'">밴 대사</button>
+                            <button onclick="playChampVoice('${champ.key}', 'pick')" style="background: transparent; border: 1px solid rgba(167, 139, 250, 0.5); color: var(--text-bright); border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--dogu-ease); outline: none; white-space: nowrap;" onmouseover="this.style.background='rgba(107, 70, 193, 0.3)'" onmouseout="this.style.background='transparent'">픽 대사</button>
+                            <button onclick="playChampVoice('${champ.key}', 'ban')" style="background: transparent; border: 1px solid rgba(167, 139, 250, 0.5); color: var(--text-bright); border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--dogu-ease); outline: none; white-space: nowrap;" onmouseover="this.style.background='rgba(107, 70, 193, 0.3)'" onmouseout="this.style.background='transparent'">밴 대사</button>
                         </div>
                     </div>
                 </div>
@@ -8935,7 +8935,7 @@ ${TOOLTIP_STYLE_CSS}        </style>
                                      아래 두 번째 폼 박스엔 원래부터 있던 라벨인데 본체 쪽엔 없어서
                                      어느 폼 설명인지 알 수 없었다. 같은 모양으로 맞춘다 (2026-08-10). -->
                                 <div id="champ-skill-form" style="color: var(--accent); font-size: 12px; font-weight: 700; margin-bottom: 2px; display: none;"></div>
-                                <h3 id="champ-skill-name-header" style="color: #fff; font-size: 18px; font-weight: 700; margin: 0;"></h3>
+                                <h3 id="champ-skill-name-header" style="color: #fff; font-size: 17px; font-weight: 700; margin: 0;"></h3>
                             </div>
                         </div>
                         <div class="champ-skill-meta">
@@ -8961,7 +8961,7 @@ ${TOOLTIP_STYLE_CSS}        </style>
                             <img id="champ-skill2-icon" src="" style="width: 48px; height: 48px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
                             <div>
                                 <div id="champ-skill2-form" style="color: var(--accent); font-size: 12px; font-weight: 700; margin-bottom: 2px;"></div>
-                                <h3 id="champ-skill2-name" style="color: #fff; font-size: 18px; font-weight: 700; margin: 0;"></h3>
+                                <h3 id="champ-skill2-name" style="color: #fff; font-size: 17px; font-weight: 700; margin: 0;"></h3>
                             </div>
                         </div>
                         <div class="champ-skill-meta">
@@ -8981,8 +8981,8 @@ ${TOOLTIP_STYLE_CSS}        </style>
                      ★ 영상이 없는 스킬이 있다 (이즈리얼 패시브 등 — 라이엇이 안 만들었다).
                      기본을 display:none 으로 두고 **불러오기에 성공했을 때만** 보여 준다.
                      안 그러면 검은 화면만 덩그러니 남는다. -->
-                <video id="champ-skill-video" autoplay loop muted playsinline style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; flex-shrink: 0; display: none;"></video>
-                <video id="champ-skill2-video" autoplay loop muted playsinline style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; flex-shrink: 0; display: none;"></video>
+                <video id="champ-skill-video" autoplay loop muted playsinline style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; flex-shrink: 0; display: none;"></video>
+                <video id="champ-skill2-video" autoplay loop muted playsinline style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; flex-shrink: 0; display: none;"></video>
             </div>
         </div>
         `;
@@ -9029,16 +9029,16 @@ ${TOOLTIP_STYLE_CSS}        </style>
         detailArea.innerHTML = `
             <div class="champ-detail-inner">
                 <div class="champ-tab-bar">
-                    <button class="champ-tab-btn active" data-tab="skills" onclick="switchChampTab(event, 'skills')" style="padding: 15px 20px; background: transparent; border: none; color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; border-bottom: 3px solid var(--accent);">스킬</button>
-                    <button class="champ-tab-btn" data-tab="stats" onclick="switchChampTab(event, 'stats')" style="padding: 15px 20px; background: transparent; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; border-bottom: 3px solid transparent;">스탯</button>
-                    <button class="champ-tab-btn" data-tab="skins" onclick="switchChampTab(event, 'skins')" style="padding: 15px 20px; background: transparent; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; border-bottom: 3px solid transparent;">스킨</button>
-                    <button class="champ-tab-btn" data-tab="lore" onclick="switchChampTab(event, 'lore')" style="padding: 15px 20px; background: transparent; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; border-bottom: 3px solid transparent;">배경</button>
+                    <button class="champ-tab-btn active" data-tab="skills" onclick="switchChampTab(event, 'skills')" style="padding: 11px 14px; background: transparent; border: none; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; border-bottom: 3px solid var(--accent);">스킬</button>
+                    <button class="champ-tab-btn" data-tab="stats" onclick="switchChampTab(event, 'stats')" style="padding: 11px 14px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent;">스탯</button>
+                    <button class="champ-tab-btn" data-tab="skins" onclick="switchChampTab(event, 'skins')" style="padding: 11px 14px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent;">스킨</button>
+                    <button class="champ-tab-btn" data-tab="lore" onclick="switchChampTab(event, 'lore')" style="padding: 11px 14px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent;">배경</button>
                     <!-- ▼▼ 비공개 처리 (대사 탭) ▼▼
                          되살릴 때: 이 주석 한 줄만 풀면 된다. 탭 내용(quotesHtml)·renderChampQuotes·
                          champion_quotes.js 는 그대로라 바로 살아난다.
                          가린 이유: 라이엇이 공개하는 음성이 픽·밴 둘뿐이라 채울 게 대표 대사
                          한 줄밖에 없다. 자세한 건 CLAUDE.md "인게임 대사" 절 참고.
-                    <button class="champ-tab-btn" data-tab="quotes" onclick="switchChampTab(event, 'quotes')" style="padding: 15px 20px; background: transparent; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; border-bottom: 3px solid transparent;">대사</button>
+                    <button class="champ-tab-btn" data-tab="quotes" onclick="switchChampTab(event, 'quotes')" style="padding: 11px 14px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent;">대사</button>
                          ▲▲ 비공개 처리 끝 ▲▲ -->
                 </div>
                 <div class="champ-tab-scroll">
@@ -9677,7 +9677,7 @@ window.playSkill = function (index) {
     }
 
     const nameEl = document.getElementById('champ-skill-name-header');
-    if (nameEl) nameEl.innerHTML = `<span style="color:var(--text-bright); font-weight: normal; font-size: 16px;">[${skill.keyChar}]</span> ${skill.name}`;
+    if (nameEl) nameEl.innerHTML = `<span style="color:var(--text-bright); font-weight: normal; font-size: 15px;">[${skill.keyChar}]</span> ${skill.name}`;
 
     const cooldownEl = document.getElementById('champ-skill-cooldown-header');
     const costEl = document.getElementById('champ-skill-cost-header');
@@ -9711,7 +9711,7 @@ window.playSkill = function (index) {
             if (icon2) icon2.src = f2.icon;
             put('champ-skill2-form', f2.label);
             put('champ-skill2-name',
-                `<span style="color:var(--text-bright); font-weight: normal; font-size: 16px;">[${skill.keyChar}]</span> ${f2.name}`);
+                `<span style="color:var(--text-bright); font-weight: normal; font-size: 15px;">[${skill.keyChar}]</span> ${f2.name}`);
             put('champ-skill2-cooldown', metaLine('쿨타임', f2.cooldown));
             put('champ-skill2-cost', metaLine('소모값', f2.cost));
             put('champ-skill2-desc', f2.desc);
@@ -10202,7 +10202,7 @@ async function showCandidates(name) {
         box.innerHTML = `
             <div class="cand-wrap">
                 <div style="text-align:center; padding:70px 20px; color:var(--text-muted); line-height:1.9;">
-                    <div style="font-size:18px; color:#fff; margin-bottom:12px;">'${escapeHtml(name)}' 님을 찾지 못했습니다.</div>
+                    <div style="font-size: 17px; color:#fff; margin-bottom:12px;">'${escapeHtml(name)}' 님을 찾지 못했습니다.</div>
                     태그까지 함께 입력하면 정확하게 찾을 수 있습니다.<br>
                     <span style="font-size:13px; color:var(--text-faint);">예) ${escapeHtml(name)}#KR1</span>
                 </div>
@@ -10446,10 +10446,10 @@ function skelTableHtml(rows = 12, rowH = 36) {
 // 전적검색 뼈대 — 프로필 카드 + 요약 상자 + 경기 카드들
 function skelSummonerHtml() {
     const cards = Array.from({ length: 5 }, () =>
-        `<div class="skel" style="height:96px;border-radius:12px;margin-bottom:10px"></div>`).join('');
+        `<div class="skel" style="height:96px;border-radius: 10px;margin-bottom:10px"></div>`).join('');
     return `<div style="min-height:100vh">
-        <div class="skel" style="height:150px;border-radius:12px;margin-bottom:20px"></div>
-        <div class="skel" style="height:180px;border-radius:12px;margin-bottom:20px"></div>
+        <div class="skel" style="height:150px;border-radius: 10px;margin-bottom:20px"></div>
+        <div class="skel" style="height:180px;border-radius: 10px;margin-bottom:20px"></div>
         ${cards}
     </div>`;
 }
@@ -10460,8 +10460,8 @@ function skelCodexHtml() {
         `<div class="skel" style="width:92px;height:36px;border-radius:8px"></div>`).join('');
     return `<div style="display:flex;gap:10px;margin-bottom:14px">${chips}</div>
         <div class="skel-split" style="height:62vh">
-            <div class="skel" style="flex:0 0 56%;border-radius:12px"></div>
-            <div class="skel" style="flex:1;border-radius:12px"></div>
+            <div class="skel" style="flex:0 0 56%;border-radius: 10px"></div>
+            <div class="skel" style="flex:1;border-radius: 10px"></div>
         </div>`;
 }
 
@@ -10471,8 +10471,8 @@ function skelChampHtml() {
         `<div class="skel" style="width:92px;height:36px;border-radius:8px"></div>`).join('');
     return `<div style="display:flex;gap:10px;margin-bottom:14px">${chips}</div>
         <div class="skel-split" style="height:70vh">
-            <div class="skel" style="flex:0 0 250px;border-radius:12px"></div>
-            <div class="skel" style="flex:1;border-radius:12px"></div>
+            <div class="skel" style="flex:0 0 250px;border-radius: 10px"></div>
+            <div class="skel" style="flex:1;border-radius: 10px"></div>
         </div>`;
 }
 
@@ -10490,15 +10490,15 @@ function skelStatsPageHtml() {
 
 // 통계 상세(빌드 페이지) 뼈대 — 툴바 + 카드 두 열. 툴바가 이미 그려진 자리(lx-body)는 withBar=false
 function skelLxHtml(withBar = true) {
-    return `${withBar ? '<div class="skel" style="height:64px;border-radius:12px;margin-bottom:14px"></div>' : ''}
+    return `${withBar ? '<div class="skel" style="height:64px;border-radius: 10px;margin-bottom:14px"></div>' : ''}
         <div class="skel-split">
             <div class="skel-col">
-                <div class="skel" style="height:260px;border-radius:12px"></div>
-                <div class="skel" style="height:200px;border-radius:12px"></div>
+                <div class="skel" style="height:260px;border-radius: 10px"></div>
+                <div class="skel" style="height:200px;border-radius: 10px"></div>
             </div>
             <div class="skel-col">
-                <div class="skel" style="height:150px;border-radius:12px"></div>
-                <div class="skel" style="height:310px;border-radius:12px"></div>
+                <div class="skel" style="height:150px;border-radius: 10px"></div>
+                <div class="skel" style="height:310px;border-radius: 10px"></div>
             </div>
         </div>`;
 }

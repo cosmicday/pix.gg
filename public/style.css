@@ -78,7 +78,7 @@
    ::after(오버레이) 가 깐다. 홈/비홈 농도는 app.js 가 DoguUI.setHome() 으로 body.dogu-home 을 토글한다.
    글꼴·글자색도 body.dogu-body 가 정한다 (Pretendard → Malgun Gothic 폴백 · #e6eefb) */
 body {
-    font-family: 'Malgun Gothic', sans-serif;
+    font-family: var(--dogu-font);   /* 'Malgun Gothic' → 공통 토큰 (2026-09-10 5사이트 통일 1편) */
     color: #fff;
     /* ★ 1.5 (2026-08-28, 글자 계단 정리). 예전 normal(≈1.2)은 스킬 설명·룬 설명처럼 긴 문단에서 너무 빽빽했다.
        표·버튼·배지처럼 한 줄짜리는 각자 line-height 를 갖고 있어 안 흔들린다 — 흔들리면 그 자리에 1.2~1.3 을 명시할 것 */
@@ -91,6 +91,9 @@ body {
     display: flex;
     flex-direction: column;
 }
+
+/* 컨트롤 글꼴 상속 (2026-09-10 통일 1편) — 없으면 버튼·입력이 브라우저 기본(Arial)으로 나간다 */
+button, input, select, textarea { font-family: inherit; }
 
 /* ★ main 을 flex 컨테이너로 만들면 안 된다 (2026-08-18 사고).
    margin:auto + max-width 로 가운데 정렬하는 상자들이 flex 항목이 되는 순간
@@ -127,7 +130,7 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: all 0.4s ease;
+    transition: all 0.2s ease;
     animation: fadeIn 0.6s ease;
 }
 
@@ -184,7 +187,7 @@ main {
 .home-tier-col {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 10px;
 }
 
@@ -230,7 +233,7 @@ main {
     align-items: center;
     gap: 6px;
     padding: 5px 3px;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     cursor: pointer;
     min-width: 0;
 }
@@ -251,7 +254,7 @@ main {
    칸이 모자라면 말줄임으로 (랭킹 닉네임과 같은 처리). */
 .home-tier-name {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 700;
     color: var(--text-bright);
     white-space: nowrap;
     overflow: hidden;
@@ -397,8 +400,8 @@ main {
 .shop-title-container h3 {
     color: #fff;
     margin: 0;
-    font-size: 19px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 800;
 }
 
 .shop-title-container h2 {
@@ -443,7 +446,7 @@ main {
     font-size: 13px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px dashed rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    border-radius: var(--dogu-r-card);
 }
 
 .mythic-item-card {
@@ -451,9 +454,9 @@ main {
     min-width: 0;
     background: rgba(20, 20, 35, 0.9);
     border: 1px solid rgba(167, 139, 250, 0.15);
-    border-radius: 10px;
+    border-radius: var(--dogu-r-card);
     overflow: hidden;
-    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    transition: transform 0.2s ease, border-color var(--dogu-ease), box-shadow 0.2s ease;
 }
 
 /* ★ hover 테두리는 보라(--accent) 다 (2026-09-08). 예전엔 #fff 라 카드만 사이트 색과 따로 놀았다 —
@@ -490,7 +493,7 @@ main {
 .mythic-item-name {
     display: block;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;
     color: var(--text-bright);
     margin-bottom: 6px;
     white-space: nowrap;
@@ -525,7 +528,7 @@ main {
     min-width: 0;
     background: rgba(20, 20, 35, 0.9);
     border: 1px solid rgba(167, 139, 250, 0.15);
-    border-radius: 10px;
+    border-radius: var(--dogu-r-card);
     padding: 16px 18px;
 }
 
@@ -541,8 +544,8 @@ main {
 
 .patch-note-head h3 {
     margin: 0;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 800;
     color: #fff;
 }
 
@@ -570,7 +573,7 @@ main {
     padding: 9px 6px;
     border-radius: 6px;
     text-decoration: none;
-    transition: background 0.15s;
+    transition: background var(--dogu-ease);
 }
 
 .patch-note-item:hover {
@@ -626,8 +629,8 @@ main {
 #result-container {
     display: none;
     max-width: 1200px;   /* 1089 → 1200 (2026-08-28 본문 폭 통일) */
-    margin: 40px auto;
-    padding-bottom: 50px;
+    margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
+    padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
 }
 
@@ -657,7 +660,7 @@ main {
        ★ border-left 는 border 축약 **뒤**에 — 앞에 두면 축약이 되돌린다 */
     background: var(--surface);
     padding: 30px;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-card);
     margin-bottom: 10px;
     border: 1px solid rgba(107, 70, 193, 0.4);
     border-left: 4px solid var(--accent);
@@ -675,13 +678,15 @@ main {
 }
 
 .profile-info h2 {
-    font-size: 30px;
+    font-size: 24px;   /* 30 → 24/800 (2026-09-10 통일 2편: 소환사 이름) */
+    font-weight: 800;
+    letter-spacing: var(--dogu-title-ls);
 }
 
 .pix-box {
     background: var(--surface);
-    border-radius: 8px;
-    padding: 15px;
+    border-radius: var(--dogu-r-card);   /* 8 → 10 (2026-09-10 통일 4편: 카드) */
+    padding: var(--dogu-card-pad);
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -723,7 +728,7 @@ main {
 }
 
 .pix-tier-info .tier-rank {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     color: #fff;
 }
@@ -744,15 +749,17 @@ main {
    같은 각진 칩으로 — 탭/필터 성격은 사이트 전체가 한 모양을 쓴다. 되돌리려면 옛 값: 반경 20 ·
    배경 rgba(255,255,255,0.05) · 테두리 rgba(107,70,193,0.4) · active 는 accent-deep 채움 + glow */
 .filter-btn {
-    padding: 8px 16px;
+    height: var(--dogu-ctl-sm);   /* 패딩 높이 → 28 고정 (2026-09-10 통일 3편: 칩·필터) */
+    padding: 0 12px;
+    line-height: 1;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-pill);
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-size: 12px;
+    font-weight: 700;
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 .filter-btn:hover {
@@ -785,7 +792,9 @@ main {
 }
 
 .profile-name {
-    font-size: 26px;
+    font-size: 24px;   /* 26 → 24/800 (2026-09-10 통일 2편: 소환사 이름) */
+    font-weight: 800;
+    letter-spacing: var(--dogu-title-ls);
     margin: 0;
     line-height: 1.2;
 }
@@ -794,15 +803,17 @@ main {
     display: inline-flex;
     align-items: center;
     margin-top: 2px;
-    padding: 4px 11px;
+    height: var(--dogu-ctl-sm);
+    padding: 0 12px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(167, 139, 250, 0.5);
-    border-radius: 8px;   /* 12 → 8 (2026-08-31 버튼 정리) */
+    border-radius: var(--dogu-r-pill);   /* 8 → 알약 (2026-09-10 통일 3편: 칩) */   /* 12 → 8 (2026-08-31 버튼 정리) */
     color: var(--text-bright);
     font-size: 12px;
-    line-height: 1.2;
+    font-weight: 700;
+    line-height: 1;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all var(--dogu-ease);
 }
 
 .profile-fav-btn:hover {
@@ -829,14 +840,16 @@ main {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    height: var(--dogu-ctl-sm);
+    padding: 0 12px;
     background: rgba(107, 70, 193, 0.18);
     border: 1px solid rgba(167, 139, 250, 0.6);
-    border-radius: 8px;   /* 20 → 8 (2026-08-31 버튼 정리 — 같은 줄의 큐 필터 칩과 맞춤) */
+    border-radius: var(--dogu-r-pill);   /* 8 → 알약 (2026-09-10 통일 3편: 칩·필터) */   /* 20 → 8 (2026-08-31 버튼 정리 — 같은 줄의 큐 필터 칩과 맞춤) */
     color: var(--text-bright);
     cursor: pointer;
-    font-size: 13px;
-    transition: all 0.2s;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all var(--dogu-ease);
     white-space: nowrap;
 }
 
@@ -877,7 +890,7 @@ main {
     z-index: 200;
     background: #16162a;
     border: 1px solid rgba(167, 139, 250, 0.35);
-    border-radius: 10px;
+    border-radius: var(--dogu-r-card);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     padding: 12px;
     gap: 12px;
@@ -914,7 +927,7 @@ main {
     margin-bottom: 8px;
     background: rgba(0, 0, 0, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
+    border-radius: var(--dogu-r-ctl);
     color: var(--text-bright);
     font-size: 12px;
     outline: none;
@@ -955,7 +968,7 @@ main {
     padding: 0 6px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--dogu-ease);
 }
 
 .cf-item:hover {
@@ -1186,7 +1199,7 @@ main {
     isolation: isolate;
     -webkit-mask: var(--obj-icon) center / contain no-repeat;
     mask: var(--obj-icon) center / contain no-repeat;
-    transition: transform 0.12s;
+    transition: transform 0.2s ease;
 }
 
 .tl-obj-marker-icon::before {
@@ -1228,7 +1241,7 @@ main {
     cursor: pointer;
     overflow: hidden;
     opacity: 0.45;
-    transition: all 0.15s;
+    transition: all var(--dogu-ease);
 }
 
 .tl-champ-toggle:hover {
@@ -1280,19 +1293,22 @@ main {
 .refresh-btn {
     background: linear-gradient(135deg, var(--accent-mid), var(--accent-deep));
     font-weight: 700;
-    transition: filter 0.2s;
+    transition: filter var(--dogu-ease);
 }
 .refresh-btn:hover { filter: brightness(1.15); }
 
 .profile-action-btn {
-    padding: 10px 20px;
+    height: var(--dogu-ctl-lg);   /* 패딩 높이 → 40 고정 (2026-09-10 통일 3편: CTA) */
+    padding: 0 20px;
+    line-height: 1;
     font-size: 14px;
-    border-radius: 8px;   /* 4 → 8 (2026-08-31 버튼 정리 — 버튼·칩 반경 8 통일) */
+    font-weight: 700;
+    border-radius: var(--dogu-r-ctl);   /* 4 → 8 (2026-08-31 버튼 정리 — 버튼·칩 반경 8 통일) */
     width: 100%;
     border: none;
     color: #fff;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background var(--dogu-ease);
     white-space: nowrap;
 }
 
@@ -1323,7 +1339,7 @@ main {
     align-items: stretch;
     background: linear-gradient(135deg, #241a3f, #14141f);
     border: 1px solid rgba(107, 70, 193, 0.4);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-card);
     margin-bottom: 10px;
     padding: 12px;
     gap: 10px;
@@ -1345,7 +1361,7 @@ main {
     padding: 4px 6px;
     border-radius: 4px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--dogu-ease);
 }
 
 .live-player:hover {
@@ -1492,7 +1508,7 @@ main {
     padding: 1px 3px;
     border-radius: 3px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--dogu-ease);
 }
 
 .live-arena-player:hover {
@@ -1645,9 +1661,9 @@ main {
     color: var(--text-muted);
     height: 96px;
     position: relative;
-    padding-right: 35px;
+    padding-right: 34px;
     border-radius: 4px;
-    transition: border-radius 0.2s;
+    transition: border-radius 0.2s ease;
 }
 
 .pix-game.win {
@@ -1764,7 +1780,6 @@ main {
     font-size: 15px;
     font-weight: 700;
     color: #fff;
-    letter-spacing: 1px;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
@@ -1841,8 +1856,8 @@ main {
 }
 
 .pix-badge {
-    padding: 2px 4px;
-    border-radius: 4px;
+    padding: 2px 6px;
+    border-radius: var(--dogu-r-badge);
     font-size: 12px;
     font-weight: 700;
     color: #fff;
@@ -1941,13 +1956,13 @@ main {
     position: absolute;
     right: 0;
     top: 0;
-    width: 35px;
+    width: 34px;
     height: 100%;
     background: rgba(0, 0, 0, 0.15);
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    transition: 0.2s;
+    transition: var(--dogu-ease);
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -1969,7 +1984,7 @@ main {
     right: 0;
     top: 0;
     z-index: 2;
-    width: 35px;
+    width: 34px;
     height: 34px;
     background: none;
     border: none;
@@ -1979,7 +1994,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.15s;
+    transition: color var(--dogu-ease);
 }
 
 .share-btn svg {
@@ -2025,7 +2040,7 @@ main {
     width: 16px;
     height: 16px;
     fill: currentColor;
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .match-wrapper.open .toggle-btn svg {
@@ -2065,11 +2080,13 @@ main {
     background: #6a5587;
     border: none;
     color: rgba(255, 255, 255, 0.9);
-    padding: 9px 0;
+    height: var(--dogu-ctl-tab);   /* 패딩 높이 → 36 고정 (2026-09-10 통일 3편: 밑줄형 탭) */
+    padding: 0;
+    line-height: 1;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background var(--dogu-ease), color var(--dogu-ease);
     outline: none;
 }
 
@@ -2269,7 +2286,7 @@ main {
 .damage-bar {
     height: 100%;
     background: var(--lose);
-    transition: width 0.3s ease;
+    transition: width 0.2s ease;
 }
 
 .team-blue .damage-bar {
@@ -2317,19 +2334,17 @@ main {
 .build-box {
     width: 100%;
     background: var(--surface);
-    border-radius: 8px;
-    padding: 20px;
+    border-radius: var(--dogu-r-card);
+    padding: var(--dogu-card-pad);
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-sizing: border-box;
 }
 
 .build-title {
     color: #fff;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 15px;   /* 14/700 + 밑줄 → 15/800 (2026-09-10 통일 2편: 카드 제목) */
+    font-weight: 800;
     margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .rune-trees-wrap {
@@ -2367,7 +2382,7 @@ main {
     border-radius: 50%;
     padding: 3px;
     border: 2px solid transparent;
-    transition: 0.2s;
+    transition: var(--dogu-ease);
 }
 
 .rune-icon.keystone {
@@ -2396,7 +2411,6 @@ main {
     display: none;
     font-weight: 700;
     white-space: nowrap;
-    letter-spacing: -0.5px;
     margin-top: -2px;
 }
 
@@ -2426,7 +2440,7 @@ main {
 .skill-table th {
     background: rgba(0, 0, 0, 0.3);
     color: var(--text-muted);
-    font-weight: normal;
+    font-weight: 700;
 }
 
 .skill-icon-cell {
@@ -2518,8 +2532,8 @@ main {
 #stats-container {
     display: none;
     max-width: 1200px;   /* 1000 → 1200 (2026-08-28 본문 폭 통일) */
-    margin: 40px auto;
-    padding-bottom: 50px;
+    margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
+    padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
     min-height: 100vh;
 }
@@ -2533,7 +2547,7 @@ main {
 .stats-table-wrapper {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     overflow: hidden;
 }
 
@@ -2558,13 +2572,13 @@ main {
 .stats-table th {
     background: var(--surface-hover);
     color: var(--accent);
-    padding: 15px 10px;
-    font-weight: 600;
+    padding: 10px 12px;   /* 15 10 → 10 12 (2026-09-10 통일 4편: 표 머리) */
+    font-weight: 700;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .stats-table td {
-    padding: 12px 10px;
+    padding: 9px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     vertical-align: middle;
     font-variant-numeric: tabular-nums;   /* 승률·픽률 % 자릿폭 고정 (2026-09-03 감사 3-1-2) */
@@ -2607,7 +2621,7 @@ main {
 }
 
 .stats-tier {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 800;
 }
 
@@ -2655,9 +2669,11 @@ main {
     background: var(--surface);
     color: var(--text-bright);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 7px 12px;
+    border-radius: var(--dogu-r-ctl);
+    height: var(--dogu-ctl-md);
+    padding: 0 10px;
     font-size: 13px;
+    font-weight: 700;
     cursor: pointer;
 }
 
@@ -2671,7 +2687,7 @@ main {
     gap: 4px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-pill);
     padding: 3px;
 }
 
@@ -2679,11 +2695,14 @@ main {
     background: transparent;
     color: var(--text-muted);
     border: none;
-    border-radius: 6px;
-    padding: 5px 12px;
+    border-radius: var(--dogu-r-pill);
+    height: var(--dogu-ctl-sm);
+    padding: 0 12px;
+    line-height: 1;
     font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--dogu-ease), color var(--dogu-ease);
 }
 
 .stats-band-btn:hover {
@@ -2693,7 +2712,7 @@ main {
 .stats-band-btn.active {
     background: var(--surface-hover);
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 /* ★ 2026-08-31 사용자 요청 — 승률 초록을 픽률·밴률과 같은 색으로. 굵기도 같이 맞췄다 (되돌리려면 #10b981 · bold) */
@@ -3189,7 +3208,7 @@ main {
 /* 같은 이름을 예전 화면이 쓰던 규칙 — 승률 색 (전적 카드 등) */
 .build-wr-up { color: #60a5fa; }
 .build-wr-down { color: #f87171; }
-.build-wr-dim { color: var(--text-faint); font-weight: 600; }
+.build-wr-dim { color: var(--text-faint); font-weight: 700; }
 .build-none { font-size: 12px; color: var(--text-faint); padding: 8px 2px; }
 .build-lane { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 4px; background: var(--surface-hover); color: var(--accent); font-size: 12px; font-weight: 700; }
 .build-thin { color: #c9a227; margin-left: 6px; }
@@ -3243,13 +3262,13 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
+    width: var(--dogu-ctl-md);   /* 42 → 34 (2026-09-10 통일 3편: 아이콘 버튼) */
+    height: var(--dogu-ctl-md);
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--dogu-ease);
 }
 
 .stats-filter-btn:hover {
@@ -3267,7 +3286,7 @@ main {
     width: 22px;
     height: 22px;
     opacity: 0.55;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s ease;
 }
 
 .stats-filter-btn:hover img,
@@ -3277,10 +3296,10 @@ main {
 
 .stats-filter-btn.all-btn {
     width: auto;
-    padding: 0 18px;
+    padding: 0 14px;
     color: rgba(255, 255, 255, 0.5);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .stats-filter-btn.all-btn:hover,
@@ -3303,10 +3322,11 @@ main {
 
 .stats-pickcut input {
     width: 56px;
-    padding: 7px 6px;
+    height: var(--dogu-ctl-md);
+    padding: 0 10px;
     background: #12121f;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
+    border-radius: var(--dogu-r-ctl);
     color: var(--text-bright);
     font-size: 13px;
     text-align: center;
@@ -3327,7 +3347,7 @@ main {
 .sortable-th {
     cursor: pointer;
     user-select: none;
-    transition: background 0.2s, color 0.2s;
+    transition: background var(--dogu-ease), color var(--dogu-ease);
 }
 
 /* ★ hover 규칙은 **마우스가 있는 기기에서만** 건다 (2026-08-19).
@@ -3357,7 +3377,7 @@ main {
     font-size: 10px;
     margin-left: 4px;
     color: rgba(255, 255, 255, 0.3);
-    transition: color 0.2s;
+    transition: color var(--dogu-ease);
 }
 
 .sortable-th.active .sort-icon {
@@ -3370,8 +3390,8 @@ main {
 #masters-container {
     display: none;
     max-width: 1200px;   /* 1500 → 1200 (2026-08-28 본문 폭 통일, 비공개 페이지) */
-    margin: 40px auto;
-    padding-bottom: 50px;
+    margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
+    padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
     min-height: 100vh;
 }
@@ -3386,7 +3406,7 @@ main {
     width: 504px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 25px;
     flex-shrink: 0;
     box-sizing: border-box;
@@ -3405,7 +3425,7 @@ main {
     cursor: pointer;
     border: 2px solid transparent;
     border-radius: 4px;
-    transition: all 0.2s;
+    transition: all var(--dogu-ease);
 }
 
 .champ-grid-item img {
@@ -3428,7 +3448,7 @@ main {
     min-width: 0;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     overflow: hidden;
 }
 
@@ -3436,25 +3456,27 @@ main {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .master-table th {
     background: var(--surface-hover);
     color: #10b981;
-    padding: 15px;
-    font-weight: normal;
+    padding: 10px 12px;
+    font-weight: 700;
     border-bottom: 2px solid #10b981;
 }
 
 .master-table td {
-    padding: 12px 15px;
+    padding: 9px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     vertical-align: middle;
 }
 
-.master-table tr:hover {
-    background: rgba(255, 255, 255, 0.03);
+@media (hover: hover) {   /* 줄 hover 는 마우스 기기에서만 (2026-09-10 통일 4편) */
+    .master-table tr:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
 }
 
 .master-summoner {
@@ -3479,7 +3501,7 @@ main {
 
 .tier-badge {
     padding: 3px 6px;
-    border-radius: 12px;
+    border-radius: var(--dogu-r-badge);
     font-size: 12px;
     font-weight: 700;
     color: #fff;
@@ -3501,7 +3523,9 @@ main {
     align-items: center;
     gap: 12px;
     color: #fff;
-    font-size: 28px;
+    font-size: 24px;   /* 28/normal → 24/800 (2026-09-10 통일 2편: 페이지 제목) */
+    font-weight: 800;
+    letter-spacing: var(--dogu-title-ls);
     text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
     width: fit-content;
     margin: 0 auto;
@@ -3509,7 +3533,7 @@ main {
 
 .summoner-link {
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color var(--dogu-ease);
 }
 
 .summoner-link:hover {
@@ -3570,13 +3594,13 @@ main {
     background-color: #ef4444;
     color: white;
     padding: 15px 25px;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-card);
     font-weight: 700;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     z-index: 9999;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: none;
 }
 
@@ -3595,7 +3619,7 @@ main {
     cursor: pointer;
     color: var(--accent);
     font-weight: 700;
-    font-size: 0.85em;
+    font-size: 12px;
     vertical-align: super;
     margin-left: 2px;
 }
@@ -3610,7 +3634,7 @@ main {
     background-color: rgba(20, 20, 28, 0.98);
     color: #fff;
     text-align: center;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-card);
     padding: 12px;
     /* ★ absolute 가 아니라 fixed 다 (2026-08-11).
        스킬 본문(.champ-skill-body)이 overflow-y: auto 라 **가로도 같이 잘린다**
@@ -3627,7 +3651,7 @@ main {
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.8);
     font-size: 12px;
     font-weight: normal;
-    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.15s;
 }
 
 /* ★ 각주 내용 div 는 생성기가 인라인 white-space:nowrap 을 박는다. 위 max-width 상한에
@@ -3657,7 +3681,7 @@ main {
 }
 
 .graph-point circle {
-    transition: all 0.1s ease;
+    transition: all var(--dogu-ease);
 }
 
 .graph-point:hover circle {
@@ -3887,7 +3911,7 @@ main {
         right: 41px;
         width: 30px;
         height: 30px;
-        border-radius: 8px;
+        border-radius: var(--dogu-r-ctl);
         background: rgba(0, 0, 0, 0.25);
         color: var(--text-muted);
     }
@@ -3897,7 +3921,7 @@ main {
         right: 7px;
         width: 30px;
         height: 30px;
-        border-radius: 8px;
+        border-radius: var(--dogu-r-ctl);
         background: rgba(0, 0, 0, 0.25);
         align-items: center;
         padding-bottom: 0;
@@ -3956,7 +3980,7 @@ main {
     }
 
     .pix-kda-score {
-        font-size: 16px;
+        font-size: 15px;
         letter-spacing: 0;
     }
 
@@ -4148,7 +4172,7 @@ main {
     width: 100%;
     background: var(--surface);
     border: 1px solid rgba(167, 139, 250, 0.4);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     margin-top: 8px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     z-index: 100;
@@ -4163,7 +4187,7 @@ main {
     gap: 12px;
     padding: 10px 18px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--dogu-ease);
 }
 
 .ac-item:hover,
@@ -4234,7 +4258,7 @@ main {
 .cand-list {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     overflow: hidden;
 }
 
@@ -4245,7 +4269,7 @@ main {
     padding: 12px 18px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--dogu-ease);
 }
 
 .cand-item:last-child {
@@ -4310,15 +4334,17 @@ main {
 .load-more-btn {
     display: block;
     width: 100%;
-    padding: 14px 0;
+    height: var(--dogu-ctl-md);
+    padding: 0;
+    line-height: 1;
     background: var(--surface);
     color: var(--accent);
     border: 1px solid rgba(167, 139, 250, 0.35);
-    border-radius: 10px;
-    font-size: 14px;
+    border-radius: var(--dogu-r-ctl);
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease);
     outline: none;
 }
 
@@ -4413,7 +4439,7 @@ main {
     height: 16px;
     border-radius: 3px;
     cursor: pointer;
-    transition: transform 0.12s;
+    transition: transform 0.2s ease;
 }
 
 .arena-team img:hover {
@@ -4552,7 +4578,7 @@ main {
     height: 75vh;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     overflow: hidden;
 }
 #champ-page-header {
@@ -4586,7 +4612,7 @@ main {
     min-height: 0;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     overflow-y: auto;
     padding: 15px;
     display: flex;
@@ -4602,7 +4628,7 @@ main {
     min-width: 0;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     height: 75vh;
     display: flex;
     align-items: center;
@@ -4614,7 +4640,7 @@ main {
    폰 전용 최소 높이는 아래 @media 블록에 있다 (칸이 auto 라 한 줄로 쪼그라들던 것) */
 .champ-loading {
     color: var(--text-muted);
-    font-size: 18px;
+    font-size: 17px;
 }
 
 .champ-detail-inner {
@@ -4669,8 +4695,8 @@ main {
     gap: 10px;        /* 12 → 10 (2026-08-28, 버튼 약간 축소: 96x60 → 84x50) */
     cursor: pointer;
     padding: 5px;     /* 6 → 5 */
-    border-radius: 8px;
-    transition: 0.2s;
+    border-radius: var(--dogu-r-ctl);
+    transition: var(--dogu-ease);
     background: rgba(255, 255, 255, 0.02);
 }
 
@@ -4683,9 +4709,9 @@ main {
 
 .skill-btn-key {
     color: var(--text-muted);
-    font-weight: 600;   /* bold → 600 (2026-08-28 굵기 정리) */
+    font-weight: 700;   /* bold → 600 (2026-08-28 굵기 정리) */
     width: 24px;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .champ-skill-body {
@@ -4728,11 +4754,11 @@ main {
 
 .skin-item {
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-card);
     padding: 5px;
     margin-bottom: 6px;
     border: 2px solid transparent;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 .skin-item:hover {
@@ -4829,7 +4855,7 @@ main {
     margin: 0 auto;
     aspect-ratio: 1215 / 717;
     background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
     flex-shrink: 0;
@@ -4918,7 +4944,7 @@ main {
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.25);
     cursor: pointer;
-    transition: transform 0.12s, box-shadow 0.12s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .chroma-dot:hover {
@@ -4935,7 +4961,7 @@ main {
 .skin-view-name {
     margin: 16px auto 0 auto;
     max-width: 640px;
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 700;
     color: #fff;
     text-align: center;
@@ -5018,7 +5044,7 @@ main {
 
 .champ-quote-text {
     margin: 0;
-    font-size: 19px;
+    font-size: 17px;
     line-height: 1.7;
     color: #fff;
     word-break: keep-all;
@@ -5044,14 +5070,16 @@ main {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 18px;
+    height: var(--dogu-ctl-md);
+    padding: 0 14px;
     background: var(--surface-hover);
     border: 1px solid var(--accent-deep);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     color: #fff;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--dogu-ease);
 }
 
 .champ-voice-btn:hover {
@@ -5077,7 +5105,7 @@ main {
 /* 헤더 초상화를 누르면 선택 음성이 나온다 */
 .champ-header-portrait {
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .champ-header-portrait:hover {
@@ -5087,7 +5115,7 @@ main {
 
 .champ-skill-box {
     background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     border: 1px solid rgba(255, 255, 255, 0.05);
     padding: 25px;
     flex-shrink: 0;
@@ -5378,7 +5406,7 @@ main {
    ========================================= */
 .rank-table-wrap {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     background: var(--surface);
     overflow-x: auto;
 }
@@ -5396,11 +5424,11 @@ main {
 }
 
 .rank-table th {
-    padding: 15px;
+    padding: 10px 12px;
 }
 
 .rank-table td {
-    padding: 12px;
+    padding: 9px 12px;
 }
 
 .rank-table tbody tr {
@@ -5565,14 +5593,15 @@ main {
 .rank-search {
     width: 100%;
     box-sizing: border-box;
-    padding: 10px 34px 10px 14px;
+    height: var(--dogu-ctl-md);
+    padding: 0 34px 0 12px;
     background: #12121f;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     color: var(--text-bright);
-    font-size: 14px;
+    font-size: 13px;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color var(--dogu-ease);
 }
 
 .rank-search::placeholder {
@@ -5594,7 +5623,7 @@ main {
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1;
     cursor: pointer;
     visibility: hidden;
@@ -5698,7 +5727,7 @@ main {
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--dogu-ease), color var(--dogu-ease);
 }
 
 .rank-pg:hover:not(:disabled) {
@@ -5731,10 +5760,11 @@ main {
 
 .rank-pg-jump input {
     width: 58px;
-    padding: 7px 8px;
+    height: var(--dogu-ctl-md);
+    padding: 0 10px;
     background: #12121f;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
+    border-radius: var(--dogu-r-ctl);
     color: var(--text-bright);
     font-size: 13px;
     text-align: center;
@@ -5790,7 +5820,7 @@ main {
 
 .cutoff-card {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     background: var(--surface);
     padding: 14px 16px 10px;
 }
@@ -5822,7 +5852,7 @@ main {
 
 /* 지금 컷. 그래프에서 제일 자주 볼 숫자라 크게 둔다 */
 .cutoff-now {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     color: #fff;
     white-space: nowrap;
@@ -5876,7 +5906,7 @@ main {
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.12s;
+    transition: opacity 0.2s ease;
     z-index: 5;
 }
 
@@ -6398,7 +6428,7 @@ main {
 }
 
 .g-end {
-    transition: opacity 0.1s;
+    transition: opacity 0.2s ease;
 }
 
 /* ★ 점은 작아서 정확히 못 맞춘다. 각 점이 담당하는 x 구간을 덮는 투명 칸을
@@ -6412,7 +6442,7 @@ main {
 .g-pt {
     position: absolute;
     opacity: 0;
-    transition: opacity 0.1s;
+    transition: opacity 0.2s ease;
     pointer-events: none;
     white-space: nowrap;
 }
@@ -6513,7 +6543,7 @@ main {
     padding: 6px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
+    border-radius: var(--dogu-r-card);
 }
 
 .vs-item {
@@ -6526,7 +6556,7 @@ main {
     color: var(--text-bright);
     font-size: 12px;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 .vs-item:hover {
@@ -6669,10 +6699,11 @@ main {
 .champ-search {
     width: 100%;
     box-sizing: border-box;
-    padding: 9px 12px;
+    height: var(--dogu-ctl-md);
+    padding: 0 12px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    border-radius: var(--dogu-r-ctl);
     color: #fff;
     font-size: 13px;
     outline: none;
@@ -6735,7 +6766,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity .12s, background .12s, color .12s;
+    transition: opacity 0.2s ease, background var(--dogu-ease), color var(--dogu-ease);
 }
 
 .search-clear:hover {
@@ -6766,13 +6797,13 @@ main {
     padding: 5px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     cursor: pointer;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color var(--dogu-ease), background var(--dogu-ease);
 }
 
 .role-btn img {
@@ -6782,7 +6813,7 @@ main {
     /* 꺼진 상태는 회색으로 죽여 둔다. 켜지면 원래 금색이 살아난다 */
     filter: grayscale(1) brightness(0.75);
     opacity: 0.65;
-    transition: filter 0.15s, opacity 0.15s;
+    transition: filter var(--dogu-ease), opacity 0.2s ease;
 }
 
 /* ★ hover 는 마우스 기기에서만 (2026-08-19). 폰에서는 탭한 순간 :hover 가 걸리고
@@ -6824,7 +6855,7 @@ main {
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.15s;
+    transition: opacity 0.2s ease;
     pointer-events: none;
     z-index: 30;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
@@ -6882,8 +6913,8 @@ main {
        안 올리면 오른쪽 상세가 776 → 520px 으로 쪼그라든다. 지금은 820px 이라 오히려 넓다.
        ★★ 2026-08-28 본문 폭 통일로 1400 → 1200. 왼쪽 칸도 740 → 680 (아래). 상세는 아이템 500 / 룬 588 / 주문 736 */
     max-width: 1200px;
-    margin: 40px auto;
-    padding-bottom: 50px;
+    margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
+    padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
     min-height: 100vh;
 }
@@ -6896,8 +6927,8 @@ main {
 #patch-container {
     display: none;
     max-width: 1200px;   /* 1000 → 1200 (2026-08-28 본문 폭 통일) */
-    margin: 40px auto;
-    padding-bottom: 50px;
+    margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
+    padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
     min-height: 100vh;
 }
@@ -6915,10 +6946,10 @@ main {
     padding: 12px 16px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     color: inherit;
     text-decoration: none;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 @media (hover: hover) {
@@ -6949,9 +6980,8 @@ main {
     color: var(--text-muted);
 }
 .patch-page-pbe-mark b {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 800;
-    letter-spacing: 1px;
     line-height: 1;
 }
 .patch-page-pbe-mark i {
@@ -6963,7 +6993,7 @@ main {
 .patch-page-pbe-mark.is-detail i { color: var(--accent); opacity: 0.75; }
 
 .patch-page-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
-.patch-page-title { color: var(--text-bright); font-size: 15px; font-weight: 700; }
+.patch-page-title { color: var(--text-bright); font-size: 15px; font-weight: 800; }
 
 /* 요약은 한 줄까지만 — 길이가 제각각이라 두 줄이 되면 줄 높이가 들쭉날쭉해진다 */
 .patch-page-desc {
@@ -6979,12 +7009,12 @@ main {
 
 .patch-page-ver {
     flex: none;
-    padding: 4px 10px;
+    padding: 2px 6px;
     background: rgba(167, 139, 250, 0.14);
     border: 1px solid rgba(167, 139, 250, 0.35);
-    border-radius: 6px;
+    border-radius: var(--dogu-r-badge);
     color: var(--accent);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
 }
 
@@ -7010,12 +7040,14 @@ main {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
-    padding: 9px 18px;
-    border-radius: 8px;
+    height: var(--dogu-ctl-md);   /* 패딩 높이 → 34 고정 (2026-09-10 통일 3편: 기본 버튼) */
+    padding: 0 14px;
+    line-height: 1;
+    border-radius: var(--dogu-r-ctl);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 .codex-tab:hover { color: var(--text-bright); }
@@ -7097,7 +7129,7 @@ main {
     overflow-y: auto;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 8px 6px;
     scrollbar-gutter: stable;
 }
@@ -7109,7 +7141,6 @@ main {
     font-size: 12px;
     color: var(--text-faint);
     padding: 2px 8px 6px;
-    letter-spacing: 0.02em;
 }
 
 .codex-stat {
@@ -7158,9 +7189,10 @@ main {
     box-sizing: border-box;
     background: #14142a;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     color: var(--text-bright);
-    padding: 9px 12px;
+    height: var(--dogu-ctl-md);
+    padding: 0 12px;
     font-size: 13px;
     outline: none;
     margin-bottom: 8px;
@@ -7203,9 +7235,12 @@ main {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
-    padding: 4px 10px;
-    border-radius: 6px;
+    height: var(--dogu-ctl-sm);
+    padding: 0 12px;
+    line-height: 1;
+    border-radius: var(--dogu-r-pill);
     font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
 }
 
@@ -7231,7 +7266,7 @@ main {
     align-content: start;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 10px 6px 10px 10px;
     scrollbar-gutter: stable;
 }
@@ -7241,10 +7276,10 @@ main {
     align-items: center;
     gap: 10px;
     padding: 6px 8px;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     border: 2px solid transparent;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease);
     /* 줄 간격은 격자의 gap 이 준다 — margin 을 같이 주면 두 번 벌어진다 */
     min-width: 0;
 }
@@ -7272,7 +7307,7 @@ main {
 .codex-item-name {
     font-size: 13px;
     color: var(--text-bright);
-    font-weight: 500;   /* 600 → 500 (2026-08-28 굵기 정리 — 목록 이름은 강조 자리가 아니다) */
+    font-weight: 400;   /* 600 → 500 (2026-08-28 굵기 정리 — 목록 이름은 강조 자리가 아니다) */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -7295,7 +7330,7 @@ main {
     box-shadow: 0 0 0 2px rgba(240, 200, 120, 0.75);
 }
 
-.codex-key-tag { color: #f0c878; font-weight: 600; }
+.codex-key-tag { color: #f0c878; font-weight: 700; }
 
 /* 보기 토글 (룬 탭 전용). 거르는 줄 오른쪽 끝에 붙는다. */
 .codex-view-toggle {
@@ -7309,9 +7344,12 @@ main {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
-    padding: 4px 10px;
-    border-radius: 6px;
+    height: var(--dogu-ctl-sm);
+    padding: 0 12px;
+    line-height: 1;
+    border-radius: var(--dogu-r-pill);
     font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
 }
 
@@ -7352,7 +7390,7 @@ main {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 10px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-bright);
 }
 
@@ -7374,14 +7412,14 @@ main {
     box-sizing: border-box;
     padding: 6px 4px;
     border: 2px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 5px;
     text-align: center;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 /* ★ 호버 색은 반드시 hover 기기에서만 — 폰에서 탭 자국이 눌어붙는다 (사이트 공통 규칙) */
@@ -7419,7 +7457,7 @@ main {
 }
 
 .codex-rune-node.active .codex-rune-label { color: #fff; }
-.codex-rune-node.is-key .codex-rune-label { color: var(--text-bright); font-weight: 600; }
+.codex-rune-node.is-key .codex-rune-label { color: var(--text-bright); font-weight: 700; }
 
 /* ============================================================
    ★ 룬 설명은 강조를 전부 끈 맨 글씨다 (2026-08-21, 요청 — "나중에 다시 보자")
@@ -7463,7 +7501,7 @@ main {
     overflow-y: auto;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 16px;
 }
 
@@ -7563,7 +7601,7 @@ main {
     gap: 6px;
     background: #14142a;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     padding: 5px 9px 5px 5px;
 }
 
@@ -7665,7 +7703,7 @@ main {
 .codex-detail-img-round { border-radius: 50%; }
 
 .codex-detail-name {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     color: #fff;
     margin-bottom: 6px;
@@ -7689,8 +7727,9 @@ main {
     border: 1px solid rgba(167, 139, 250, 0.3);
     color: var(--accent);
     padding: 2px 8px;
-    border-radius: 5px;
+    border-radius: var(--dogu-r-badge);
     font-size: 12px;
+    font-weight: 700;
 }
 
 .codex-plain {
@@ -7752,7 +7791,7 @@ main {
 .codex-recipe-label {
     font-size: 12px;
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
     flex-shrink: 0;
     width: 74px;
     white-space: nowrap;
@@ -7794,7 +7833,7 @@ main {
     border-radius: 7px;
     padding: 5px 9px 5px 5px;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 .codex-recipe-item:hover {
@@ -7947,7 +7986,7 @@ main {
 
 .codex-tree-node[data-id] {
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    transition: background var(--dogu-ease), border-color var(--dogu-ease), transform 0.2s ease;
 }
 
 /* ★ :hover 는 항상 hover:hover 로 감싼다 — 폰 탭 잔상 방지 (role-btn 에서 겪은 것) */
@@ -7974,7 +8013,7 @@ main {
 /* 값은 인게임 상점처럼 금색이고, 아이콘보다 뒤로 물러나게 알약에 담는다 */
 .codex-tree-gold {
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1;
     color: #f0c674;
     background: rgba(0, 0, 0, 0.3);
@@ -7998,7 +8037,7 @@ main {
    높이 72vh 도 푼다 — 세로로 쌓으면 그 안에 두 칸이 들어가야 해서 둘 다 납작해진다. */
 @media (max-width: 768px) {
     #codex-container {
-        margin: 20px auto;
+        margin: var(--dogu-page-top) auto 0;
         padding: 0 10px 40px;
     }
 
@@ -8050,10 +8089,12 @@ main {
         background: var(--surface);
         border: 1px solid rgba(255, 255, 255, 0.1);
         color: var(--text-muted);
-        padding: 7px 14px;
-        border-radius: 8px;
+        height: var(--dogu-ctl-md);
+        padding: 0 14px;
+        line-height: 1;
+        border-radius: var(--dogu-r-ctl);
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
     }
     .codex-body[data-tab="rune"] .codex-statbar-toggle,
@@ -8098,7 +8139,7 @@ main {
     }
 
     .codex-detail-img { width: 52px; height: 52px; }
-    .codex-detail-name { font-size: 16px; }
+    .codex-detail-name { font-size: 17px; }
 
     /* 재료 줄은 라벨을 위로 올린다 — 62px 을 떼면 아이콘 자리가 모자란다.
        ★ stretch 필수 — 기본 규칙의 align-items: flex-start 가 column 에서 그대로 남으면
@@ -8109,15 +8150,15 @@ main {
     .codex-recipe-label { width: auto; padding-top: 0; }
 
     /* 패치노트 목록 — 폰에서는 그림을 줄이고 요약 줄을 뺀다 (2026-08-27) */
-    #patch-container { margin: 20px auto; }
+    #patch-container { margin: var(--dogu-page-top) auto 0; }
     .patch-page-item { gap: 10px; padding: 10px 12px; }
     .patch-page-thumb { width: 96px; height: 54px; }
     .patch-page-title { font-size: 14px; }
     .patch-page-desc { display: none; }
-    .patch-page-ver { padding: 3px 7px; font-size: 12px; }
+    .patch-page-ver { padding: 2px 6px; font-size: 12px; }
 
     .codex-tabs { padding: 0; }
-    .codex-tab { flex: 1; padding: 9px 6px; }
+    .codex-tab { flex: 1; padding: 0 6px; }
 }
 
 /* ============================================================
@@ -8130,8 +8171,8 @@ main {
 #mythic-container {
     display: none;
     max-width: 1200px;   /* 1100 → 1200 (2026-08-28 본문 폭 통일) */
-    margin: 40px auto;
-    padding-bottom: 50px;
+    margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
+    padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
     min-height: 100vh;
 }
@@ -8156,12 +8197,14 @@ main {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
-    padding: 9px 18px;
-    border-radius: 8px;
+    height: var(--dogu-ctl-md);
+    padding: 0 14px;
+    line-height: 1;
+    border-radius: var(--dogu-r-ctl);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 .mshop-tab:hover { color: var(--text-bright); }
@@ -8175,7 +8218,7 @@ main {
 .mshop-body {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 20px;
     /* ★ 최소 높이를 잡아 둔다. 준비 중인 탭(짧은 안내)과 일일 탭(카드 줄) 사이를
        오갈 때 상자가 확 줄었다 늘어나면 탭 줄이 위아래로 튄다. */
@@ -8194,8 +8237,11 @@ main {
 
 .mshop-section-title {
     margin: 0;
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 15px;   /* 17/600 → 15/800 + 액센트 좌측 마커 (2026-09-10 통일 2편: 섹션 제목) */
+    font-weight: 800;
+    line-height: 1.2;
+    padding-left: 9px;
+    border-left: 3px solid var(--accent);
     color: #fff;
 }
 
@@ -8252,7 +8298,7 @@ main {
 .mythic-card-skel .mythic-item-price::after { width: 42px; height: 15px; margin: 3px auto; }
 
 .mshop-grid .mythic-item-img-box {
-    border-radius: 10px 10px 0 0;
+    border-radius: var(--dogu-r-card) var(--dogu-r-card) 0 0;
     overflow: hidden;
 }
 
@@ -8269,13 +8315,12 @@ main {
     top: 6px;
     right: 6px;
     z-index: 2;
-    padding: 3px 7px;
-    border-radius: 6px;
+    padding: 2px 6px;
+    border-radius: var(--dogu-r-badge);
     background: rgba(0, 0, 0, 0.72);
     color: var(--text-bright);
     font-size: 12px;
-    font-weight: 600;
-    letter-spacing: -0.2px;
+    font-weight: 700;
     cursor: help;
     pointer-events: auto;
 }
@@ -8389,7 +8434,7 @@ main {
 .mshop-stale {
     margin-bottom: 14px;
     padding: 10px 14px;
-    border-radius: 8px;
+    border-radius: var(--dogu-r-card);
     background: rgba(250, 204, 21, 0.08);
     border: 1px solid rgba(250, 204, 21, 0.25);
     color: #facc15;
@@ -8407,7 +8452,7 @@ main {
 .mshop-soon-title {
     color: var(--text-bright);
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 800;
     margin-bottom: 10px;
 }
 
@@ -8421,12 +8466,14 @@ main {
     background: var(--surface-hover);
     border: 1px solid rgba(167, 139, 250, 0.5);
     color: var(--accent);
-    padding: 9px 18px;
-    border-radius: 8px;
+    height: var(--dogu-ctl-md);
+    padding: 0 14px;
+    line-height: 1;
+    border-radius: var(--dogu-r-ctl);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--dogu-ease), color var(--dogu-ease);
 }
 
 .mshop-goto:hover {
@@ -8436,13 +8483,13 @@ main {
 
 @media (max-width: 768px) {
     #mythic-container {
-        margin: 20px auto;
+        margin: var(--dogu-page-top) auto 0;
         padding: 0 10px 40px;
     }
 
     /* 탭 4개가 한 줄에 들어가야 한다 — 도감과 같은 처리다 */
     .mshop-tabs { padding: 0; }
-    .mshop-tab { flex: 1; padding: 9px 6px; }
+    .mshop-tab { flex: 1; padding: 0 6px; }
 
     .mshop-body { padding: 14px; }
 
@@ -8522,7 +8569,7 @@ main {
 .skel-box {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
@@ -8548,8 +8595,8 @@ main {
 #patch-impact-container {
     display: none;
     max-width: 1200px;
-    margin: 40px auto;
-    padding-bottom: 50px;
+    margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
+    padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
     min-height: 100vh;
 }
@@ -8586,7 +8633,7 @@ main {
     padding: 10px 4px 8px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-card);
     cursor: pointer;
     color: inherit;
     font: inherit;
@@ -8628,7 +8675,7 @@ main {
 /* ── 상세 카드 ── */
 .pi-detail-card {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     background: var(--surface);
     padding: 18px 20px;
 }
@@ -8648,7 +8695,7 @@ main {
 
 .pi-detail-name {
     font-size: 17px;
-    font-weight: 600;
+    font-weight: 700;
     color: #fff;
 }
 
@@ -8672,7 +8719,7 @@ main {
 
 .pi-box {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    border-radius: var(--dogu-r-card);
     background: #16162a;
     padding: 12px 14px 8px;
 }
@@ -8697,7 +8744,7 @@ main {
     white-space: nowrap;
 }
 
-.pi-delta { font-size: 12px; font-weight: 600; margin-left: 2px; }
+.pi-delta { font-size: 12px; font-weight: 700; margin-left: 2px; }
 .pi-delta.up { color: #10b981; }
 .pi-delta.down { color: #ef4444; }
 .pi-delta.flat { color: var(--text-faint); }
@@ -8810,7 +8857,7 @@ main {
 }
 
 @media (max-width: 768px) {
-    #patch-impact-container { margin: 20px auto; padding: 0 10px 40px; }
+    #patch-impact-container { margin: var(--dogu-page-top) auto 0; padding: 0 10px 40px; }
     .pi-head { flex-wrap: wrap; }
     .pi-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
     .pi-champ img { width: 40px; height: 40px; }
@@ -8844,10 +8891,11 @@ main {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 14px;
+    height: var(--dogu-ctl-md);
+    padding: 0 14px;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     color: var(--text-muted);
     font-size: 13px;
     cursor: pointer;
@@ -8929,9 +8977,10 @@ main {
     padding: 5px 10px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-pill);   /* 8 → 알약 (2026-09-10 통일 3편: 칩) */
     color: var(--text-bright);
     font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
 }
 
@@ -8985,7 +9034,7 @@ main {
    ========================================== */
 #recent-mates-area:empty { display: none; }
 
-.mates-box { padding: 16px 18px 12px; }
+.mates-box { padding: var(--dogu-card-pad); }
 
 .mates-title {
     color: #fff;
@@ -9038,7 +9087,7 @@ main {
     font-variant-numeric: tabular-nums;
 }
 
-.lp-card { padding: 16px 18px 12px; }
+.lp-card { padding: var(--dogu-card-pad); }
 
 .lp-card-head {
     display: flex;
@@ -9115,7 +9164,7 @@ main {
 .versus-swap {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-ctl);
     color: var(--text-bright);
     font-size: 14px;
     padding: 6px 10px;
@@ -9158,7 +9207,7 @@ main {
 .versus-lane {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 12px 14px;
 }
 
@@ -9227,7 +9276,7 @@ main {
 .versus-none {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: var(--dogu-r-card);
     padding: 24px 18px;
     text-align: center;
 }
@@ -9294,9 +9343,10 @@ main {
     padding: 6px 10px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: var(--dogu-r-pill);   /* 8 → 알약 (2026-09-10 통일 3편: 칩) */
     color: var(--text-muted);
     font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
 }
 
@@ -9330,4 +9380,9 @@ main {
 .versus-build-title { font-size: 15px; color: var(--text-bright); }
 .versus-build-n { font-size: 12px; color: var(--text-faint); }
 
+}
+
+/* 폰에서는 칩·필터를 34 로 (2026-09-10 통일 3편, DOGU_UI.md 14-3) */
+@media (max-width: 768px) {
+    .filter-btn, .champ-filter-btn, .stats-band-btn, .profile-fav-btn, .codex-cat, .codex-view-btn { height: 34px; }
 }
