@@ -1614,7 +1614,6 @@ const DAILY_KEEP_DAYS = 42;        // 일별 집계를 며칠치 보관할지 (�
 const PATCH_FREEZE_DAYS = 3;       // 최신이 아닌 패치의 마지막 경기가 이만큼 지나면 재집계를 멈춘다 (2026-08-27)
 let frozenLoggedKey = '';          // 얼어붙은 패치 목록 로그를 바뀔 때만 찍으려고
 const dailySkipLogged = new Set(); // 원본이 빠져 건너뛴 일별 scope 를 한 번만 찍으려고
-const heavySkipLogged = new Set(); // 용량 때문에 빌드·상성을 건너뛴 패치 scope 를 한 번만 찍으려고
 // ★★ 세대 교체는 새 세대를 넣은 뒤 옛 세대를 지우므로 **그 몇 분 동안 두 벌**이 있다 (2026-09-10 실측:
 //   16.17 champbuilds 24만 줄 = 데이터+인덱스 59MB). Atlas 512MB 는 그 순간에도 세므로, 논리 합이
 //   이 값을 넘으면 **옛 세대를 먼저 지우고** 넣는다. 화면은 그 몇 분 동안 "표본을 모으는 중" 을 볼 수
@@ -1623,9 +1622,9 @@ const heavySkipLogged = new Set(); // 용량 때문에 빌드·상성을 건너�
 //   ★★★ 2026-09-11 13시에 실제로 잠겼다 (513/512MB). 두 가지를 그때 배웠다 —
 //     ① **Atlas 512MB 는 클러스터 전체다.** 같은 클러스터의 `dogu_tft`(TFT 사이트) DB 가 논리 ~52MB 를 같이 먹는다.
 //        `mongoose.connection.db.stats()` 는 이 DB 만 재므로 **모든 DB 를 더해서** 봐야 한다 (아래 `clusterLogicalMB`).
-//     ② 「옛 세대 먼저 삭제」로도 부족하다 — 새 세대 52MB 가 들어갈 자리 자체가 없으면 넣다가 막힌다.
-//        그래서 빠듯할 때는 **무거운 집계(빌드·상성)를 아예 건너뛴다.** 챔피언 통계·일별은 작아서 계속 돈다.
-//        마지막 한 번(패치 원본 지우기 직전)은 `STAT_HEAVY=1` 로 강제하면 옛 세대 먼저 삭제로 돈다.
+//     ② 「옛 세대 먼저 삭제」로도 부족할 수 있다 — 새 세대 52MB 가 들어갈 자리 자체가 없으면 넣다가 막힌다.
+//        그럴 땐 집계를 멈추는 게 아니라 **용량을 비우는 게 답이다** (사용자 지시: 통계는 항상 돈다).
+//        9/11 에는 TFT DB(`dogu_tft`) 53MB 를 통째로 비우고 수집을 멈춰 풀었다.
 const STAT_TIGHT_MB = Number(process.env.STAT_TIGHT_MB) || 450;
 let statTightMode = false;
 async function clusterLogicalMB() {
@@ -2247,7 +2246,7 @@ async function buildChampStats() {
         try {
             const logicalMB = await clusterLogicalMB();
             const tight = logicalMB > STAT_TIGHT_MB;
-            if (tight !== statTightMode) console.log(`[Stat] 클러스터 논리 합 ${logicalMB.toFixed(0)}MB — ${tight ? '빠듯하다: 빌드·상성 집계를 건너뛰고 세대 교체는 옛 세대 먼저 삭제' : '여유 있다: 평소대로'} (기준 ${STAT_TIGHT_MB}MB)`);
+            if (tight !== statTightMode) console.log(`[Stat] 클러스터 논리 합 ${logicalMB.toFixed(0)}MB — 세대 교체를 ${tight ? '「옛 세대 먼저 삭제」로 바꾼다' : '평소대로 되돌린다'} (기준 ${STAT_TIGHT_MB}MB)`);
             statTightMode = tight;
         } catch (e) {
             console.warn('[Stat] db.stats 실패, 세대 교체는 평소대로:', e.message);
@@ -2328,13 +2327,8 @@ async function buildChampStats() {
         for (const s of scopes) {
             total += await buildOneScope(s.key, s.cond);
             // ★ 룬 빌드·상성은 패치 scope 에만 만든다. 하루치는 거의 전부 1판짜리다.
-            //   ★★ 용량이 빠듯하면 건너뛴다 (2026-09-11) — 새 세대가 들어갈 자리가 없어 넣다가 잠긴다.
-            //     `STAT_HEAVY=1` 이면 빠듯해도 돈다 (옛 세대 먼저 삭제). 패치 원본을 지우기 직전 마지막 집계용.
-            if (s.key.startsWith('p:') && statTightMode && process.env.STAT_HEAVY !== '1') {
-                if (!heavySkipLogged.has(s.key)) { heavySkipLogged.add(s.key); console.log(`[Stat] 용량이 빠듯해 ${s.key} 의 빌드·상성 집계를 건너뛴다 (있던 줄은 그대로)`); }
-                continue;
-            }
-            heavySkipLogged.delete(s.key);
+            //   ★ 2026-09-11 낮에 「용량이 빠듯하면 건너뛰기」를 넣었다가 **같은 날 사용자 지시로 뺐다** — 통계는 항상 돈다.
+            //     빠듯할 때는 세대 교체 순서만 바뀐다 (swapOldFirstIfTight). 용량은 지우는 쪽(TFT DB 정리·패치 원본 삭제)으로 푼다.
             if (s.key.startsWith('p:')) {
                 builds += await buildOneBuildScope(s.key, s.cond);
                 matchups += await buildOneMatchupScope(s.key, s.cond);
