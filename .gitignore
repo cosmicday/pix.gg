@@ -14,3 +14,6 @@ database.sqlite
 
 # 수집 대기열 스냅샷 (TTL 로 사라지기 전에 떠 둔 목록, 1MB+)
 pending_queue_backup.json
+
+# 패치 마무리 자동 절차의 상태 파일 (finalize_patch.js)
+finalize_*.state.json
