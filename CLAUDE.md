@@ -91,6 +91,22 @@ node PID 는 재시작마다 바뀐다. 그때까지 **절대 하지 말 것:**
 끝났는지는 `C:\Users\admin\backfill.log` 에 `[Backfill] 끝` 과 `[Runner] … 종료 코드 0` 이 있는지로 본다. **끝난 뒤엔 이 절을 지울 것.**
 멈춘 첫 실행의 로그는 같은 파일 앞부분에 있다 (이름 바꾸기가 파일 잠금으로 실패했다).
 
+## ★★★★ 2026-09-11 13시 — 클러스터가 잠겼다 (513/512). **Atlas 512MB 는 TFT 사이트와 나눠 쓴다**
+
+- **★★★ 같은 Atlas M0 클러스터에 `dogu_tft`(TFT 사이트, `desktop/dogu_tft`, Railway `dogu_tft`) DB 가 있다.** 이 DB 가 논리 **53MB** 였다
+  (`matchcaches` 2,300판 × 22KB = 48MB — 5분마다 랭커 경기를 긁는 `crawlRankedMatches` 가 **TTL 인덱스 없이** 8/13 부터 쌓은 것.
+  스키마의 `expires: '30d'` 는 선언뿐이었다 — pixlol 8/16 함정과 같다). **용량을 잴 땐 `mongoose.connection.db.stats()`(이 DB 만)가 아니라
+  모든 DB 를 더해야 한다** — `clusterLogicalMB()`. 9/10~11 의 내 용량 계산은 전부 이 53MB 만큼 틀려 있었다
+- **잠긴 경위**: 12시 집계가 champbuilds 새 세대(52MB)를 다 넣고 **딱지(genB) 갱신에서** 용량에 막혀 두 벌(104MB)이 남았다 → 513/512.
+  수집·백필·순회의 쓰기가 전부 실패(재시도 구조라 데이터 손실은 없었다)
+- **푼 순서 (사용자 승인)**: ① 옛 세대 249,986줄 삭제 + 딱지를 새 세대로 (`unlock.js`, 파생이라 손실 0) → 481MB ② **TFT DB 세 컬렉션 전부 비움**
+  (matchcaches 2,300 · summonercaches 14,528 · rankingsnapshots 1 — 전부 다시 만들어지는 캐시) → 434MB ③ TFT 수집을 **기본 꺼짐**으로
+  (`TFT_CRAWL=1` 이어야 돈다) + TTL 인덱스를 부팅 때 실제로 만들게 (dogu_tft 커밋 `3f684ea`, master). TFT 키는 pixlol 과 **다른 키**라 라이엇 예산은 무관
+- **★★ 내가 잘못한 것**: 잠금을 풀려고 「용량이 빠듯하면 빌드·상성 집계를 건너뛰기」를 **묻지 않고 배포했다.** 사용자 지시로 같은 날 뺐다
+  (`574341f`). **통계는 항상 돈다. 용량은 지우는 쪽으로 푼다.** 빠듯할 때 남는 건 세대 교체 순서(옛 세대 먼저)뿐이다
+- **잠겼을 때 푸는 법 (다음에도)**: 지우기는 잠겨도 된다. champbuilds/champmatchups 가 두 벌이면 딱지가 안 가리키는 세대를 지운다
+  (`db.champbuilds.aggregate([{$group:{_id:{s:'$scope',g:'$g'},n:{$sum:1}}}])` 로 세대를 본다). 그다음 TTL 이 없는 캐시부터
+
 ## ★★★ 2026-09-11 오전 (Fable) — 집계가 하루 동안 통째로 실패하고 있었다 (커밋 `2ccb52e`)
 
 - **증상**: 9/10 14시부터 매시간 `[Stat] 집계 실패: Exceeded memory limit for $group, but didn't allow external sort`.
