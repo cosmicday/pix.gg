@@ -2141,6 +2141,14 @@ async function buildOneBuildScope(scopeKey, matchCond, opts = {}) {
 //   5판 이상은 7,558개다. 1판짜리 칸이 컬렉션을 뒤덮는 걸 막는 장치이고,
 //   원본(matchstats)이 살아 있는 동안은 이 값을 바꿔 다시 세울 수 있다.
 const MATCHUP_MIN = 5;
+// ★★★ 상성 집계는 **챔피언을 이 수만큼의 묶음으로 나눠 여러 번** 돈다 (2026-09-11).
+//   `$group` 키가 (라인 × 챔피언 × 상대 × 상대 라인 × 관계) 라 그룹이 수십만 개고, 한 패치가 5만 판을 넘자
+//   **$group 의 100MB 메모리 한도**에 걸렸다. `allowDiskUse(true)` 를 달아 뒀지만 **M0 는 그 옵션을
+//   조용히 무시한다** (실측 2026-09-11: 옵션을 줘도 같은 오류). 9/10 14시부터 매시간 집계가 통째로 실패해
+//   일별 줄과 빌드가 하루 동안 안 갱신됐다. 묶음마다 메모리가 1/N 이라 넘치지 않는다 — 실측 4묶음 12초씩.
+//   챔피언(`c % N`)으로 가르므로 묶음끼리 겹치는 그룹이 없어 그냥 이어 붙이면 된다.
+//   ★ 또 넘치면 이 값을 올리면 된다 (환경변수 `STAT_CHUNKS`).
+const STAT_CHUNKS = Math.max(1, Number(process.env.STAT_CHUNKS) || 4);
 
 // 라인 상성 집계. **패치 scope 에만 부른다** (하루치는 칸마다 한두 판이라 뜻이 없다)
 async function buildOneMatchupScope(scopeKey, matchCond) {
@@ -2150,28 +2158,33 @@ async function buildOneMatchupScope(scopeKey, matchCond) {
     // ★★ 한 판의 나 x 나머지 9명 (2026-08-26 밤). 예전엔 같은 라인 둘만 짝지었는데($group by {m, pos} → $size 2),
     //   lolalytics 처럼 적 5라인·아군 4라인을 다 보려면 9명 전부가 필요하다.
     //   ★ 라인 판정 실패(-1)한 사람은 짝을 지을 수 없어 뺀다 — 실측 197,370명 중 7명이라 손실이 없다.
-    const rows = await MatchStat.aggregate([
-        { $match: matchCond },
-        { $project: { p: 1 } },
-        { $project: { rows: { $map: { input: { $range: [0, 10] }, as: 'i', in: {
-            c: P('$$i', 0), pos: P('$$i', 1), w: P('$$i', 2),
-            o: { $map: {
-                input: { $filter: { input: { $range: [0, 10] }, as: 'j', cond: { $ne: ['$$j', '$$i'] } } },
-                as: 'j',
-                in: { f: P('$$j', 0), fpos: P('$$j', 1), rel: { $cond: [{ $eq: [P('$$j', 3), P('$$i', 3)] }, 1, 0] } }
-            } }
-        } } } } },
-        { $unwind: '$rows' }, { $unwind: '$rows.o' },
-        { $match: { 'rows.pos': { $gte: 0 }, 'rows.o.fpos': { $gte: 0 } } },
-        {
-            $group: {
-                _id: { pos: '$rows.pos', c: '$rows.c', f: '$rows.o.f', fpos: '$rows.o.fpos', rel: '$rows.o.rel' },
-                games: { $sum: 1 },
-                wins: { $sum: '$rows.w' }
-            }
-        },
-        { $match: { games: { $gte: MATCHUP_MIN } } }
-    ]).allowDiskUse(true);
+    const rows = [];
+    for (let chunk = 0; chunk < STAT_CHUNKS; chunk++) {
+        const part = await MatchStat.aggregate([
+            { $match: matchCond },
+            { $project: { p: 1 } },
+            { $project: { rows: { $map: { input: { $range: [0, 10] }, as: 'i', in: {
+                c: P('$$i', 0), pos: P('$$i', 1), w: P('$$i', 2),
+                o: { $map: {
+                    input: { $filter: { input: { $range: [0, 10] }, as: 'j', cond: { $ne: ['$$j', '$$i'] } } },
+                    as: 'j',
+                    in: { f: P('$$j', 0), fpos: P('$$j', 1), rel: { $cond: [{ $eq: [P('$$j', 3), P('$$i', 3)] }, 1, 0] } }
+                } }
+            } } } } },
+            { $unwind: '$rows' }, { $unwind: '$rows.o' },
+            // ★ 이 묶음의 챔피언만 (위 STAT_CHUNKS 주석)
+            { $match: { 'rows.pos': { $gte: 0 }, 'rows.o.fpos': { $gte: 0 }, $expr: { $eq: [{ $mod: ['$rows.c', STAT_CHUNKS] }, chunk] } } },
+            {
+                $group: {
+                    _id: { pos: '$rows.pos', c: '$rows.c', f: '$rows.o.f', fpos: '$rows.o.fpos', rel: '$rows.o.rel' },
+                    games: { $sum: 1 },
+                    wins: { $sum: '$rows.w' }
+                }
+            },
+            { $match: { games: { $gte: MATCHUP_MIN } } }
+        ]).allowDiskUse(true);
+        rows.push(...part);
+    }
 
     const docs = rows
         .filter(r => r._id.c > 0 && r._id.f > 0)
