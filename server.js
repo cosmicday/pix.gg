@@ -56,6 +56,7 @@ const matchSeenSchema = new mongoose.Schema({
     matchId: { type: String, required: true, unique: true },
     day: { type: String },                      // 이 경기가 속한 날짜 (KST "2026-08-14")
     cnt: { type: Number, default: 1 },          // 명단 유저 몇 명에게서 보였나
+    cnt2: { type: Number },                     // ★ 다시 훑기(RESCAN_DAY)가 새로 세는 칸. 끝나면 cnt 로 옮기고 지운다
     done: { type: Boolean, default: false },    // detail 처리를 끝냈나
     // ★ 5일이다 (2026-09-10, 3 → 5). 9/9 쓰기 잠금으로 수집이 이틀 밀렸을 때 3일짜리 목록이
     //   먼저 사라질 뻔했다. 1.8MB 짜리 컬렉션이라 늘려도 용량 부담이 없다.
@@ -87,6 +88,7 @@ const rankSnapshotSchema = new mongoose.Schema({
     //   수집이 전날 잔량을 따라잡을 때 이 표시가 있는 날만 손댄다 — 순회가 덜 된 날은
     //   등장 횟수(cnt)가 하한조차 못 되어 어떤 판이 5명 이상인지 모른다.
     scanDone: { type: Boolean, default: false },
+    rescanDone: { type: [String], default: undefined },   // ★ 다시 훑기(RESCAN_DAY) 진행 표시 — 끊겨도 이어 돈다
     // ★ 7일이다 (2026-09-10, 5 → 7). matchseens(5일) 이 남아 있는 동안은 그 날짜 명단도 있어야
     //   수집이 k 를 제대로 세고 scanDone 을 볼 수 있다. 하루 0.9MB 라 7일이면 6MB 남짓.
     createdAt: { type: Date, expires: '7d', default: Date.now }
@@ -2627,6 +2629,105 @@ async function startJobs() {
         clearInterval(watchdog);
         console.log(`[Backfill] 끝 — 훑음 ${seen.toLocaleString()} · 채움 ${done.toLocaleString()} · 실패 ${fail} · 건너뜀 ${skip}`);
         if (done) console.log(`[Backfill] 구매 판당 ${(before / done).toFixed(1)} → ${(after / done).toFixed(1)}건`);
+        process.exit(0);
+    }
+
+    // ★★ `RESCAN_DAY=2026-09-08 node server.js` — 그 날짜의 전적 목록 훑기를 **처음부터 다시** 한다 (2026-09-11 사용자 결정).
+    //
+    //   ★ 왜: 9/9 쓰기 잠금 탓에 09-08 훑기가 13시에야 시작해 자정까지 명단의 ~90% 만 돌았다. 못 훑은 10% 가 낀 판은
+    //     「몇 번 보였나」(cnt) 가 덜 세어져서, 실제로는 마스터+ 5명인데 4명 이하로 세어진 판 약 600개(그날의 16%)가
+    //     대기열에 남았다. **누구를 못 훑었는지는 기록이 없다** (matchScanDay 가 다음 날 값으로 덮였다) — 그래서 전원이다.
+    //   ★ 라이엇 match-v5 목록은 날짜 범위(startTime/endTime)로 받으므로 지금 다시 받아도 그날과 같은 목록이 온다.
+    //   ★ 사람 목록은 **그 날짜의 스냅샷**(ranksnapshots.puuids)이다 — 수집이 k 를 셀 때 쓰는 바로 그 명단이라 기준이 같다.
+    //   ★ 새 셈은 `cnt2` 에 따로 쌓고, 끝났을 때 한 번에 `cnt` 로 옮긴다. 도중에 죽어도 평소 수집이 보는 `cnt` 는 안 다치고,
+    //     진행 표시(`rescanDone`)로 남은 사람부터 이어 돈다. 끝나면 평소 수집(창이 모든 날짜)이 5명 이상 판을 알아서 받는다.
+    //   ★ 호출 예산: 백필이 끝난 뒤에만 돌릴 것 — 간격 2.5초면 2분에 48회, 평소 수집 40회와 합쳐 100 안이다.
+    if (process.env.RESCAN_DAY) {
+        const day = process.env.RESCAN_DAY;
+        const GAP = Number(process.env.RESCAN_GAP) || 2500;
+        const snap = await RankSnapshot.findOne({ day }).lean();
+        if (!snap?.puuids?.length) { console.error(`[Rescan] ${day} 명단 스냅샷이 없다 — 할 수 없다`); process.exit(1); }
+        const doneSet = new Set(snap.rescanDone || []);
+        // ★ `RESCAN_LIMIT=3` 은 연습용 — 앞 N명만 보고 코드 3 으로 끝낸다 (cnt 로 옮기지 않는다). 본 실행이 이어받는다
+        const LIMIT = Number(process.env.RESCAN_LIMIT) || 0;
+        const targets = snap.puuids.filter(p => !doneSet.has(p)).slice(0, LIMIT || undefined);
+        const from = Math.floor(Date.parse(`${day}T00:00:00+09:00`) / 1000);
+        const to = from + 86400;
+        console.log(`[Rescan] ${day} 명단 ${snap.puuids.length.toLocaleString()}명 중 남은 ${targets.length.toLocaleString()}명 · 간격 ${GAP}ms → 예상 ${(targets.length * GAP / 3600000).toFixed(1)}시간`);
+        let seen = 0, sightings = 0, fail = 0;
+        const t0 = Date.now();
+        // 감시견 — 백필과 같다 (10분 무진행이면 코드 3, 실행기가 다시 띄운다)
+        let wdSeen = -1, wdMoved = Date.now();
+        const watchdog = setInterval(() => {
+            if (seen !== wdSeen) { wdSeen = seen; wdMoved = Date.now(); return; }
+            if (Date.now() - wdMoved > 10 * 60 * 1000) {
+                console.error(`[Rescan] 10분째 진행이 없다 (${seen}/${targets.length}) — 멈춘 것으로 보고 종료한다. 다시 띄우면 이어진다`);
+                process.exit(3);
+            }
+        }, 60 * 1000);
+        let batch = [];
+        const flush = async () => {
+            if (!batch.length) return;
+            await RankSnapshot.updateOne({ day }, { $addToSet: { rescanDone: { $each: batch } } });
+            batch = [];
+        };
+        for (const puuid of targets) {
+            let ids = null, err = null;
+            for (let tryN = 0; tryN < 5 && ids === null; tryN++) {
+                try {
+                    const res = await riotApi.get(
+                        `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids` +
+                        `?queue=${STAT_QUEUE}&startTime=${from}&endTime=${to}&start=0&count=100`
+                    );
+                    ids = res.data || [];
+                } catch (e) {
+                    err = e;
+                    const st = e.response?.status;
+                    if (st !== 429 && st !== 503 && st !== 500) break;
+                    const wait = 10000 * (tryN + 1);
+                    console.warn(`[Rescan] ${st} — ${wait / 1000}초 쉬고 다시`);
+                    await sleep(wait);
+                }
+            }
+            if (ids === null) {
+                fail++;
+                if (fail <= 5) console.warn(`[Rescan] ${puuid.slice(0, 8)} 포기 ${err?.response?.status || err?.message}`);
+                // 포기한 사람은 진행 표시에 안 넣는다 — 다시 띄우면 그 사람부터 다시 본다
+            } else {
+                if (ids.length) {
+                    await MatchSeen.bulkWrite(ids.map(id => ({
+                        updateOne: {
+                            filter: { matchId: id },
+                            update: { $inc: { cnt2: 1 }, $setOnInsert: { day, cnt: 0, createdAt: new Date() } },
+                            upsert: true
+                        }
+                    })), { ordered: false });
+                    sightings += ids.length;
+                }
+                batch.push(puuid);
+            }
+            seen++;
+            if (batch.length >= 10) await flush();   // 자주 적어 둔다 — 죽었다 다시 뜰 때 두 번 세는 사람이 열 명을 안 넘게
+            if (seen % 500 === 0) {
+                const el = (Date.now() - t0) / 1000;
+                console.log(`[Rescan] ${seen.toLocaleString()}/${targets.length.toLocaleString()} · 관측 ${sightings.toLocaleString()}건 · 실패 ${fail} · 남은 시간 약 ${((targets.length - seen) * (el / seen) / 3600).toFixed(1)}시간`);
+            }
+            await sleep(GAP);
+        }
+        await flush();
+        clearInterval(watchdog);
+        if (LIMIT) {
+            console.log(`[Rescan] 연습 끝 — ${seen}명 · 관측 ${sightings}건 · 실패 ${fail}. cnt 는 안 옮겼다 (본 실행이 이어받는다)`);
+            process.exit(3);
+        }
+        if (fail) {
+            console.error(`[Rescan] ${fail}명을 못 받았다 — 다시 띄우면 그 사람들만 다시 본다. cnt 는 아직 안 옮겼다`);
+            process.exit(3);
+        }
+        // ★ 마무리 — 새 셈(cnt2)을 cnt 로 옮긴다. 이번에 아무에게서도 안 보인 판(cnt2 없음)은 손대지 않는다.
+        const moved = await MatchSeen.updateMany({ day, cnt2: { $exists: true } }, [{ $set: { cnt: '$cnt2' } }, { $unset: 'cnt2' }]);
+        const left = await MatchSeen.countDocuments({ day, done: { $ne: true }, cnt: { $gte: STAT_MIN_K } });
+        console.log(`[Rescan] 끝 — ${seen.toLocaleString()}명 · 관측 ${sightings.toLocaleString()}건 · cnt 갱신 ${moved.modifiedCount.toLocaleString()}판 · 5명 이상 미처리 ${left.toLocaleString()}판 (평소 수집이 이어받는다)`);
         process.exit(0);
     }
     await loadResolvedNames();
