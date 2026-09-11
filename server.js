@@ -186,6 +186,9 @@ const matchStatSchema = new mongoose.Schema({
     //         구매 건수의 3분의 1을 차지한다.
     sk: { type: [String] },
     it: { type: [Number] },
+    // ★ 타임라인 규칙 판 (TL_VER). **스키마에 있어야 수집이 찍는 값이 저장된다** — 없으면 mongoose strict 가 조용히 버린다
+    //   (2026-09-11 실측: 수집이 `slim.tlv` 를 넣는데도 16.18 판 2,476개 전부 딱지가 없었다. 백필은 raw 컬렉션으로 써서 몰랐다)
+    tlv: { type: Number },
     // ★ 30일이다 (2026-08-15에 룬·주문을 넣으면서 45 → 30). 한 건이 2.4KB 라
     //   하루 3,000판이면 7MB/일 → 정착점 213MB. 45일로 두면 320MB 가 되어
     //   matchcaches 와 합쳐 512MB 의 85%를 먹는다.
