@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         goLobby();
     } else if (pathParts[1] === 'masters') {
         document.getElementById('masters-container').style.display = "block";
-        document.getElementById('masters-container').innerHTML = "<div style='text-align:center; padding:100px 0; min-height:100vh; color:var(--text-muted);'>장인 데이터를 불러오는 중입니다...</div>";
+        document.getElementById('masters-container').innerHTML = window.DoguUI ? DoguUI.skelRowsHtml(12) : "<div style='text-align:center; padding:100px 0; color:var(--text-muted);'>장인 데이터를 불러오는 중입니다...</div>";
         const requestedChamp = pathParts[2] ? decodeURIComponent(pathParts[2]) : null;
         showMasters(requestedChamp);
         setActiveNav('nav-masters');
@@ -804,8 +804,9 @@ async function showPatchNotes(kind) {
             ? 'https://x.com/RiotPhroxzon'
             : 'https://www.leagueoflegends.com/ko-kr/news/tags/patch-notes/';
         const label = cur === 'pbe' ? 'X 프로필에서 보기 →' : '공식 홈페이지에서 보기 →';
-        list.innerHTML = `<div class="patch-page-empty">패치노트를 불러오지 못했습니다.<br>
-            <a class="patch-note-x-link" href="${href}" target="_blank" rel="noopener">${label}</a></div>`;
+        list.innerHTML = emptyBoxHtml('패치노트를 불러오지 못했습니다', '잠시 뒤 다시 시도하거나 원문 페이지에서 볼 수 있습니다.', 'patch-page-retry') +
+            `<p class="patch-page-empty-link"><a class="patch-note-x-link" href="${href}" target="_blank" rel="noopener">${label}</a></p>`;
+        bindRetry('patch-page-retry', () => showPatchNotes(cur));
         return;
     }
     list.innerHTML = items.map(n => cur === 'pbe' ? pbeNoteRowHtml(n) : patchNoteRowHtml(n)).join('');
@@ -821,7 +822,7 @@ function patchNoteRowHtml(n) {
     return `<a class="patch-page-item" href="${escapeHtml(n.url)}" target="_blank" rel="noopener">
         <span class="patch-page-thumb">${thumb}</span>
         <span class="patch-page-info">
-            <b class="patch-page-title">${escapeHtml(n.title)}</b>
+            <b class="patch-page-title">${escapeHtml(String(n.title || '').replace(/^리그 오브 레전드\s*/, ''))}</b>   <!-- m-5: 홈 위젯과 같은 「26.x 패치 노트」 표기 -->
             ${desc}
             <span class="patch-page-date">${patchDateText(n.date)}</span>
         </span>${ver}</a>`;
@@ -3481,7 +3482,8 @@ async function showCodex(target) {
     try {
         D = await loadCodexData();
     } catch (e) {
-        box.innerHTML = `<div class="codex-empty">도감 데이터를 불러오지 못했습니다.</div>`;
+        box.innerHTML = emptyBoxHtml('도감 데이터를 불러오지 못했습니다', '네트워크를 확인한 뒤 다시 시도해 주세요.', 'codex-retry');
+        bindRetry('codex-retry', () => showCodex(target));
         return;
     }
 
@@ -5345,8 +5347,9 @@ async function showPatchImpact() {
     // ★ 그리는 사이에 다른 화면으로 옮겼으면 버린다 (느린 응답이 새 화면을 덮지 않게)
     if (window.location.pathname !== '/stats/patch') return;
     if (!pc || !Object.keys(pc).length) {
-        box.innerHTML = `<div class="pi-head"><h1 class="ranking-title">패치 영향</h1></div>
-            <div class="stats-empty">바뀐 챔피언 목록을 불러오지 못했습니다.</div>`;
+        box.innerHTML = `<div class="pi-head"><h1 class="ranking-title">패치 영향</h1></div>` +
+            emptyBoxHtml('바뀐 챔피언 목록을 불러오지 못했습니다', '', 'pi-retry');
+        bindRetry('pi-retry', showPatchImpact);
         return;
     }
     const versions = Object.keys(pc);   // build_patch_changes.js 가 내림차순으로 적는다
@@ -5419,7 +5422,7 @@ async function loadPatchImpactDetail(pc) {
     // 영문 키 → 숫자 id (championIdMap 은 id → 영문 키라 뒤집어 찾는다)
     const champId = Number(Object.keys(championIdMap).find(k => championIdMap[k] === eng));
     if (!Number.isFinite(champId)) {
-        el.innerHTML = `<div class="stats-empty">챔피언 정보를 찾지 못했습니다.</div>`;
+        el.innerHTML = emptyBoxHtml('챔피언 정보를 찾지 못했습니다');
         return;
     }
 
@@ -5432,7 +5435,8 @@ async function loadPatchImpactDetail(pc) {
     const now = document.getElementById('pi-detail');
     if (!now) return;
     if (!d || !d.ready) {
-        now.innerHTML = `<div class="stats-empty">통계를 불러오지 못했습니다.</div>`;
+        now.innerHTML = emptyBoxHtml('통계를 불러오지 못했습니다', '', 'pi-detail-retry');
+        bindRetry('pi-detail-retry', () => loadPatchImpactDetail(pc));
         return;
     }
     now.innerHTML = piDetailHtml(d, pc, eng);
@@ -5587,8 +5591,17 @@ async function showDuoPage(tabKey) {
     } catch (e) { }
     if (!window.location.pathname.startsWith('/stats/duo')) return;   // 그리는 사이 다른 화면으로 갔으면 버린다
     if (!d || !d.ready) {
+        // ★ 빈 상태에서도 제목·탭 줄은 남기고 표 자리에만 빈 상자 (S-2, 2026-09-11 · DOGU_UI.md 15-2). 탭으로 다른 조합에 갈 수 있어야 한다
+        const emptyTabs = DUO_TABS.map(t =>
+            `<button class="duo-tab${t.key === duoTab ? ' active' : ''}" data-tab="${t.key}" type="button">${t.name}</button>`).join('');
         box.innerHTML = `<div class="pi-head"><h1 class="ranking-title">조합</h1></div>
-            <div class="stats-empty">아직 표본을 모으는 중입니다.</div>`;
+            <div class="duo-tabs">${emptyTabs}</div>` +
+            emptyBoxHtml('아직 표본을 모으는 중입니다', '마스터 이상 솔로랭크 경기가 쌓이면 채워집니다.', 'duo-retry');
+        box.querySelector('.duo-tabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.duo-tab[data-tab]');
+            if (btn && btn.dataset.tab !== duoTab) showDuoPage(btn.dataset.tab);
+        });
+        bindRetry('duo-retry', () => showDuoPage(duoTab));
         return;
     }
     window.statScope = d.scope;
@@ -5714,8 +5727,9 @@ async function showTrendPage(laneKey) {
     try { d = await (await fetch(`/api/lane-trend?pos=${pos}`)).json(); } catch (e) { }
     if (!window.location.pathname.startsWith('/stats/trend')) return;
     if (!d || !d.ready || !d.days?.length) {
-        box.innerHTML = `<div class="pi-head"><h1 class="ranking-title">픽률 추이</h1></div>
-            <div class="stats-empty">아직 일별 표본을 모으는 중입니다.</div>`;
+        box.innerHTML = `<div class="pi-head"><h1 class="ranking-title">픽률 추이</h1></div>` +
+            emptyBoxHtml('아직 일별 표본을 모으는 중입니다', '날짜별 집계가 쌓이면 채워집니다.', 'trend-retry');
+        bindRetry('trend-retry', () => showTrendPage(laneKey));
         return;
     }
 
@@ -5825,7 +5839,8 @@ async function showStats() {
         const res = await fetch(`/api/champion-stats${window.statScope ? `?scope=${encodeURIComponent(window.statScope)}` : ''}`);
         data = await res.json();
     } catch (e) {
-        box.innerHTML = `<div class="stats-empty">통계를 불러오지 못했습니다.</div>`;
+        box.innerHTML = `<div class="stats-header"><h1 class="ranking-title">챔피언 통계</h1></div>` + emptyBoxHtml('통계를 불러오지 못했습니다', '네트워크를 확인한 뒤 다시 시도해 주세요.', 'stats-retry');
+        bindRetry('stats-retry', showStats);
         return;
     }
 
@@ -5844,21 +5859,32 @@ async function showStats() {
                 a.t.forEach(t => { data.totals[ARCHIVE_KB[t[0]]] = t[1]; });
             }
         } catch (e) {
-            box.innerHTML = `<div class="stats-empty">이 패치의 통계를 불러오지 못했습니다.</div>`;
+            box.innerHTML = `<div class="stats-header"><h1 class="ranking-title">챔피언 통계</h1></div>` + emptyBoxHtml('이 패치의 통계를 불러오지 못했습니다', '', 'stats-retry');
+            bindRetry('stats-retry', showStats);
             return;
         }
     }
 
     if (!data.ready || !data.rows?.length) {
+        // ★ 빈 상태에서도 제목·패치 셀렉트·라인 줄은 남기고 **표 자리에만** 빈 상자 (S-2, 2026-09-11 · DOGU_UI.md 15-2).
+        //   예전엔 컨트롤까지 통째로 갈아끼워 다른 패치로 바꿀 길이 없었고, 문구가 상자 없이 배경 위에 떠 있었다
         box.innerHTML = `
             <div class="stats-header">
                 <h1 class="ranking-title">챔피언 통계</h1>
+                <p class="stats-sub">마스터 이상 솔로랭크</p>
             </div>
-            <div class="stats-empty">
-                <div style="font-size:15px; color:var(--text-bright); margin-bottom:10px;">아직 표본을 모으는 중입니다.</div>
-                마스터 이상 솔로랭크 경기를 모아 집계합니다.<br>
-                하루 정도 지나야 첫 통계가 나옵니다.
-            </div>`;
+            <div class="stats-controls">
+                <select class="stats-select" id="stats-scope">${scopeOptionsHtml(data.scopes, data.scope)}</select>
+            </div>
+            <div class="stats-filter-container">
+                <button class="stats-filter-btn all-btn active" data-lane="all" type="button" disabled>ALL</button>
+                ${STAT_POS.map(p => `<button class="stats-filter-btn" data-lane="${p.code}" title="${p.name}" type="button" disabled><img src="${STAT_LANE_ICON[p.key]}" alt="${p.name}"></button>`).join('')}
+            </div>` +
+            emptyBoxHtml('아직 표본을 모으는 중입니다', '마스터 이상 솔로랭크 경기를 모아 집계합니다. 하루 정도 지나야 첫 통계가 나옵니다.', 'stats-retry');
+        const sel = document.getElementById('stats-scope');
+        if (sel && sel.options.length) sel.addEventListener('change', (e) => { window.statScope = e.target.value; showStats(); });
+        else if (sel) sel.parentElement.style.display = 'none';
+        bindRetry('stats-retry', showStats);
         return;
     }
 
@@ -6181,7 +6207,7 @@ function cutoffChartHtml(rows, key, opts) {
         </div>`;
 
     if (rows === null) {
-        return `<div class="cutoff-card">${head}<div class="cutoff-empty">불러오는 중…</div></div>`;
+        return `<div class="cutoff-card">${head}${window.DoguUI ? DoguUI.skelRowsHtml(3) : '<div class="cutoff-empty">불러오는 중…</div>'}</div>`;
     }
     if (!pts.length) {
         return `<div class="cutoff-card">${head}
@@ -6431,7 +6457,8 @@ async function showRanking(targetPage = 1) {
             const retryAfter = res.headers.get('Retry-After');
             rateLimitUnlockTime = Date.now() + (retryAfter ? parseInt(retryAfter) * 1000 : 5000);
             showErrorToast("조회 한도를 초과했습니다. 잠시 후 다시 시도해주세요.");
-            listDiv.innerHTML = "<div style='text-align:center; padding:50px; color:#f87171;'>조회 한도를 초과했습니다. 잠시 후 다시 시도해주세요.</div>";
+            listDiv.innerHTML = emptyBoxHtml('조회 한도를 초과했습니다', '잠시 후 다시 시도해 주세요.', 'rank-retry');
+            bindRetry('rank-retry', () => showRanking(targetPage));
             return;
         }
 
@@ -7083,10 +7110,11 @@ async function loadPatchNotes() {
     } catch (e) { /* 아래에서 폴백 처리 */ }
 
     if (data && Array.isArray(data.official) && data.official.length) {
-        box.innerHTML = data.official.slice(0, 5).map(n => row(n.url, n.title, n.date)).join('');
+        box.innerHTML = data.official.slice(0, 5).map(n => row(n.url, String(n.title || '').replace(/^리그 오브 레전드\s*/, ''), n.date))   /* m-5: 「리그 오브 레전드 26.18 패치 노트」 → 「26.18 패치 노트」 로 표기 통일 */.join('');
     } else {
-        box.innerHTML = `<div class="patch-note-empty">패치노트를 불러오지 못했습니다.<br>
-            <a class="patch-note-x-link" href="https://www.leagueoflegends.com/ko-kr/news/tags/patch-notes/" target="_blank" rel="noopener">공식 홈페이지에서 보기 →</a></div>`;
+        box.innerHTML = emptyBoxHtml('패치노트를 불러오지 못했습니다', '', 'home-patch-retry') +
+            `<p class="patch-page-empty-link"><a class="patch-note-x-link" href="https://www.leagueoflegends.com/ko-kr/news/tags/patch-notes/" target="_blank" rel="noopener">공식 홈페이지에서 보기 →</a></p>`;
+        bindRetry('home-patch-retry', loadPatchNotes);
     }
 
     // ★ 오른쪽 PBE 칸 (2026-08-19 2차). 서버가 nitter RSS 에서 `Patch NN.NN [Full] Preview`
@@ -7109,7 +7137,8 @@ window.loadMythicShop = async function () {
         data = await res.json();
         if (!data.ok) throw new Error('not ok');
     } catch (e) {
-        box.innerHTML = `<div class="mythic-empty">신화 상점 정보를 불러오지 못했습니다.</div>`;
+        box.innerHTML = emptyBoxHtml('신화 상점 정보를 불러오지 못했습니다', '', 'mythic-home-retry');
+        bindRetry('mythic-home-retry', loadMythicShop);
         return;
     }
 
@@ -7118,7 +7147,7 @@ window.loadMythicShop = async function () {
 
     // ★ 아직 오늘 수집 전. 어제 것을 대신 보여주면 거짓말이 되므로 비워 두고 말한다.
     if (!data.items || !data.items.length) {
-        box.innerHTML = `<div class="mythic-empty">${mythicCollectingMsg('daily')}</div>`;
+        box.innerHTML = emptyBoxHtml(mythicCollectingMsg('daily'), '오늘 수집이 끝나면 채워집니다.');
         return;
     }
 
@@ -7493,7 +7522,8 @@ async function renderMythicSection(key) {
     try {
         data = isDaily ? await fetchMythicToday() : await fetchMythicSection(key);
     } catch (e) {
-        body.innerHTML = `<div class="mythic-empty">신화 상점 정보를 불러오지 못했습니다.</div>`;
+        body.innerHTML = emptyBoxHtml('신화 상점 정보를 불러오지 못했습니다', '', 'mythic-retry');
+        bindRetry('mythic-retry', () => renderMythicSection(key));
         return;
     }
 
@@ -7549,7 +7579,7 @@ async function renderMythicSection(key) {
     //   CSS 만 남아 있고 안 붙인다.
     const cards = items.length
         ? `<div class="mshop-grid">${items.map(mythicCardHtml).join('')}</div>`
-        : `<div class="mythic-empty">${mythicCollectingMsg(key)}</div>`;
+        : emptyBoxHtml(mythicCollectingMsg(key), '수집이 끝나면 채워집니다.');
 
     // ★★ 제목 옆은 **다음 초기화까지 남은 시간**, 오른쪽 끝은 **판매 기간**이다 (2026-08-17).
     //   예전엔 "8월 17일 기준 · 오늘" 과 "수집 2026. 8. 17. 오후 2:23:11" 이 있었는데,
@@ -10427,6 +10457,18 @@ window.copyMatchLink = async function (e, btn, matchId) {
 // "…불러오는 중" 한 줄 대신 올 내용의 모양을 그린다. 모양 CSS 는 style.css 의 .skel* 절.
 // 함수 선언이라 파일 끝에 있어도 호이스팅으로 어디서든 불린다.
 // ============================================================
+
+// ★ 빈 상태·오류 상자 — 공통 DoguUI.emptyHtml (DOGU_UI.md 15-2, 2026-09-11 C편).
+//   retryId 를 주면 그 id 의 「다시 시도」 버튼을 그리고, 클릭은 bindRetry 로 부르는 쪽이 건다.
+//   예전엔 .stats-empty(맨몸 글자) · .mythic-empty(점선 상자) · .patch-page-empty(맨몸+링크) 세 문법이었다 (M-8)
+function emptyBoxHtml(title, body, retryId) {
+    if (!window.DoguUI) return `<div class="stats-empty">${escapeHtml(title)}${body ? '<br>' + escapeHtml(body) : ''}</div>`;
+    return DoguUI.emptyHtml({ icon: '📭', title, body: body || '', retry: retryId ? { text: '다시 시도', id: retryId } : null });
+}
+function bindRetry(id, fn) {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener('click', () => { b.disabled = true; fn(); }, { once: true });
+}
 
 // 표 뼈대 — 랭킹·통계처럼 [아이콘·이름 ……… 숫자 셋] 줄이 이어지는 자리
 function skelTableHtml(rows = 12, rowH = 36) {

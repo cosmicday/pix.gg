@@ -210,7 +210,7 @@ main {
 .home-tier-colnote {
     margin-left: auto;
     font-size: 12px;
-    color: var(--text-dim);
+    color: var(--text-faint);
 }
 
 /* ★★ 라벨과 숫자를 같은 두 칸 격자로 묶는다 (2026-09-08).
@@ -222,8 +222,8 @@ main {
 .home-tier-colnote,
 .home-tier-num {
     display: grid;
-    grid-template-columns: 33px 33px;
-    column-gap: 3px;
+    grid-template-columns: 36px 36px;   /* 33/3 → 36/8 (2026-09-11 S-4): 두 자리 픽률이 칸을 꽉 채워 승률과 3px 만 남아 한 숫자로 읽혔다 */
+    column-gap: 8px;
     text-align: right;
     font-variant-numeric: tabular-nums;
 }
@@ -373,8 +373,8 @@ main {
         align-self: start;
     }
 
-    .home-tier-num span:first-child::before { content: '승률 '; color: var(--text-dim); }
-    .home-tier-num span:last-child::before { content: '픽률 '; color: var(--text-dim); }
+    .home-tier-num span:first-child::before { content: '승률 '; color: var(--text-faint); }
+    .home-tier-num span:last-child::before { content: '픽률 '; color: var(--text-faint); }
 }
 
 /* ★★ 좁은 폰(≤355px)에서는 승률·픽률도 위아래로 (2026-09-09 사용자가 미리 허락한 갈래).
@@ -433,21 +433,7 @@ main {
     margin-left: auto;   /* 신화상점 탭의 판매 기간처럼 오른쪽 끝에 붙인다 (2026-08-18) */
 }
 
-/* ★ 아직 오늘 수집 전이거나 불러오기 실패했을 때. 수집이 반자동이라 빈 날이 생기는데
-   **어제 것을 대신 보여주면 안 되므로** 자리를 비워 두고 이유를 적는다.
-   높이를 카드와 비슷하게 잡아 목록이 있을 때와 없을 때 아래가 안 튀게 한다. */
-.mythic-empty {
-    width: 100%;
-    min-height: 96px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-faint);
-    font-size: 13px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px dashed rgba(255, 255, 255, 0.1);
-    border-radius: var(--dogu-r-card);
-}
+/* 신화상점 빈 상태(.mythic-empty)는 공통 DoguUI.emptyHtml(.dogu-empty) 로 갈아탔다 (2026-09-11 M-8, DOGU_UI.md 15-2). 수집 전인 날은 어제 것을 대신 보여주지 않고 이유를 적는 규칙은 그대로 (app.js mythicCollectingMsg) */
 
 .mythic-item-card {
     flex: 1;
@@ -462,10 +448,12 @@ main {
 /* ★ hover 테두리는 보라(--accent) 다 (2026-09-08). 예전엔 #fff 라 카드만 사이트 색과 따로 놀았다 —
    기본 테두리가 rgba(167,139,250,0.15) = 같은 보라의 15% 라, hover 는 그 보라를 100% 로 켜는 셈이다.
    ★ /mythic 탭 카드도 이 규칙을 그대로 쓴다 (.mshop-grid 가 .mythic-item-card 를 물려받는다) */
-.mythic-item-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.25);
+@media (hover: hover) {
+    .mythic-item-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.25);
+    }
 }
 
 .mythic-item-img-box {
@@ -556,8 +544,10 @@ main {
     white-space: nowrap;
 }
 
-.patch-note-more:hover {
-    color: var(--accent);
+@media (hover: hover) {
+    .patch-note-more:hover {
+        color: var(--accent);
+    }
 }
 
 .patch-note-list {
@@ -576,8 +566,10 @@ main {
     transition: background var(--dogu-ease);
 }
 
-.patch-note-item:hover {
-    background: rgba(167, 139, 250, 0.08);
+@media (hover: hover) {
+    .patch-note-item:hover {
+        background: rgba(167, 139, 250, 0.08);
+    }
 }
 
 .patch-note-title {
@@ -589,8 +581,10 @@ main {
     white-space: nowrap;
 }
 
-.patch-note-item:hover .patch-note-title {
-    color: #fff;
+@media (hover: hover) {
+    .patch-note-item:hover .patch-note-title {
+        color: #fff;
+    }
 }
 
 .patch-note-date {
@@ -619,8 +613,10 @@ main {
     text-decoration: none;
 }
 
-.patch-note-x-link:hover {
-    text-decoration: underline;
+@media (hover: hover) {
+    .patch-note-x-link:hover {
+        text-decoration: underline;
+    }
 }
 
 /* =========================================
@@ -762,8 +758,10 @@ main {
     transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease);
 }
 
-.filter-btn:hover {
-    color: var(--text-bright);
+@media (hover: hover) {
+    .filter-btn:hover {
+        color: var(--text-bright);
+    }
 }
 
 .filter-btn.active {
@@ -813,13 +811,15 @@ main {
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
-    transition: all var(--dogu-ease);
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease), box-shadow var(--dogu-ease);
 }
 
-.profile-fav-btn:hover {
-    background: rgba(107, 70, 193, 0.3);
-    border-color: var(--accent);
-    color: #fff;
+@media (hover: hover) {
+    .profile-fav-btn:hover {
+        background: rgba(107, 70, 193, 0.3);
+        border-color: var(--accent);
+        color: #fff;
+    }
 }
 
 @media (max-width: 768px) {
@@ -849,12 +849,14 @@ main {
     cursor: pointer;
     font-size: 12px;
     font-weight: 700;
-    transition: all var(--dogu-ease);
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease), box-shadow var(--dogu-ease);
     white-space: nowrap;
 }
 
-.champ-filter-btn:hover {
-    background: rgba(107, 70, 193, 0.35);
+@media (hover: hover) {
+    .champ-filter-btn:hover {
+        background: rgba(107, 70, 193, 0.35);
+    }
 }
 
 .champ-filter-btn.selected {
@@ -877,8 +879,10 @@ main {
     color: rgba(255, 255, 255, 0.7);
 }
 
-.cf-clear:hover {
-    color: #fff;
+@media (hover: hover) {
+    .cf-clear:hover {
+        color: #fff;
+    }
 }
 
 /* 패널 */
@@ -971,8 +975,10 @@ main {
     transition: background var(--dogu-ease);
 }
 
-.cf-item:hover {
-    background: rgba(255, 255, 255, 0.07);
+@media (hover: hover) {
+    .cf-item:hover {
+        background: rgba(255, 255, 255, 0.07);
+    }
 }
 
 .cf-item.active {
@@ -1241,12 +1247,14 @@ main {
     cursor: pointer;
     overflow: hidden;
     opacity: 0.45;
-    transition: all var(--dogu-ease);
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease), box-shadow var(--dogu-ease);
 }
 
-.tl-champ-toggle:hover {
-    opacity: 0.8;
-    transform: translateY(-2px);
+@media (hover: hover) {
+    .tl-champ-toggle:hover {
+        opacity: 0.8;
+        transform: translateY(-2px);
+    }
 }
 
 .tl-champ-toggle img {
@@ -1295,7 +1303,9 @@ main {
     font-weight: 700;
     transition: filter var(--dogu-ease);
 }
-.refresh-btn:hover { filter: brightness(1.15); }
+@media (hover: hover) {
+    .refresh-btn:hover { filter: brightness(1.15); }
+}
 
 .profile-action-btn {
     height: var(--dogu-ctl-lg);   /* 패딩 높이 → 40 고정 (2026-09-10 통일 3편: CTA) */
@@ -1329,8 +1339,10 @@ main {
     box-shadow: 0 0 10px rgba(107, 70, 193, 0.5);
 }
 
-.live-btn.in-game:hover {
-    background: #7c53d6;
+@media (hover: hover) {
+    .live-btn.in-game:hover {
+        background: #7c53d6;
+    }
 }
 
 /* 진행 중인 게임 패널 */
@@ -1364,8 +1376,10 @@ main {
     transition: background var(--dogu-ease);
 }
 
-.live-player:hover {
-    background: rgba(255, 255, 255, 0.07);
+@media (hover: hover) {
+    .live-player:hover {
+        background: rgba(255, 255, 255, 0.07);
+    }
 }
 
 .live-player.blue {
@@ -1442,8 +1456,10 @@ main {
     cursor: default;
 }
 
-.live-player.anon:hover {
-    background: transparent;
+@media (hover: hover) {
+    .live-player.anon:hover {
+        background: transparent;
+    }
 }
 
 /* ★ 인게임 참가자 마스터+ 티어 배지 (2026-09-03, 기능 감사 F1) — 상세 전적의 .detail-tier-slot 과 같은 18px.
@@ -1511,16 +1527,20 @@ main {
     transition: background var(--dogu-ease);
 }
 
-.live-arena-player:hover {
-    background: rgba(255, 255, 255, 0.07);
+@media (hover: hover) {
+    .live-arena-player:hover {
+        background: rgba(255, 255, 255, 0.07);
+    }
 }
 
 .live-arena-player.anon {
     cursor: default;
 }
 
-.live-arena-player.anon:hover {
-    background: transparent;
+@media (hover: hover) {
+    .live-arena-player.anon:hover {
+        background: transparent;
+    }
 }
 
 .live-arena-player img {
@@ -1947,9 +1967,11 @@ main {
     color: var(--text-muted);
 }
 
-.pix-player:hover span {
-    color: var(--accent) !important;
-    text-decoration: underline;
+@media (hover: hover) {
+    .pix-player:hover span {
+        color: var(--accent) !important;
+        text-decoration: underline;
+    }
 }
 
 .toggle-btn {
@@ -1970,9 +1992,11 @@ main {
     outline: none;
 }
 
-.toggle-btn:hover {
-    background: rgba(0, 0, 0, 0.3);
-    color: #fff;
+@media (hover: hover) {
+    .toggle-btn:hover {
+        background: rgba(0, 0, 0, 0.3);
+        color: #fff;
+    }
 }
 
 /* 경기 주소 복사 버튼.
@@ -2003,8 +2027,10 @@ main {
     fill: currentColor;
 }
 
-.share-btn:hover {
-    color: #fff;
+@media (hover: hover) {
+    .share-btn:hover {
+        color: #fff;
+    }
 }
 
 /* 복사 결과는 버튼 옆 말풍선으로 알린다.
@@ -2090,9 +2116,11 @@ main {
     outline: none;
 }
 
-.detail-tab-btn:hover {
-    background: #483463;
-    color: #fff;
+@media (hover: hover) {
+    .detail-tab-btn:hover {
+        background: #483463;
+        color: #fff;
+    }
 }
 
 .detail-tab-btn.active {
@@ -2232,9 +2260,11 @@ main {
     max-width: 95px;
 }
 
-.detail-summoner:hover {
-    color: var(--accent);
-    text-decoration: underline;
+@media (hover: hover) {
+    .detail-summoner:hover {
+        color: var(--accent);
+        text-decoration: underline;
+    }
 }
 
 .spell-rune-wrapper {
@@ -2535,7 +2565,6 @@ main {
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
-    min-height: 100vh;
 }
 
 /* 페이지 머리 — er 의 .page-head 와 같은 배치 (2026-09-10 통일): 왼쪽 제목, 오른쪽 검색/컨트롤, 아래 한 줄 설명.
@@ -2577,10 +2606,11 @@ main {
 .stats-table th:nth-child(7) { width: 14%; }
 
 .stats-table th {
-    background: var(--surface-hover);
-    color: var(--accent);
+    color: var(--text-faint);   /* 채움 제거 + faint 글자 (M-3, 2026-09-11 결정). 액센트는 정렬된 열의 ▲▼ 만 */
     padding: 10px 12px;   /* 15 10 → 10 12 (2026-09-10 통일 4편: 표 머리) */
+    font-size: 12px;
     font-weight: 700;
+    white-space: nowrap;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -2615,8 +2645,8 @@ main {
 }
 
 .stats-champ-info img {
-    width: 40px;
-    height: 40px;
+    width: 36px;   /* 40 → 36 (m-8, 2026-09-11): 라인 칸을 한 줄로 만들면서 행 높이를 64 → 54 로 */
+    height: 36px;
     border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -2647,12 +2677,17 @@ main {
     width: 20px;
     height: 20px;
     opacity: 0.9;
+    vertical-align: middle;
 }
 
+/* 라인 % 를 아이콘 옆 한 줄로 (m-8, 2026-09-11): 두 줄이라 행이 64px 였다 */
+.stats-lane { white-space: nowrap; }
 .stats-lane-rate {
+    display: inline-block;
+    vertical-align: middle;
     font-size: 12px;
     color: var(--text-muted);
-    margin-top: 2px;
+    margin: 0 0 0 4px;
 }
 
 /* ===== 통계 탭 (2026-08-15 실제 집계로 교체하면서 추가) ===== */
@@ -2714,8 +2749,10 @@ main {
     transition: background var(--dogu-ease), color var(--dogu-ease);
 }
 
-.stats-band-btn:hover {
-    color: var(--text-bright);
+@media (hover: hover) {
+    .stats-band-btn:hover {
+        color: var(--text-bright);
+    }
 }
 
 .stats-band-btn.active {
@@ -2739,7 +2776,7 @@ main {
 }
 
 .stats-tier-none {
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-weight: 700;
 }
 
@@ -3271,17 +3308,20 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--dogu-ctl-md);   /* 42 → 34 (2026-09-10 통일 3편: 아이콘 버튼) */
-    height: var(--dogu-ctl-md);
+    min-width: var(--dogu-ctl-sm);   /* 34 각진 아이콘 버튼 → 28 알약 (2026-09-11 결정). 같은 줄의 ALL 글자 칩과 한 모양, ≤768 은 34 */
+    height: var(--dogu-ctl-sm);
+    padding: 0 4px;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--dogu-r-ctl);
+    border-radius: var(--dogu-r-pill);
     cursor: pointer;
-    transition: all var(--dogu-ease);
+    transition: background var(--dogu-ease), border-color var(--dogu-ease), box-shadow var(--dogu-ease);
 }
 
-.stats-filter-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+@media (hover: hover) {
+    .stats-filter-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
 }
 
 .stats-filter-btn.active {
@@ -3292,28 +3332,36 @@ main {
 
 /* invert(1) 을 뺐다 — CD 금색 아이콘을 그대로 쓴다 (위 .stats-lane img 와 같은 이유) */
 .stats-filter-btn img {
-    width: 22px;
-    height: 22px;
+    width: 20px;   /* 22 → 20 (28 알약 안) */
+    height: 20px;
     opacity: 0.55;
     transition: opacity 0.2s ease;
 }
 
-.stats-filter-btn:hover img,
 .stats-filter-btn.active img {
     opacity: 1;
+}
+@media (hover: hover) {
+    .stats-filter-btn:hover img {
+        opacity: 1;
+    }
 }
 
 .stats-filter-btn.all-btn {
     width: auto;
-    padding: 0 14px;
+    padding: 0 12px;
     color: rgba(255, 255, 255, 0.5);
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
 }
 
-.stats-filter-btn.all-btn:hover,
 .stats-filter-btn.all-btn.active {
     color: #fff;
+}
+@media (hover: hover) {
+    .stats-filter-btn.all-btn:hover {
+        color: #fff;
+    }
 }
 
 /* ★ 픽률 커트라인 입력 (2026-08-19). 라인 버튼 줄의 오른쪽 끝에 붙는다.
@@ -3369,10 +3417,11 @@ main {
 @media (hover: hover) {
     .sortable-th:hover {
         color: #fff;
-        background: #3a2470;
+        background: rgba(255, 255, 255, 0.04);   /* #3a2470 은 보라 채움 머리 시절 값 — 투명 머리(M-3)엔 옅은 흰 겹칠 */
     }
 
     .sortable-th:hover .sort-icon {
+        visibility: visible;
         color: #c4b5fd;
     }
 }
@@ -3385,12 +3434,13 @@ main {
     display: inline-block;
     font-size: 10px;
     margin-left: 4px;
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--accent);
+    visibility: hidden;   /* M-6 (2026-09-11): 정렬된 열만 ▲▼ 를 보인다. 나머지는 hover 때만 (아래 hover 가드). 예전엔 7칸 전부 떠 있어 어느 열인지 못 읽었다 */
     transition: color var(--dogu-ease);
 }
 
 .sortable-th.active .sort-icon {
-    color: var(--accent);
+    visibility: visible;
 }
 
 /* =========================================
@@ -3402,7 +3452,6 @@ main {
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
-    min-height: 100vh;
 }
 
 .masters-wrap {
@@ -3434,7 +3483,7 @@ main {
     cursor: pointer;
     border: 2px solid transparent;
     border-radius: 4px;
-    transition: all var(--dogu-ease);
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease), box-shadow var(--dogu-ease);
 }
 
 .champ-grid-item img {
@@ -3444,12 +3493,19 @@ main {
     object-fit: cover;
 }
 
-.champ-grid-item:hover,
 .champ-grid-item.active {
     border-color: var(--accent);
     transform: scale(1.1);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     z-index: 10;
+}
+@media (hover: hover) {
+    .champ-grid-item:hover {
+        border-color: var(--accent);
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+    }
 }
 
 .masters-right {
@@ -3469,11 +3525,11 @@ main {
 }
 
 .master-table th {
-    background: var(--surface-hover);
-    color: #10b981;
+    color: var(--text-faint);   /* 채움·초록 글자 → 계열대로 (M-3, 2026-09-11) */
     padding: 10px 12px;
+    font-size: 12px;
     font-weight: 700;
-    border-bottom: 2px solid #10b981;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .master-table td {
@@ -3532,8 +3588,7 @@ main {
     color: #fff;
     font-size: 24px;   /* 28/normal → 24/800 (2026-09-10 통일 2편: 페이지 제목) */
     font-weight: 800;
-    letter-spacing: var(--dogu-title-ls);
-    text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+    letter-spacing: var(--dogu-title-ls);   /* 노란 글로우(text-shadow)는 뺐다 (m-6, 2026-09-11): 계열 어느 사이트도 제목 글로우가 없다 */
 }
 
 .summoner-link {
@@ -3541,9 +3596,11 @@ main {
     transition: color var(--dogu-ease);
 }
 
-.summoner-link:hover {
-    color: var(--accent) !important;
-    text-decoration: underline;
+@media (hover: hover) {
+    .summoner-link:hover {
+        color: var(--accent) !important;
+        text-decoration: underline;
+    }
 }
 
 [data-tooltip] {
@@ -3686,7 +3743,7 @@ main {
 }
 
 .graph-point circle {
-    transition: all var(--dogu-ease);
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease), box-shadow var(--dogu-ease);
 }
 
 .graph-point:hover circle {
@@ -4158,8 +4215,6 @@ main {
         grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
     }
 
-    /* 폰: 제목은 24 그대로(13절 — 폰이라서 작게 금지). 검색칸만 제목 아래 한 줄로 */
-    .rank-search-box { width: 100%; margin: 0; }
 }
 /* ================================
    닉네임 자동완성 드롭다운
@@ -4192,9 +4247,13 @@ main {
     transition: background var(--dogu-ease);
 }
 
-.ac-item:hover,
 .ac-item.active {
     background: rgba(167, 139, 250, 0.12);
+}
+@media (hover: hover) {
+    .ac-item:hover {
+        background: rgba(167, 139, 250, 0.12);
+    }
 }
 
 .ac-icon {
@@ -4278,8 +4337,10 @@ main {
     border-bottom: none;
 }
 
-.cand-item:hover {
-    background: rgba(167, 139, 250, 0.1);
+@media (hover: hover) {
+    .cand-item:hover {
+        background: rgba(167, 139, 250, 0.1);
+    }
 }
 
 .cand-badge {
@@ -4350,9 +4411,11 @@ main {
     outline: none;
 }
 
-.load-more-btn:hover:not(:disabled) {
-    background: rgba(167, 139, 250, 0.12);
-    border-color: rgba(167, 139, 250, 0.7);
+@media (hover: hover) {
+    .load-more-btn:hover:not(:disabled) {
+        background: rgba(167, 139, 250, 0.12);
+        border-color: rgba(167, 139, 250, 0.7);
+    }
 }
 
 .load-more-btn:disabled {
@@ -4444,8 +4507,10 @@ main {
     transition: transform 0.2s ease;
 }
 
-.arena-team img:hover {
-    transform: scale(1.15);
+@media (hover: hover) {
+    .arena-team img:hover {
+        transform: scale(1.15);
+    }
 }
 
 .arena-team img.me {
@@ -4577,7 +4642,7 @@ main {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    height: 75vh;
+    max-height: 75vh;   /* height → max-height (2026-09-11 S-3): 내용이 짧으면 상자도 짧게. 긴 내용은 안쪽 스크롤이 받는다 (.champ-page-wrap 이 flex-start 라 목록 칸 높이로 안 늘어난다) */
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--dogu-r-card);
@@ -4763,8 +4828,10 @@ main {
     transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
-.skin-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+@media (hover: hover) {
+    .skin-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
 }
 
 .skin-item.active {
@@ -4949,8 +5016,10 @@ main {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.chroma-dot:hover {
-    transform: scale(1.15);
+@media (hover: hover) {
+    .chroma-dot:hover {
+        transform: scale(1.15);
+    }
 }
 
 .chroma-dot.active {
@@ -5027,8 +5096,10 @@ main {
     text-decoration: none;
 }
 
-.champ-lore-text a:hover {
-    text-decoration: underline;
+@media (hover: hover) {
+    .champ-lore-text a:hover {
+        text-decoration: underline;
+    }
 }
 
 .champ-quotes {
@@ -5084,8 +5155,10 @@ main {
     transition: background var(--dogu-ease);
 }
 
-.champ-voice-btn:hover {
-    background: var(--accent-deep);
+@media (hover: hover) {
+    .champ-voice-btn:hover {
+        background: var(--accent-deep);
+    }
 }
 
 .champ-voice-icon {
@@ -5093,8 +5166,10 @@ main {
     color: var(--accent);
 }
 
-.champ-voice-btn:hover .champ-voice-icon {
-    color: #fff;
+@media (hover: hover) {
+    .champ-voice-btn:hover .champ-voice-icon {
+        color: #fff;
+    }
 }
 
 .champ-voice-note {
@@ -5110,9 +5185,11 @@ main {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.champ-header-portrait:hover {
-    transform: scale(1.06);
-    box-shadow: 0 4px 16px rgba(167, 139, 250, 0.6) !important;
+@media (hover: hover) {
+    .champ-header-portrait:hover {
+        transform: scale(1.06);
+        box-shadow: 0 4px 16px rgba(167, 139, 250, 0.6) !important;
+    }
 }
 
 .champ-skill-box {
@@ -5150,8 +5227,8 @@ main {
        longhand 라 인라인의 padding-bottom 과 안 부딪힌다. */
     #champions-container {
         margin-top: 20px !important;
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: 16px;   /* 10 → 16 (규격 14-5) */
+        padding-right: 16px;
     }
 
     /* 인라인 height: 80px 라 !important 가 필요하다.
@@ -5160,7 +5237,7 @@ main {
         height: auto !important;
     }
     /* 폰은 상자 높이를 풀어 페이지가 스크롤되게 (상세 상자와 같은 이유) */
-    .champ-detail-col { height: auto; }
+    .champ-detail-col { max-height: none; }
 
     .champ-page-wrap {
         flex-direction: column;
@@ -5421,12 +5498,16 @@ main {
 }
 
 .rank-table thead {
-    background: var(--surface-hover);
-    color: var(--accent);
+    color: var(--text-faint);   /* 보라 채움 + 액센트 글자 → 계열(ER·maple)대로 투명 머리 + faint 글자 + 하단 1px (M-3, 2026-09-11 결정) */
 }
 
 .rank-table th {
     padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .rank-table td {
@@ -5633,8 +5714,10 @@ main {
     visibility: hidden;
 }
 
-.rank-search-clear:hover {
-    color: #fff;
+@media (hover: hover) {
+    .rank-search-clear:hover {
+        color: #fff;
+    }
 }
 
 /* 표 위 한 줄: 왼쪽 "전체 N명" + (폰에서만) 오른쪽 커트라인 (2026-08-19) */
@@ -5734,9 +5817,11 @@ main {
     transition: background var(--dogu-ease), color var(--dogu-ease);
 }
 
-.rank-pg:hover:not(:disabled) {
-    background: var(--surface-hover);
-    color: #fff;
+@media (hover: hover) {
+    .rank-pg:hover:not(:disabled) {
+        background: var(--surface-hover);
+        color: #fff;
+    }
 }
 
 /* 처음·끝 버튼은 못 눌러도 자리를 지킨다 (안 그러면 페이저가 좌우로 튄다) */
@@ -5959,6 +6044,11 @@ main {
         flex-direction: column;
     }
 
+    /* 폰: 검색칸은 제목 아래 한 줄 전체. ★ 원래 4162줄의 768 블록에 있었는데 기본 규칙(280px · margin-left:auto)이 **뒤에** 와서
+       같은 특이도로 이겨 죽어 있었다 (S-5, 2026-09-11 여기로). 설명 줄(.rank-updated)은 order 를 풀어 제목 → 설명 → 검색칸 순 (m-4) */
+    .rank-search-box { width: 100%; margin: 0; }
+    .rank-updated { order: 0; }
+
     .rank-side {
         width: 100%;
         margin-top: 0;   /* 위아래로 쌓이면 표와 나란히 둘 이유가 없다 */
@@ -6168,8 +6258,10 @@ main {
     cursor: pointer;
 }
 
-.stat-tname:hover {
-    color: #fff;
+@media (hover: hover) {
+    .stat-tname:hover {
+        color: #fff;
+    }
 }
 
 .stat-tname.flat {
@@ -6226,7 +6318,7 @@ main {
 /* 버튼은 제목 줄에 같이 둔다. 이 줄은 높이가 **항상 같아서** 아래 그래프가 안 흔들린다 */
 .savg-title {
     margin-left: 8px;
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-size: 12px;
     white-space: nowrap;
 }
@@ -6258,9 +6350,11 @@ main {
     cursor: default;
 }
 
-.savg-btns .role-btn:disabled:hover img {
-    filter: grayscale(1) brightness(0.75);
-    opacity: 0.65;
+@media (hover: hover) {
+    .savg-btns .role-btn:disabled:hover img {
+        filter: grayscale(1) brightness(0.75);
+        opacity: 0.65;
+    }
 }
 
 /* ★ 범례는 제목 줄 오른쪽 끝에 **아래에서 위로** 쌓인다 (2026-08-12).
@@ -6317,7 +6411,7 @@ main {
 }
 
 .savg-item em {
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-style: normal;
 }
 
@@ -6342,7 +6436,7 @@ main {
 }
 
 .sgh-row span {
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-size: 12px;
 }
 
@@ -6563,8 +6657,10 @@ main {
     transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
-.vs-item:hover {
-    background: rgba(255, 255, 255, 0.06);
+@media (hover: hover) {
+    .vs-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
 }
 
 /* 지금 겹쳐 그리는 챔피언. 그래프의 vs 선 색과 같은 보라다 */
@@ -6596,7 +6692,7 @@ main {
 .stat-foot {
     margin-top: 14px;
     padding: 0 6px;
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-size: 12px;
     line-height: 1.6;
 }
@@ -6773,9 +6869,11 @@ main {
     transition: opacity 0.2s ease, background var(--dogu-ease), color var(--dogu-ease);
 }
 
-.search-clear:hover {
-    background: rgba(255, 255, 255, 0.24);
-    color: #fff;
+@media (hover: hover) {
+    .search-clear:hover {
+        background: rgba(255, 255, 255, 0.24);
+        color: #fff;
+    }
 }
 
 /* 값이 비면(=placeholder 가 보이면) 숨긴다 */
@@ -6920,7 +7018,6 @@ main {
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
-    min-height: 100vh;
 }
 
 
@@ -6934,7 +7031,6 @@ main {
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
-    min-height: 100vh;
 }
 
 .patch-page-list {
@@ -7022,39 +7118,42 @@ main {
     font-weight: 700;
 }
 
-.patch-page-empty {
-    padding: 60px 20px;
-    color: var(--text-muted);
+/* .patch-page-empty 는 공통 .dogu-empty 로 갈아탔다 (2026-09-11 M-8). 원문 링크만 상자 아래 한 줄 */
+.patch-page-empty-link {
+    margin: 10px 0 0;
     text-align: center;
-    line-height: 1.9;
+    font-size: 13px;
 }
 
 /* 홈 「오늘의 신화 상점」 제목 — 누르면 신화상점 탭으로 (2026-08-27) */
 .shop-title-link { color: inherit; text-decoration: none; }
-.shop-title-link:hover { color: var(--dogu-accent, #9b6be8); }
+@media (hover: hover) {
+    .shop-title-link:hover { color: var(--dogu-accent, #9b6be8); }
+}
 
 .codex-tabs {
     display: flex;
     gap: 8px;
-    margin-bottom: 14px;
-    padding: 0 4px;
+    margin-bottom: 14px;   /* padding 0 4px 을 뺐다 (m-3, 2026-09-11): 탭 왼쪽선이 다른 페이지 표보다 4px 안으로 들어가 있었다 */
 }
 
 .codex-tab {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
-    height: var(--dogu-ctl-md);   /* 패딩 높이 → 34 고정 (2026-09-10 통일 3편: 기본 버튼) */
-    padding: 0 14px;
+    height: var(--dogu-ctl-sm);   /* 34 각진 버튼 → 28 알약 12/700 (2026-09-11 결정: 세그먼트·필터 탭은 5사이트 전부 28 알약, ≤768 은 34 — 파일 끝 블록) */
+    padding: 0 12px;
     line-height: 1;
-    border-radius: var(--dogu-r-ctl);
-    font-size: 13px;
+    border-radius: var(--dogu-r-pill);
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease);
 }
 
-.codex-tab:hover { color: var(--text-bright); }
+@media (hover: hover) {
+    .codex-tab:hover { color: var(--text-bright); }
+}
 
 .codex-tab.active {
     background: var(--surface-hover);
@@ -7248,7 +7347,9 @@ main {
     cursor: pointer;
 }
 
-.codex-cat:hover { color: var(--text-bright); }
+@media (hover: hover) {
+    .codex-cat:hover { color: var(--text-bright); }
+}
 
 .codex-cat.active {
     background: rgba(167, 139, 250, 0.15);
@@ -7288,7 +7389,9 @@ main {
     min-width: 0;
 }
 
-.codex-item:hover { background: rgba(255, 255, 255, 0.04); }
+@media (hover: hover) {
+    .codex-item:hover { background: rgba(255, 255, 255, 0.04); }
+}
 
 .codex-item.active {
     background: rgba(167, 139, 250, 0.12);
@@ -7502,6 +7605,8 @@ main {
 .codex-detail {
     flex: 1;
     min-width: 0;
+    align-self: flex-start;   /* 상세 칸은 내용 높이, 최대는 목록 칸(72vh)과 같은 선 (2026-09-11 S-3: 내용 200px 에 상자 700px 이던 것). 폰 블록에서 stretch 로 되돌린다 */
+    max-height: 100%;
     overflow-y: auto;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -7683,7 +7788,7 @@ main {
 
 .codex-lane-pct.is-zero {
     font-weight: 400;
-    color: var(--text-dim);
+    color: var(--text-faint);
 }
 
 .codex-detail-head {
@@ -7840,9 +7945,11 @@ main {
     transition: background var(--dogu-ease), border-color var(--dogu-ease);
 }
 
-.codex-recipe-item:hover {
-    background: rgba(167, 139, 250, 0.12);
-    border-color: rgba(167, 139, 250, 0.4);
+@media (hover: hover) {
+    .codex-recipe-item:hover {
+        background: rgba(167, 139, 250, 0.12);
+        border-color: rgba(167, 139, 250, 0.4);
+    }
 }
 
 .codex-recipe-item img {
@@ -8016,7 +8123,7 @@ main {
 
 /* 값은 인게임 상점처럼 금색이고, 아이콘보다 뒤로 물러나게 알약에 담는다 */
 .codex-tree-gold {
-    font-size: 11px;
+    font-size: 12px;   /* 11 → 12 (m-2, 2026-09-11): 알약 안 실글자 */
     font-weight: 700;
     line-height: 1;
     color: #f0c674;
@@ -8026,8 +8133,7 @@ main {
     font-variant-numeric: tabular-nums;
 }
 
-.codex-empty,
-.codex-none {
+.codex-none {   /* .codex-empty 는 공통 .dogu-empty 로 (2026-09-11 M-8) */
     text-align: center;
     padding: 40px 20px;
     color: var(--text-muted);
@@ -8042,7 +8148,7 @@ main {
 @media (max-width: 768px) {
     #codex-container {
         margin: var(--dogu-page-top) auto 0;
-        padding: 0 10px 40px;
+        padding: 0 16px 40px;   /* 10 → 16 (m-7, 규격 14-5) */
     }
 
     .codex-body {
@@ -8138,6 +8244,8 @@ main {
     .codex-body[data-tab="rune"] .codex-detail,
     .codex-body[data-tab="spell"] .codex-detail {
         flex: 1 1 auto;
+        align-self: stretch;   /* column 방향에서 flex-start 는 가로 폭을 줄인다 — 되돌린다 (S-3) */
+        max-height: none;
         overflow-y: visible;
         padding: 14px;
     }
@@ -8154,7 +8262,7 @@ main {
     .codex-recipe-label { width: auto; padding-top: 0; }
 
     /* 패치노트 목록 — 폰에서는 그림을 줄이고 요약 줄을 뺀다 (2026-08-27) */
-    #patch-container { margin: var(--dogu-page-top) auto 0; }
+    #patch-container { margin: var(--dogu-page-top) auto 0; padding: 0 16px 40px; }   /* 좌우 16 (M-1, 2026-09-11): 패딩이 없어 탭이 화면 끝까지 붙었다 */
     .patch-page-item { gap: 10px; padding: 10px 12px; }
     .patch-page-thumb { width: 96px; height: 54px; }
     .patch-page-title { font-size: 14px; }
@@ -8178,13 +8286,12 @@ main {
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
-    min-height: 100vh;
 }
 
 .mshop-header {
-    text-align: center;
-    padding: 20px;
-    margin-bottom: 10px;
+    text-align: left;   /* 가운데 → 왼쪽 24/800 (M-4, 2026-09-11): 통일 2편에서 이 헤더만 빠져 있었다 */
+    padding: 0;
+    margin-bottom: 16px;
 }
 
 /* 제목 아래 부제(`신화 정수로 사는 상품 · 매일 오전 9시 초기화`)는 지웠다 (2026-08-17).
@@ -8193,25 +8300,26 @@ main {
 .mshop-tabs {
     display: flex;
     gap: 8px;
-    margin-bottom: 14px;
-    padding: 0 4px;
+    margin-bottom: 14px;   /* padding 0 4px 을 뺐다 (m-3, 2026-09-11): 탭 왼쪽선이 다른 페이지 표보다 4px 안으로 들어가 있었다 */
 }
 
 .mshop-tab {
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
-    height: var(--dogu-ctl-md);
-    padding: 0 14px;
+    height: var(--dogu-ctl-sm);   /* 28 알약 (2026-09-11 결정, 도감 탭과 같다) */
+    padding: 0 12px;
     line-height: 1;
-    border-radius: var(--dogu-r-ctl);
-    font-size: 13px;
+    border-radius: var(--dogu-r-pill);
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease);
 }
 
-.mshop-tab:hover { color: var(--text-bright); }
+@media (hover: hover) {
+    .mshop-tab:hover { color: var(--text-bright); }
+}
 
 .mshop-tab.active {
     background: var(--surface-hover);
@@ -8308,8 +8416,10 @@ main {
 
 /* ★ 툴팁이 옆 카드에 가리지 않게 올려 준다. 카드가 `position: relative` 라 뒤쪽 카드가
    위에 그려지는데, 딱지에 커서를 올렸다는 건 그 카드에도 올렸다는 뜻이라 이걸로 충분하다 */
-.mshop-grid .mythic-item-card:hover {
-    z-index: 5;
+@media (hover: hover) {
+    .mshop-grid .mythic-item-card:hover {
+        z-index: 5;
+    }
 }
 
 /* 상품 하나의 남은 판매 시간 딱지. 추천처럼 상품마다 기한이 다른 구획에서 쓴다.
@@ -8480,15 +8590,17 @@ main {
     transition: background var(--dogu-ease), color var(--dogu-ease);
 }
 
-.mshop-goto:hover {
-    background: #3a2470;
-    color: #c4b5fd;
+@media (hover: hover) {
+    .mshop-goto:hover {
+        background: #3a2470;
+        color: #c4b5fd;
+    }
 }
 
 @media (max-width: 768px) {
     #mythic-container {
         margin: var(--dogu-page-top) auto 0;
-        padding: 0 10px 40px;
+        padding: 0 16px 40px;   /* 10 → 16 (규격 14-5) */
     }
 
     /* 탭 4개가 한 줄에 들어가야 한다 — 도감과 같은 처리다 */
@@ -8602,7 +8714,6 @@ main {
     margin: var(--dogu-page-top) auto 0;   /* 40 → 24 (2026-09-10 통일 4편: 페이지 첫 요소 위) */
     padding-bottom: var(--dogu-page-bottom);
     animation: fadeIn 0.6s ease;
-    min-height: 100vh;
 }
 
 .pi-head {
@@ -8861,7 +8972,7 @@ main {
 }
 
 @media (max-width: 768px) {
-    #patch-impact-container { margin: var(--dogu-page-top) auto 0; padding: 0 10px 40px; }
+    #patch-impact-container { margin: var(--dogu-page-top) auto 0; padding: 0 16px 40px; }
     .pi-head { flex-wrap: wrap; }
     .pi-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
     .pi-champ img { width: 40px; height: 40px; }
@@ -8881,7 +8992,6 @@ main {
     margin: 40px auto;
     padding-bottom: 50px;
     animation: fadeIn 0.6s ease;
-    min-height: 100vh;
 }
 
 .duo-tabs {
@@ -8895,14 +9005,16 @@ main {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: var(--dogu-ctl-md);
-    padding: 0 14px;
+    height: var(--dogu-ctl-sm);   /* 28 알약 12/700 (2026-09-11 결정) */
+    padding: 0 12px;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: var(--dogu-r-ctl);
+    border-radius: var(--dogu-r-pill);
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
+    transition: background var(--dogu-ease), color var(--dogu-ease), border-color var(--dogu-ease);
 }
 
 @media (hover: hover) {
@@ -9006,7 +9118,7 @@ main {
 
 @media (max-width: 768px) {
     #duo-container,
-    #trend-container { margin: 20px auto; padding: 0 10px 40px; }
+    #trend-container { margin: 20px auto; padding: 0 16px 40px; }
     .duo-pair { gap: 5px; padding-left: 8px; }
     .duo-champ { gap: 5px; font-size: 12px; }
     .duo-champ img { width: 26px; height: 26px; }
@@ -9384,9 +9496,39 @@ main {
 .versus-build-title { font-size: 15px; color: var(--text-bright); }
 .versus-build-n { font-size: 12px; color: var(--text-faint); }
 
-}
-
 /* 폰에서는 칩·필터를 34 로 (2026-09-10 통일 3편, DOGU_UI.md 14-3) */
 @media (max-width: 768px) {
     .filter-btn, .champ-filter-btn, .stats-band-btn, .profile-fav-btn, .codex-cat, .codex-view-btn { height: 34px; }
+}
+
+/* =========================================
+   취약점 수정 A~D 편 (2026-09-11) — 여기 모아 둔 것: 같은 특이도의 앞선 규칙을 소스 순서로 이겨야 하는 것들
+   ========================================= */
+/* M-2 숫자 열 오른쪽 정렬 (규격 14-4). 챔피언·티어·라인 칸은 그대로. tabular-nums 는 이미 td 에 있다 */
+.stats-table th[data-sort="winRate"], .stats-table th[data-sort="pickRate"], .stats-table th[data-sort="banRate"], .stats-table th[data-sort="games"],
+.stats-table th[data-col="wr"], .stats-table th[data-col="pick"], .stats-table th[data-col="games"],
+.stats-table td.stats-win, .stats-table td.stats-num, .stats-table td.stats-games, .stats-table td.duo-num {
+    text-align: right;
+}
+
+/* M-9 키보드 포커스 — 공통 헤더(dogu-ui.css 7-1)와 같은 규칙: 2px 액센트, offset 2. 마우스 클릭엔 안 뜬다.
+   헤더 요소(.dogu-*)는 공통 파일이 그리므로 뺀다 (검색 입력·네비는 안쪽 -2 로 그린다) */
+:is(a, button, select, input, textarea, [tabindex]):not([class^="dogu-"]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+/* B 눌림·비활성 상태 (세그먼트 탭·필터 칩) */
+.codex-tab:active, .mshop-tab:active, .duo-tab:active, .stats-filter-btn:active, .filter-btn:active, .codex-cat:active {
+    filter: brightness(0.9);
+}
+.codex-tab:disabled, .mshop-tab:disabled, .duo-tab:disabled, .stats-filter-btn:disabled, .filter-btn:disabled, .codex-cat:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+/* 공통 빈 상자가 flex 격자(홈 신화 위젯 .mythic-items-grid) 안에 들어갈 때 내용 폭으로 줄지 않게 — 옛 .mythic-empty 의 width:100% 몫 */
+.mythic-items-grid > .dogu-empty { width: 100%; flex: 1 1 100%; }
+
+/* 결정 2: 세그먼트 탭은 28 알약, 폰(≤768)에서는 34 (규격 14-3) */
+@media (max-width: 768px) {
+    .codex-tab, .mshop-tab, .duo-tab, .stats-filter-btn { height: var(--dogu-ctl-md); }
 }

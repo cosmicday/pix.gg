@@ -646,6 +646,38 @@
             });
         },
 
+        /* ---------- 6b. 표 스크롤 힌트 · 빈 상태 · 스켈레톤 (2026-09-11, DOGU_UI.md 15절) ---------- */
+        /* wrap(.dogu-scroll-wrap) 이 오른쪽으로 더 스크롤될 수 있을 때만 .has-more(페이드) 를 붙인다. 표를 다시 그린 뒤 다시 불러도 안전(리스너 중복 없음) */
+        scrollHint: function (wrap) {
+            var w = el(wrap);
+            if (!w) return;
+            function update() { w.classList.toggle('has-more', w.scrollWidth - w.clientWidth - w.scrollLeft > 4); }
+            if (!w.__doguScrollHint) {
+                w.__doguScrollHint = true;
+                w.addEventListener('scroll', update, { passive: true });
+                window.addEventListener('resize', update);
+            }
+            update();
+        },
+        /* 빈 상태·오류 상자. opts = { icon, title, body, retry: { text, id } } — retry 를 주면 <button id> 를 그리고 클릭은 사이트가 건다 */
+        emptyHtml: function (opts) {
+            opts = opts || {};
+            return '<div class="dogu-empty" role="status">' +
+                (opts.icon ? '<div class="dogu-empty-icon" aria-hidden="true">' + esc(opts.icon) + '</div>' : '') +
+                (opts.title ? '<div class="dogu-empty-title">' + esc(opts.title) + '</div>' : '') +
+                (opts.body ? '<p>' + esc(opts.body) + '</p>' : '') +
+                /* 링크 슬롯 — 「← 통계로」「원문 보기」 같은 것 (pixlol 요청, 2026-09-11). 내부 링크면 linkAttr(data-link) 을 같이 */
+                (opts.link ? '<p><a class="dogu-empty-link" href="' + esc(opts.link.href || '#') + '"' + linkAttr(opts) + (opts.link.external ? ' target="_blank" rel="noopener"' : '') + '>' + esc(opts.link.text || '') + '</a></p>' : '') +
+                (opts.retry ? '<button type="button" class="dogu-empty-retry"' + (opts.retry.id ? ' id="' + esc(opts.retry.id) + '"' : '') + '>' + esc(opts.retry.text || '다시 시도') + '</button>' : '') +
+            '</div>';
+        },
+        /* 표·목록 자리막이 n 줄 */
+        skelRowsHtml: function (n) {
+            var s = '';
+            for (var i = 0; i < (n || 6); i++) s += '<span class="dogu-skel"></span>';
+            return '<div class="dogu-skel-rows" aria-hidden="true">' + s + '</div>';
+        },
+
         setAside: function (html) {
             var a = document.querySelector('#dogu-gnb-aside');
             if (a) a.innerHTML = html || '';

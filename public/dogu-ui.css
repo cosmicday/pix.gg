@@ -30,7 +30,7 @@
     /* ── 공통 토큰 (건드리지 말 것) ── */
     --dogu-text: #e6eefb;
     --dogu-text-2: #9fb2d2;
-    --dogu-text-3: #7288ac;
+    --dogu-text-3: #8ea3c6;                   /* #7288ac → #8ea3c6 (2026-09-11 취약점 P-1): 남색 위 5.2:1. er 가 A3 에서 먼저 올린 값 */
     --dogu-card: rgba(15, 26, 48, 0.76);
     --dogu-card-2: rgba(38, 58, 94, 0.42);
     --dogu-line: rgba(130, 175, 235, 0.14);
@@ -686,7 +686,7 @@ body.dogu-body:not(.dogu-home) .dogu-hero { display: none; }
     margin-left: 8px;
     font-style: normal;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;                  /* 500 → 400 (14-2: 400·700·800 만) */
     color: var(--dogu-text-3, #7c8aa5);
 }
 
@@ -710,7 +710,7 @@ body.dogu-body:not(.dogu-home) .dogu-hero { display: none; }
 .dogu-footer .dogu-brand { font-size: 20px; text-shadow: none; }
 .dogu-footer-links { display: flex; gap: 16px; margin: 12px 0 14px; flex-wrap: wrap; }
 /* 상하 패딩 8px — 글자만으론 16px 라 폰에서 누르기 어려웠다. 터치 영역 32px 확보 */
-.dogu-footer-links a { margin: 0; padding: 8px 0; font-size: 12px; font-weight: 700; color: #a9bcd9; text-decoration: none; cursor: pointer; }
+.dogu-footer-links a { margin: 0; padding: 8px 0; font-size: 12px; font-weight: 700; color: var(--dogu-text-2); text-decoration: none; cursor: pointer; }   /* #a9bcd9 리터럴 → 토큰 (2026-09-11) */
 @media (hover: hover) {
     .dogu-footer-links a:hover { color: var(--dogu-accent-strong); }
 }
@@ -742,6 +742,81 @@ body.dogu-body:not(.dogu-home) .dogu-hero { display: none; }
 }
 .dogu-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ---------- 6b. 표 스크롤 힌트 · 빈 상태 · 스켈레톤 (2026-09-11, 취약점 P-2·P-3) ----------
+   5사이트가 제각각 만들던 것을 한 벌로. 사이트는 클래스만 쓰고 색·치수는 여기 것. DOGU_UI.md 15절 */
+.dogu-scroll-hint {
+    display: none;                     /* 폰에서만 (8절 미디어) */
+    margin: 0 0 6px;
+    font-family: var(--dogu-font);
+    font-size: 12px;
+    color: var(--dogu-text-3);
+}
+.dogu-scroll-hint::before { content: "↔ "; }
+.dogu-scroll-wrap {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+/* 오른쪽 끝에 더 있을 때만 36px 페이드 — DoguUI.scrollHint(wrap) 가 스크롤 위치를 보고 has-more 를 붙였다 뗀다 */
+.dogu-scroll-wrap.has-more {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+.dogu-empty {
+    width: 100%;                       /* flex·grid 자식일 때 내용 폭으로 줄던 것 (pixlol 요청, 2026-09-11) */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 32px 16px;
+    border: 1px dashed var(--dogu-line-2);
+    border-radius: var(--dogu-r-card);
+    text-align: center;
+    font-family: var(--dogu-font);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--dogu-text-2);
+    word-break: keep-all;
+}
+.dogu-empty-icon { font-size: 24px; line-height: 1; }
+.dogu-empty-title { font-size: 15px; font-weight: 800; color: var(--dogu-text); }
+.dogu-empty p { margin: 0; }
+.dogu-empty-link { color: var(--dogu-accent-strong); font-weight: 700; text-decoration: none; }
+@media (hover: hover) { .dogu-empty-link:hover { text-decoration: underline; } }
+.dogu-empty-retry {
+    margin: 4px 0 0;
+    height: var(--dogu-ctl-md);
+    padding: 0 14px;
+    border: 1px solid var(--dogu-line-2);
+    border-radius: var(--dogu-r-ctl);
+    background: transparent;
+    color: var(--dogu-text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color var(--dogu-ease), background var(--dogu-ease);
+}
+.dogu-empty-retry:focus-visible { outline: 2px solid var(--dogu-accent); outline-offset: 2px; }
+@media (hover: hover) {
+    .dogu-empty-retry:hover { border-color: var(--dogu-accent); background: var(--dogu-accent-weak); }
+}
+.dogu-skel {
+    display: block;
+    height: 12px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.07);
+    animation: dogu-skel 1.2s ease-in-out infinite;
+}
+@keyframes dogu-skel { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.dogu-skel-rows { display: flex; flex-direction: column; gap: 12px; padding: 12px 0; }
+.dogu-skel-rows .dogu-skel { height: 14px; }
+.dogu-skel-rows .dogu-skel:nth-child(3n + 2) { width: 72%; }
+.dogu-skel-rows .dogu-skel:nth-child(3n) { width: 88%; }
+
 /* ---------- 7. 404 · 준비중 ---------- */
 .dogu-doc { padding: 20px 16px 60px; font-family: var(--dogu-font); }
 .dogu-doc-panel {
@@ -752,10 +827,11 @@ body.dogu-body:not(.dogu-home) .dogu-hero { display: none; }
     border-radius: var(--dogu-radius);
     padding: 16px 18px;                /* er .panel-pad */
     box-shadow: 0 2px 14px rgba(2, 6, 16, 0.35);
-    margin-bottom: 16px;
+    max-width: 800px;                  /* 문서(약관·404·준비중)는 800 가운데 — 5사이트가 따로 주던 것을 공통으로 (2026-09-11) */
+    margin: 0 auto 16px;
     overflow: hidden;
 }
-.dogu-doc-title { margin: 0 0 10px; padding: 0; font-size: 20px; font-weight: 800; line-height: 1.3; letter-spacing: normal; color: var(--dogu-text); }
+.dogu-doc-title { margin: 0 0 10px; padding: 0; font-size: 24px; font-weight: 800; line-height: 1.3; letter-spacing: var(--dogu-title-ls); color: var(--dogu-text); }   /* 20 → 24 (2026-09-11): 사이트 .page-title 과 같은 단 */
 .dogu-doc p { margin: 0 0 10px; padding: 0; font-size: 13px; color: var(--dogu-text-2); line-height: 1.85; }
 .dogu-doc-link { color: var(--dogu-accent-strong); font-weight: 700; text-decoration: none; }
 @media (hover: hover) {
@@ -785,6 +861,9 @@ body.dogu-body:not(.dogu-home) .dogu-hero { display: none; }
 
 /* ---------- 8. 반응형 ---------- */
 @media (max-width: 768px) {
+    .dogu-scroll-hint { display: block; }
+    /* 폰에서도 다 들어가는 표 위엔 헛안내 — 오른쪽에 더 있을 때(has-more)만 보인다 (maple 요청, 2026-09-11) */
+    .dogu-scroll-hint:has(+ .dogu-scroll-wrap:not(.has-more)) { display: none; }
     .dogu-gnb-utility-inner { height: 52px; gap: 8px; }
     /* 좁은 화면: 스위처 **버튼**만 아이콘으로 줄인다. 펼친 목록은 아이콘+게임명 그대로
        (2026-08-24 — 예전엔 목록 이름까지 숨겼는데 아이콘만으로는 어떤 게임인지 안 갈렸다) */
@@ -890,4 +969,5 @@ body.dogu-body:not(.dogu-home) .dogu-hero { display: none; }
     .dogu-search-btn,
     .dogu-toast,
     .dogu-gnb.dogu-menu-open .dogu-nav-caret { transition: none; }
+    .dogu-skel { animation: none; }
 }
